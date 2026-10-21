@@ -1,0 +1,2074 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>보조사업 현장지도</title>
+<meta name="theme-color" content="#1f6feb">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAESUlEQVR4nO3cQXITMRRFUYViCczDDsNSWCLzsAgGhsTY7rjjp5b0/rtnnCJy/avfJkn56fnltQGP+jL7APBGQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkX2cfYC2/fn67+zXff/wecBIXT3zI5p5othBTbkBKN9diS4oLqG8319JKCgro6HTO5WQUEdDIdM4lZFT/v/Gz6pn7rYcpHtD0EU4/wNHKPsJWm1zVx1nNDbRaPW3JI3VRMKBlR7XswRTVAlp8SIsf7wGlArIYj8Uh96sTkNFgjI56V5GA7EZid+AtRQLCLBUCMr3Npse+YB+Q9RisD3/iHVCBAbi/BO+AMJ3x78KOu7tbv7ca/x3Xxx/Vv7s7xbcvcH/udOS6gVb4i+YVzjAd74Een5zpyPtKD0iMgIYsA+r17Ogy/l4Nmb6vsgyoi47LI3kPhQbUfeSxDfkFZLrq93B8aX4B6Q7aFplLKC6gQ8cc2FBcQOjLLCDHdwmfYvcCzQISDXjEpD3FsgJCdwQECQFBQkCQEBAkBAQJAUFCQJBkBTTg57x2P0oWZQWE7swCKv+LArsXaBaQ7tBHTNrzqwUG1A4bc2A9LTMgdOQXUJd3Cd23RZd/0O4NUHMMqJeODWU+vE5yA2qdBp9cTzMNqOOqF8ffsR7H51czDaivhyMI3z0nfD5Qa/9S2L8DSOeN6+cDNT6hbA1soBtYMPsZvwfyvbUXrF+IcUBYgXdA1nf3xP0leAfUzAdgffgT+4Ca7RhMj32hQkCYqEhAdrfZ7sBbigSEWeoEZHSnjY56V52AMEWpgCxutsUh9ysVEMarFtDi93vx4z2gWkAYrGBAy97yZQ+mKBgQRqoZ0IJ3fcEjdVEzIAxTNqClbvxSh+mrbEAYo3JAi9z7RY5xkMoBYYDiAdW+/SsoHtB05QuuH1D5Ec5VP6CJEtqNCChhkLNEBDRFSLUpAYWMc7yUgAbL6TUooJyhjhQU0DBRpWYFFDXaMbICGiCt0biA0gZ8tLiADhVYZ2JAgWM+TmJAB8nsMjSgzGEfITSg7mKLzA0oduR95QbUUXKL0QElD76X6ICgSw9IX0Lhayw9IIgISFoh4eunERBEBNTao4uE9dMICCIC+uuz64T1c0JAkBDQu/1LhfXzhoAgIaD/7FktrJ9zBAQJAV36eMGwfi4QECQEdMPWmmH9XCMgSAjotutlw/q5iYAgIaBN5yuH9bOFgCAhoI+cFg/r5wMEBMnT88vr7DPAGBsIEgKChIAgISBICAgSAoKEgCAhIEgICBICgoSAICEgSAgIEgKChIAgISBICAgSAoKEgCAhIEgICBICgoSAICEgSAgIEgKChIAgISBICAgSAoKEgCAhIEgICJI/++sKEFvtHtcAAAAASUVORK5CYII=">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAESUlEQVR4nO3cQXITMRRFUYViCczDDsNSWCLzsAgGhsTY7rjjp5b0/rtnnCJy/avfJkn56fnltQGP+jL7APBGQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkX2cfYC2/fn67+zXff/wecBIXT3zI5p5othBTbkBKN9diS4oLqG8319JKCgro6HTO5WQUEdDIdM4lZFT/v/Gz6pn7rYcpHtD0EU4/wNHKPsJWm1zVx1nNDbRaPW3JI3VRMKBlR7XswRTVAlp8SIsf7wGlArIYj8Uh96sTkNFgjI56V5GA7EZid+AtRQLCLBUCMr3Npse+YB+Q9RisD3/iHVCBAbi/BO+AMJ3x78KOu7tbv7ca/x3Xxx/Vv7s7xbcvcH/udOS6gVb4i+YVzjAd74Een5zpyPtKD0iMgIYsA+r17Ogy/l4Nmb6vsgyoi47LI3kPhQbUfeSxDfkFZLrq93B8aX4B6Q7aFplLKC6gQ8cc2FBcQOjLLCDHdwmfYvcCzQISDXjEpD3FsgJCdwQECQFBQkCQEBAkBAQJAUFCQJBkBTTg57x2P0oWZQWE7swCKv+LArsXaBaQ7tBHTNrzqwUG1A4bc2A9LTMgdOQXUJd3Cd23RZd/0O4NUHMMqJeODWU+vE5yA2qdBp9cTzMNqOOqF8ffsR7H51czDaivhyMI3z0nfD5Qa/9S2L8DSOeN6+cDNT6hbA1soBtYMPsZvwfyvbUXrF+IcUBYgXdA1nf3xP0leAfUzAdgffgT+4Ca7RhMj32hQkCYqEhAdrfZ7sBbigSEWeoEZHSnjY56V52AMEWpgCxutsUh9ysVEMarFtDi93vx4z2gWkAYrGBAy97yZQ+mKBgQRqoZ0IJ3fcEjdVEzIAxTNqClbvxSh+mrbEAYo3JAi9z7RY5xkMoBYYDiAdW+/SsoHtB05QuuH1D5Ec5VP6CJEtqNCChhkLNEBDRFSLUpAYWMc7yUgAbL6TUooJyhjhQU0DBRpWYFFDXaMbICGiCt0biA0gZ8tLiADhVYZ2JAgWM+TmJAB8nsMjSgzGEfITSg7mKLzA0oduR95QbUUXKL0QElD76X6ICgSw9IX0Lhayw9IIgISFoh4eunERBEBNTao4uE9dMICCIC+uuz64T1c0JAkBDQu/1LhfXzhoAgIaD/7FktrJ9zBAQJAV36eMGwfi4QECQEdMPWmmH9XCMgSAjotutlw/q5iYAgIaBN5yuH9bOFgCAhoI+cFg/r5wMEBMnT88vr7DPAGBsIEgKChIAgISBICAgSAoKEgCAhIEgICBICgoSAICEgSAgIEgKChIAgISBICAgSAoKEgCAhIEgICBICgoSAICEgSAgIEgKChIAgISBICAgSAoKEgCAhIEgICJI/++sKEFvtHtcAAAAASUVORK5CYII=">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+  :root{--b:#1f6feb;--bg:#fff;--fg:#1b1f24;--mut:#6b7280;--ln:#e5e7eb}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:var(--fg);background:var(--bg)}
+  #app{display:flex;flex-direction:column;height:100%}
+  header{display:flex;gap:8px;align-items:center;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));background:var(--b);color:#fff;flex-wrap:wrap}
+  header h1{font-size:17px;margin:0;flex:1;min-width:140px}
+  button,.btn{border:0;border-radius:8px;padding:8px 12px;font-size:14px;cursor:pointer;background:#fff;color:var(--b);font-weight:600}
+  .btn input{display:none}
+  #main{flex:1;display:flex;min-height:0}
+  #side{width:320px;border-right:1px solid var(--ln);display:flex;flex-direction:column;min-height:0}
+  #map{flex:1;min-height:0}
+  #q{margin:10px;padding:9px 10px;border:1px solid var(--ln);border-radius:8px;font-size:15px}
+  #filters{display:flex;gap:6px;flex-wrap:wrap;padding:0 10px 8px}
+  .chip{border:1px solid var(--ln);background:#fff;color:var(--fg);border-radius:999px;padding:4px 10px;font-size:13px;font-weight:500}
+  .chip.on{background:var(--b);color:#fff;border-color:var(--b)}
+  #list{flex:1;overflow:auto;margin:0;padding:0;list-style:none;border-top:1px solid var(--ln)}
+  #list li{padding:10px 12px;border-bottom:1px solid var(--ln);cursor:pointer}
+  #list li:hover{background:#f3f6fb}
+  #list .n{font-weight:700}
+  #list .s{color:var(--mut);font-size:13px;margin-top:2px}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  .fail{color:#c2410c;font-size:12px}
+  #status{padding:6px 12px;font-size:13px;color:var(--mut);border-top:1px solid var(--ln)}
+  #toggle{display:none}
+  .iw{padding:10px 12px;font-size:13px;line-height:1.5;min-width:220px;max-width:260px}
+  .iw b{font-size:15px}
+  .iw a{color:var(--b);font-weight:600;text-decoration:none;margin-right:10px}
+  #empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--mut);padding:24px;pointer-events:none;font-size:15px;line-height:1.6}
+  #mapwrap{position:relative;flex:1;display:flex}
+  dialog{border:0;border-radius:12px;padding:18px;max-width:340px;width:90%}
+  dialog label{display:block;font-size:14px;margin-bottom:6px}
+  dialog input{width:100%;padding:9px;border:1px solid var(--ln);border-radius:8px;font-size:15px}
+  dialog .row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+  dialog button{border:1px solid var(--ln)}
+  dialog .sec{font-weight:700;font-size:13px;color:var(--mut);margin:4px 0 8px}
+  dialog .sec:not(:first-child){margin-top:16px;padding-top:12px;border-top:1px solid var(--ln)}
+  dialog .wide{width:100%;padding:11px;background:var(--b);color:#fff;border:0}
+  dialog label.chk{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:14px}
+  dialog label.chk input{width:auto;margin-top:3px}
+  dialog small{color:var(--mut);font-size:12px}
+  @media (max-width:760px){
+    #main{flex-direction:column-reverse}
+    #side{width:100%;height:42%;border-right:0;border-top:1px solid var(--ln)}
+    #side.hide{display:none}
+    #toggle{display:inline-block}
+  }
+  /* ---------- 현장 점검 ---------- */
+  .ov{position:fixed;inset:0;background:#f5f7fa;z-index:50;display:flex;flex-direction:column}
+  .ov[hidden]{display:none}
+  .ovh{display:flex;gap:8px;align-items:center;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));background:var(--b);color:#fff}
+  .ovh b{font-size:16px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ovb{flex:1;overflow:auto;padding:12px;padding-bottom:max(24px,env(safe-area-inset-bottom))}
+  .card{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:12px}
+  .card h3{margin:0 0 10px;font-size:14px;color:var(--mut)}
+  .fl{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+  .fl:first-of-type{margin-top:0}
+  .inp,.ovb select,.ovb textarea{width:100%;padding:9px 10px;border:1px solid var(--ln);border-radius:8px;font-size:15px;background:#fff;font-family:inherit}
+  .rowf{display:flex;gap:8px;align-items:center}
+  .rowf .inp,.rowf select{flex:1;min-width:0}
+  .bline{border:1px solid var(--ln)!important}
+  .bpri{background:var(--b)!important;color:#fff!important}
+  .bdan{color:#c2410c!important;border:1px solid #fcd5c0!important}
+  .tgt{font-size:14px;line-height:1.6}
+  .tgt b{font-size:17px}
+  .it{padding:10px 0;border-top:1px solid var(--ln)}
+  .it:first-child{border-top:0;padding-top:0}
+  .it .lb{font-weight:600;font-size:15px;margin-bottom:6px}
+  .seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+  .seg button{border:1px solid var(--ln);background:#fff;color:var(--fg);font-weight:500;padding:7px 12px}
+  .seg button.on{background:var(--b);color:#fff;border-color:var(--b)}
+  .seg button.on.bad{background:#e5484d;border-color:#e5484d}
+  .it .inp{font-size:14px;padding:7px 9px}
+  .thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+  .thumbs div{position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#eee}
+  .thumbs img{width:100%;height:100%;object-fit:cover}
+  .thumbs button{position:absolute;top:4px;right:4px;padding:2px 7px;border-radius:6px;background:rgba(0,0,0,.6);color:#fff;font-size:12px}
+  #sign{width:100%;height:160px;border:1px dashed #b6bcc6;border-radius:8px;background:#fff;touch-action:none;display:block}
+  .acts{display:flex;gap:8px;margin-top:4px}
+  .acts button{flex:1;padding:12px;font-size:15px}
+  .prev{display:flex;gap:6px;flex-wrap:wrap}
+  .prev button{font-size:13px;font-weight:500;padding:6px 10px}
+  .prev button.on{background:var(--b);color:#fff;border-color:var(--b)}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:1px 6px;border-radius:6px;background:#dcfce7;color:#166534;margin-left:6px;vertical-align:middle}
+  .badge.warn{background:#fee2e2;color:#991b1b}
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1b1f24;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}
+  #toast.on{opacity:1}
+  /* 미리보기 */
+  #pvBody{background:#8b919a;display:flex;flex-direction:column;align-items:center;gap:14px;padding:14px 8px}
+  .pvhint{color:#fff;font-size:13px;text-align:center}
+  .pg{width:794px;height:1123px;background:#fff;padding:52px 56px;color:#111;font-family:"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif;font-size:13px;line-height:1.45;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.25);flex:none}
+  .pg h1{font-size:26px;text-align:center;margin:0 0 6px;letter-spacing:2px}
+  .pg .sub{text-align:center;color:#555;margin-bottom:18px;font-size:12px}
+  .pg table{width:100%;border-collapse:collapse;margin-bottom:14px;table-layout:fixed}
+  .pg th,.pg td{border:1px solid #333;padding:6px 8px;vertical-align:middle;word-break:break-all}
+  .pg th{background:#eef1f5;font-weight:700;text-align:center}
+  .pg .cap{font-weight:700;font-size:14px;margin:6px 0 6px}
+  .pg .c{text-align:center}
+  .pg .bad{color:#c62828;font-weight:700}
+  .pg .sg{height:70px;text-align:center}
+  .pg .sg img{max-height:64px;max-width:100%}
+  .pg .ph{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pg .ph figure{margin:0;border:1px solid #999;height:440px;display:flex;flex-direction:column}
+  .pg .ph img{width:100%;flex:1;min-height:0;object-fit:contain;background:#f3f3f3}
+  .pg .ph figcaption{padding:4px 6px;font-size:12px;border-top:1px solid #999}
+  .pg [contenteditable]{outline:none;border-radius:2px}
+  .pg [contenteditable]:focus{background:#fff6c7;box-shadow:0 0 0 2px #f5c518}
+  .pg.edit [contenteditable]:hover{background:#fffbe6}
+  .pg .blk{padding-bottom:12px}
+  .pg .blk table{margin-bottom:0}
+  .pg .blk table+table{margin-top:10px}
+  .pgw{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .pgsel{display:flex;gap:6px;align-items:center;color:#fff;font-size:14px;font-weight:600;background:rgba(0,0,0,.35);padding:5px 12px;border-radius:999px}
+  .pgsel input{width:18px;height:18px}
+  .pgw.off .pg{opacity:.35}
+  #pvTools{width:100%;max-width:794px;margin:0}
+  #pvTools .seg button{font-size:13px;padding:6px 10px}
+  #pvTools .rowf{flex-wrap:wrap;margin-top:8px}
+  #pvTools .rowf button{font-size:13px;padding:7px 10px}
+  #tplDlg .secs{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:14px}
+  #tplDlg .secs label{display:flex;gap:5px;align-items:center;margin:0}
+  #tplDlg .secs input{width:auto}
+  #tplDlg textarea.sm{min-height:80px}
+  /* 점검 목록 */
+  .rec{display:flex;gap:10px;align-items:center;padding:10px 4px;border-top:1px solid var(--ln)}
+  .rec:first-child{border-top:0}
+  .rec input{width:20px;height:20px;flex:none}
+  .rec .m{flex:1;min-width:0;cursor:pointer}
+  .rec .m div:first-child{font-weight:700}
+  .rec .m div:last-child{font-size:13px;color:var(--mut)}
+  #tplDlg textarea{width:100%;min-height:170px;padding:9px;border:1px solid var(--ln);border-radius:8px;font-size:14px;font-family:inherit}
+  #tplDlg{max-width:420px}
+  #busy{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:98;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+  #busy[hidden]{display:none}
+  #syncBtn[data-st=err]{color:#c2410c}
+  #syncBtn[data-st=run]{opacity:.75}
+  #syInfo a{color:var(--b);font-weight:600;margin-right:12px;text-decoration:none}
+  /* 읍면별 점검률 */
+  .st{width:100%;border-collapse:collapse;font-size:13px}
+  .st th,.st td{padding:6px 4px;border-bottom:1px solid var(--ln);text-align:center;white-space:nowrap}
+  .st th{color:var(--mut);font-weight:600}
+  .st td:first-child,.st th:first-child{text-align:left}
+  .st tr.tot td{font-weight:700;border-bottom:0}
+  .st tr[data-town]{cursor:pointer}
+  .st tr.sel td{background:#eef4ff}
+  .bar{height:6px;background:#eef0f3;border-radius:3px;overflow:hidden;margin-top:3px;min-width:60px}
+  .bar i{display:block;height:100%;background:var(--b)}
+  .st .w{color:#c2410c}
+</style>
+<script>
+// 앱 설치 정보(manifest)를 파일 안에 내장
+(function(){ try{
+  const m = {"name": "보조사업 현장지도", "short_name": "현장지도", "display": "standalone", "background_color": "#ffffff", "theme_color": "#1f6feb", "lang": "ko", "icons": [{"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAIAAADdvvtQAAAESUlEQVR4nO3cQXITMRRFUYViCczDDsNSWCLzsAgGhsTY7rjjp5b0/rtnnCJy/avfJkn56fnltQGP+jL7APBGQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkBAQJAUFCQJAQECQEBAkBQUJAkBAQJAQECQFBQkCQEBAkX2cfYC2/fn67+zXff/wecBIXT3zI5p5othBTbkBKN9diS4oLqG8319JKCgro6HTO5WQUEdDIdM4lZFT/v/Gz6pn7rYcpHtD0EU4/wNHKPsJWm1zVx1nNDbRaPW3JI3VRMKBlR7XswRTVAlp8SIsf7wGlArIYj8Uh96sTkNFgjI56V5GA7EZid+AtRQLCLBUCMr3Npse+YB+Q9RisD3/iHVCBAbi/BO+AMJ3x78KOu7tbv7ca/x3Xxx/Vv7s7xbcvcH/udOS6gVb4i+YVzjAd74Een5zpyPtKD0iMgIYsA+r17Ogy/l4Nmb6vsgyoi47LI3kPhQbUfeSxDfkFZLrq93B8aX4B6Q7aFplLKC6gQ8cc2FBcQOjLLCDHdwmfYvcCzQISDXjEpD3FsgJCdwQECQFBQkCQEBAkBAQJAUFCQJBkBTTg57x2P0oWZQWE7swCKv+LArsXaBaQ7tBHTNrzqwUG1A4bc2A9LTMgdOQXUJd3Cd23RZd/0O4NUHMMqJeODWU+vE5yA2qdBp9cTzMNqOOqF8ffsR7H51czDaivhyMI3z0nfD5Qa/9S2L8DSOeN6+cDNT6hbA1soBtYMPsZvwfyvbUXrF+IcUBYgXdA1nf3xP0leAfUzAdgffgT+4Ca7RhMj32hQkCYqEhAdrfZ7sBbigSEWeoEZHSnjY56V52AMEWpgCxutsUh9ysVEMarFtDi93vx4z2gWkAYrGBAy97yZQ+mKBgQRqoZ0IJ3fcEjdVEzIAxTNqClbvxSh+mrbEAYo3JAi9z7RY5xkMoBYYDiAdW+/SsoHtB05QuuH1D5Ec5VP6CJEtqNCChhkLNEBDRFSLUpAYWMc7yUgAbL6TUooJyhjhQU0DBRpWYFFDXaMbICGiCt0biA0gZ8tLiADhVYZ2JAgWM+TmJAB8nsMjSgzGEfITSg7mKLzA0oduR95QbUUXKL0QElD76X6ICgSw9IX0Lhayw9IIgISFoh4eunERBEBNTao4uE9dMICCIC+uuz64T1c0JAkBDQu/1LhfXzhoAgIaD/7FktrJ9zBAQJAV36eMGwfi4QECQEdMPWmmH9XCMgSAjotutlw/q5iYAgIaBN5yuH9bOFgCAhoI+cFg/r5wMEBMnT88vr7DPAGBsIEgKChIAgISBICAgSAoKEgCAhIEgICBICgoSAICEgSAgIEgKChIAgISBICAgSAoKEgCAhIEgICBICgoSAICEgSAgIEgKChIAgISBICAgSAoKEgCAhIEgICJI/++sKEFvtHtcAAAAASUVORK5CYII=", "sizes": "192x192", "type": "image/png"}, {"src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAIAAAB7GkOtAAAMpUlEQVR4nO3cSXYcxxVAUdBHS/Cc2iG1FC/Rc2oRHsAHggSwkFWVTUS8e8dqsuN/PxMkv33/8fMFgJ5/XX0AAFxDAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIOq3qw8ADvff//z7sX/x9z/+3PdIYCjfvv/4efUxwD4eHvT3EgbWIABM7LSJf5seMCkBYDKDDP1fEQMmIgDMYfC5/5ESMD4BYGjTzf2PlIBhCQAjWmDuf6QEjEYAGMuSo/89GWAcAsAQlp/7HykBlxMALhYc/e/JABcSAC4TH/3vyQCXEAAuYPR/SgY4mQBwKqP/SzLAaQSAkxj9d5EBTuCvg+YMpv+9XDFO4A2AYxlkT/IqwHEEgKMY/TuSAY7gExCHMP335XpyBAFgf6bVEVxVducTEHsypE7gcxB78QbAbkz/c7jO7EUA2IepdCZXm134BMSzDKML+RzEM7wB8BTT/1quP88QAB5n+ozAXeBhAsCDzJ1xuBc8RgB4hIkzGneEBwgAdzNrxuS+cC8B4D6mzMjcHe4iANzBfBmfe8R2AsBWJsss3Ck2EgA2MVPm4n6xhQDwNdNkRu4aXxIAvmCOzMu94zYB4BYTZHbuIDcIAL9kdqzBfeRXBIDPmRorcTf5lADwCfNiPe4pHwkAQJQA8E9WxVW5s/yDAPA3ZsTa3F/eEwD+YjoUuMu8EQCAKAHg/yyGHe41rwSAlxcToccd50UAeDELqtx3BAAgSgDqrIFl7n6cAABECUCaBRDPQJkAdPmVzytPQpYAAEQJQJSlj/c8D00CABAlAEXWPT7yVAT9dvUBwHl+/+PPLf+YUUjEt+8/fl59DJwqNd02TvzbXDFW5Q2ABe07xd7+a6kSUOANoGXtEXba9uoysgZvAKzg5Jn1+r9bOwMUeAMIWXJgXb6uuqrMyxsAsxpkSHkbYF7+HABTGmT6vxnteGALn4AqlllRBx+1rjMT8QbATMafSuMfIbwRgIQ11tJZZussx3nbGs8Mt/khMBOYbqT6yTBT8AbA6Kab/m/mPXIiBGB9U++hs8/QqY9/6ieHLQSAcU09Pd+scRYsSQAY1Epzc6VzYSUCsDhv8TzD87M2AWBE663M650RCxAAhrPqrFz1vJiXAKxsxvf3tafkjGc341PERgIAECUADGTGBflehXNkFgLAKDqTsXOmDE4AluXTLXvxLK1KABhCbSmunS9jEgCAKAHges11uHnWDEUAAKIEYE0T/dSuvAhPdO4TPVFsJwAAUQIAECUAXGmibyAHcQW4kAAARAkAQJQAcBlfP165DlxFAACiBGBBfss2R/BcrUcAAKIEACBKALiGn3y+52pwCQEAiBIAgCgBAIgSAIAoAQCIEgCAKAEAiBIAgCgBAIgSAIAoAQCIEgCAKAHgGv5y+fdcDS4hAABRAgAQJQAL8pfLcwTP1XoEACBKALiMn3y+ch24igAARAkAQJQAcCVfP1wBLiQAAFECABAlAGua6Ldsl7+BTHTuEz1RbCcAAFECwPUmWoR31DxrhiIAAFECwBBq63DtfBmTACzLT+3Yi2dpVQLAKDpLcedMGZwAMJDCZCycI7MQAIAoAVjZjJ9u116QZzy7GZ8iNhIAhjPjlNxi1fNiXgLAiNableudEQsQgMV5f+cZnp+1CQCDWmllXulcWIkAMK415uYaZ8GSBGB9U7/Fzz49pz7+qZ8cthAARjfvDJ33yIn47eoDgK+9TtKJFlKjnyl4A0iYaHTeMMtUneU4b1vjmeE2AWAm48/W8Y8Q3nz7/uPn1cfASVaaTQPupy4v0/EGwJRGm7ajHQ9s4YfAzGqQnwwb/czLJ6CWVafVJRlwMZmdNwBWcPLbwKqjnxpvADmF4XVQCVw6FuMNgAW9Tepdxllh7tPkDaAoO9E29sD1IcIbACHZyQ6f8ucAiix6fOSpCBIAgCgBiLLu8Z7noUkAAKIEoMvSxytPQpYApPmVj2egTAAAogSgzgJY5u7HCQBAlABgDYxy3xEAXl7Mgh53nBcB4I2J0OFe80oAAKIEgL9YDAvcZd4IAH9jOqzN/eU9AeCfzIhVubP8gwAARAkAn7Aqrsc95SMB4HPmxUrcTT4lAPySqbEG95FfEQCAKAEAiBIAbvH1YHbuIDcIAECUAPAFK+S83DtuEwCAKAHgaxbJGblrfEkAAKIEgE2sk3Nxv9hCAACiBICtLJWzcKfYSAAAogSAO1gtx+cesZ0AAEQJAPexYI7M3eEuAgAQJQDczZo5JveFewkAQJQA8AjL5mjcER4gAABRAsCDrJzjcC94jAAARAkAj7N4jsBd4GECABAlAABRAsBTfH+4luvPMwQAIEoAeJYl9CquPE8SAIAoAWAHVtHzueY8TwAAogSAfVhIz+RqswsBAIgSAHZjLT2H68xeBAAgSgDYk+X0aK4wOxIAgCgBYGdW1OO4tuxLAACiBID9WVSP4KqyOwEAiBIADmFd3ZfryREEACBKADiKpXUvriQHEQCAKAEAiBIADuTbxfNcQ44jAABRAsCxLLDPcPU4lAAARAkAh7PGPsZ142gCABAlAJzBMnsvV4wTCABAlABwEivtdq4V5xAAgCgB4DwW2y1cJU4jAABRAsCprLe3uT6cSQAAogSAs1lyf8WV4WQCABAlAFzAqvuRa8L5BAAgSgC4hoX3PVeDSwgAQJQAcBlr7yvXgasIAECUAABECQBX8vXDFeBCAgAQJQBcrLwCl8+dEQgAQJQAcL3mItw8a4YiAABRAsAQautw7XwZkwAARAkAo+gsxZ0zZXACABAlAAyksBoXzpFZCABAlAAwlrUX5LXPjukIAECUADCcVdfkVc+LeQkAQJQAMKL1luX1zogFCABAlAAwqJVW5pXOhZUIAECUADCuNRbnNc6CJQkAQJQAAEQJAEOb/fvJ7MfP2gQAIEoAGN28S/S8R06EAABECQATmHGVnvGYqREAgCgBYA5zLdRzHS1ZAgAQJQBMY5a1epbjBAEAiBIAZjL+cj3+EcIbAQCIEgAmM/KKPfKxwUcCABAlAMxnzEV7zKOCGwQAIEoAmNJo6/ZoxwNbCABAlAAwq3GW7nGOBO4iAABRAsDERli9RzgGeIwAAEQJAECUADC3a7/A+P7D1AQAIEoAmN5Va7j1n9kJAECUALCC85dx6z8LEACAKAFgEWeu5NZ/1iAAAFECwDrOWcyt/yxDAACiBIClHL2eW/9ZiQAARAkAqzluSbf+sxgBAIgSABZ0xKpu/Wc9AgAQJQCsad+F3frPkgQAIEoAWNZea7v1n1UJAECUAABECQAre/7rje8/LEwAAKIEgMU9s8Jb/1mbAABECQDre2yRt/6zPAEAiBIAEu5d563/FAgAQJQAULF9qbf+EyEAAFECQMiW1d76T4cAAEQJAC23F3zrPykCABAlAOT8as23/lMjAABRAkDRx2Xf+k+QAABECQBR71d+6z9NAgAQJQB0vS7+1n+yBAAg6tv3Hz+vPgYALuANACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKIEACBKAACiBAAgSgAAogQAIEoAAKL+BykdtpHILR4MAAAAAElFTkSuQmCC", "sizes": "512x512", "type": "image/png"}]};
+  m.start_url = location.href.split('#')[0]; m.scope = location.href.replace(/[^\/]*$/, '');
+  const l = document.createElement('link'); l.rel = 'manifest';
+  l.href = URL.createObjectURL(new Blob([JSON.stringify(m)], {type:'application/manifest+json'}));
+  document.head.appendChild(l);
+}catch(e){} })();
+</script>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>보조사업 현장지도</h1>
+    <button id="openTop" style="display:none">엑셀 열기</button>
+    <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
+    <button id="install" style="display:none">앱 설치</button>
+    <button id="toggle">목록</button>
+    <button id="syncBtn" title="구글 동기화">☁ 동기화</button>
+    <button id="inspAll">점검목록</button>
+    <button id="gear" title="설정">설정</button>
+  </header>
+  <div id="main">
+    <aside id="side">
+      <div style="display:flex;gap:6px;align-items:center;padding:10px 10px 0">
+        <span style="font-size:13px;color:var(--mut);white-space:nowrap">점검 서식</span>
+        <select id="mainTpl" style="flex:1;min-width:0;padding:8px;border:1px solid var(--ln);border-radius:8px;font-size:14px;background:#fff"></select>
+      </div>
+      <input id="q" type="search" placeholder="이름·주소·품목 검색">
+      <div id="filters"></div>
+      <ul id="list"></ul>
+      <div id="status">엑셀 파일을 열어 주세요.</div>
+      <div id="rate" style="padding:0 12px 8px;font-size:13px;color:var(--mut);display:none"></div>
+    </aside>
+    <div id="mapwrap"><div id="map"></div><div id="empty"><b>&nbsp;설정 → 엑셀 열기&nbsp;</b>로 보조사업자 명단을 불러오면<br>사업장 위치가 지도에 표시됩니다.</div></div>
+  </div>
+</div>
+
+<dialog id="pwDlg">
+  <form method="dialog" id="pwForm">
+    <label for="pw">설정 비밀번호</label>
+    <input id="pw" type="password" inputmode="numeric" autocomplete="off" maxlength="12">
+    <div id="pwMsg" class="fail" style="min-height:18px;margin-top:6px"></div>
+    <div class="row">
+      <button value="cancel" type="submit">취소</button>
+      <button value="ok" type="submit" id="pwOk">확인</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg">
+  <form method="dialog">
+    <div class="sec">엑셀 업로드</div>
+    <button type="button" id="openInSet" class="wide">엑셀 열기 (명단 불러오기)</button>
+    <label class="chk"><input type="checkbox" id="allowTop"> 상단에 '엑셀 열기' 버튼 표시<br><small>켜면 비밀번호 없이 누구나 명단을 바꿀 수 있습니다</small></label>
+    <div class="sec">지도</div>
+    <label for="region">지번 앞에 붙일 시·군</label>
+    <input id="region" placeholder="예) 전라남도 구례군">
+    <div class="row">
+      <button value="clear" id="clearBtn" type="submit">저장 데이터 삭제</button>
+      <button value="ok" type="submit">저장</button>
+    </div>
+  </form>
+</dialog>
+
+
+<dialog id="syncDlg">
+  <form method="dialog">
+    <div class="sec">구글 동기화 (함께 쓰기)</div>
+    <label for="syUser">사용자 이름 <small>(사용기록에 남습니다)</small></label>
+    <input id="syUser" placeholder="예) 농업기술센터 홍길동" autocomplete="off">
+    <label for="syDev" style="margin-top:10px">기기 이름 <small>(비우면 자동)</small></label>
+    <input id="syDev" autocomplete="off">
+    <label for="syKey" style="margin-top:10px">팀 키</label>
+    <input id="syKey" type="password" autocomplete="off">
+    <label for="syUrl" style="margin-top:10px">웹앱 URL <small>(Apps Script 배포 주소)</small></label>
+    <input id="syUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+    <label class="chk"><input type="checkbox" id="syPdf"> PDF 저장할 때 구글 드라이브에도 보관</label>
+    <div id="syInfo" style="font-size:13px;color:var(--mut);margin-top:10px;line-height:1.7"></div>
+    <div class="row">
+      <button value="off" type="submit" class="bdan">끄기</button>
+      <span style="flex:1"></span>
+      <button value="cancel" type="submit">닫기</button>
+      <button value="ok" type="submit" class="bpri">연결·동기화</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ===== 현장 점검 화면 ===== -->
+<section id="insp" class="ov" hidden>
+  <div class="ovh">
+    <button id="iBack">← 닫기</button>
+    <b id="iHead">현장 점검</b>
+    <button id="iDel" class="bdan" style="display:none">삭제</button>
+    <button id="iSave">저장</button>
+  </div>
+  <div class="ovb">
+    <div class="card tgt" id="iTarget"></div>
+
+    <div class="card">
+      <h3>서식</h3>
+      <div class="rowf">
+        <select id="tplSel"></select>
+        <button id="tplEditBtn" class="bline">서식 편집</button>
+      </div>
+      <div class="rowf" style="margin-top:8px">
+        <button id="tplHwpBtn" class="bline" style="flex:1">+ 한글 서식(.hwpx) 추가</button>
+      </div>
+      <input id="tplHwpIn" type="file" accept=".hwpx,.hwp" hidden>
+      <div id="iPrevWrap" style="display:none">
+        <span class="fl">이 사업자의 점검 기록</span>
+        <div class="prev" id="iPrev"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>점검 정보</h3>
+      <label class="fl" for="iDate">점검 일시</label>
+      <input id="iDate" class="inp" type="datetime-local">
+      <label class="fl" for="iWho">점검자</label>
+      <input id="iWho" class="inp" placeholder="예) 농업기술센터 홍길동">
+      <label class="fl">점검 위치 (GPS)</label>
+      <div class="rowf">
+        <input id="iGps" class="inp" readonly placeholder="위치 미기록">
+        <button id="iGpsBtn" class="bline">현재 위치</button>
+      </div>
+    </div>
+
+    <div class="card" id="cItems">
+      <h3 id="iItemsHead">점검 항목</h3>
+      <div id="iItems"></div>
+    </div>
+
+    <div class="card" id="cExtra">
+      <h3>추가 사항</h3>
+      <div id="iExtra"></div>
+    </div>
+
+    <div class="card" id="cOverall">
+      <h3>종합 의견</h3>
+      <div class="seg" id="iOverall"></div>
+      <label class="fl" for="iMemo">특이사항 · 보완 요구사항</label>
+      <textarea id="iMemo" rows="3"></textarea>
+    </div>
+
+    <div class="card" id="cPhotos">
+      <h3>현장 사진</h3>
+      <div class="rowf">
+        <button id="iCam" class="bpri" style="flex:1">사진 촬영</button>
+        <button id="iPick" class="bline" style="flex:1">앨범에서 선택</button>
+      </div>
+      <input id="iCamIn" type="file" accept="image/*" capture="environment" hidden>
+      <input id="iPickIn" type="file" accept="image/*" multiple hidden>
+      <div class="thumbs" id="iThumbs"></div>
+    </div>
+
+    <div class="card" id="cSign">
+      <h3>확인 서명 (보조사업자)</h3>
+      <canvas id="sign"></canvas>
+      <div class="rowf" style="margin-top:6px;justify-content:space-between">
+        <small style="color:var(--mut)">손가락으로 서명하세요</small>
+        <button id="signClr" class="bline">다시 쓰기</button>
+      </div>
+    </div>
+
+    <div class="acts">
+      <button id="iPreview" class="bline">PDF 미리보기 · 편집</button>
+      <button id="iPdf" class="bpri">PDF 저장</button>
+    </div>
+    <div class="acts" style="margin-top:8px"><button id="iHwp" class="bpri" style="display:none;background:#0f766e!important">한글(hwpx) 저장</button></div>
+  </div>
+</section>
+
+<!-- ===== PDF 미리보기(편집) ===== -->
+<section id="pv" class="ov" hidden>
+  <div class="ovh">
+    <button id="pvBack">← 돌아가기</button>
+    <b>PDF 미리보기</b>
+    <button id="pvPdf">PDF 저장</button>
+  </div>
+  <div class="ovb" id="pvBody">
+    <div class="card" id="pvTools">
+      <span class="fl">PDF에 넣을 내용 (눌러서 넣기·빼기)</span>
+      <div class="seg" id="pvSec"></div>
+      <div class="rowf">
+        <button id="pvAddItem" class="bline">+ 점검항목 행</button>
+        <button id="pvAddExtra" class="bline">+ 추가사항 행</button>
+        <button id="pvSaveTpl" class="bpri">이 서식으로 저장</button>
+      </div>
+      <small style="display:block;margin-top:6px;color:var(--mut)">노란 칸을 눌러 글자를 고칩니다 · 행을 지우려면 항목 이름을 모두 지우세요 · 쪽마다 체크한 쪽만 PDF로 저장됩니다</small>
+    </div>
+    <div id="pvPages" style="display:flex;flex-direction:column;align-items:center;gap:14px;width:100%"></div>
+  </div>
+</section>
+
+<!-- ===== 점검 목록 ===== -->
+<section id="ilist" class="ov" hidden>
+  <div class="ovh">
+    <button id="lBack">← 닫기</button>
+    <b>점검 목록</b>
+  </div>
+  <div class="ovb">
+    <div class="card" id="lStats"></div>
+    <div class="card">
+      <div class="rowf" style="flex-wrap:wrap">
+        <label style="display:flex;gap:6px;align-items:center;font-size:14px;flex:1"><input type="checkbox" id="lAll"> 전체 선택</label>
+        <button id="lPdf" class="bpri">PDF 묶음 저장</button>
+        <button id="lXls" class="bline">엑셀 저장</button>
+      </div>
+    </div>
+    <div class="card" id="lRecs"></div>
+  </div>
+</section>
+
+<!-- ===== 양식 편집 ===== -->
+<dialog id="tplDlg">
+  <form method="dialog">
+    <label for="tName">서식 이름 <small>(목록에 표시)</small></label>
+    <input id="tName" placeholder="예) 화재예방 준공점검">
+    <label for="tTitle" style="margin-top:12px">문서 제목 <small>(PDF 맨 위)</small></label>
+    <input id="tTitle" placeholder="예) 현장점검표">
+    <label style="margin-top:12px">PDF에 넣을 내용</label>
+    <div class="secs" id="tSecs"></div>
+    <label for="tItems" style="margin-top:12px">점검 항목 <small>(한 줄에 하나씩)</small></label>
+    <textarea id="tItems"></textarea>
+    <label for="tOpts" style="margin-top:12px">항목별 결과 선택지 <small>(쉼표로 구분)</small></label>
+    <input id="tOpts" placeholder="이상 없음, 보완 필요, 해당 없음">
+    <label for="tExtra" style="margin-top:12px">추가 사항 표 항목 <small>(한 줄에 하나, 예: 보조금액)</small></label>
+    <textarea id="tExtra" class="sm"></textarea>
+    <small style="display:block;margin-top:8px">저장하면 새 서식으로 추가되어 맨 위(최근)에 표시됩니다. 이전 서식은 서식 목록에서 다시 고를 수 있습니다.</small>
+    <div class="row">
+      <button value="del" type="submit" class="bdan" id="tDel">이 서식 삭제</button>
+      <span style="flex:1"></span>
+      <button value="cancel" type="submit">취소</button>
+      <button value="ok" type="submit" class="bpri">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="busy" hidden>PDF 만드는 중…</div>
+<div id="toast"></div>
+
+<!-- SheetJS (엑셀 읽기) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- PDF 만들기 -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<!-- 한글(hwpx) 서식 읽기·쓰기 -->
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<!-- 카카오맵 JavaScript SDK (JavaScript 키 내장) -->
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=cc35a8d88dfcd1d55ef7d71a118bc02b&libraries=services&autoload=false"></script>
+<script>
+const KAKAO_JS_KEY = 'cc35a8d88dfcd1d55ef7d71a118bc02b';
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const COLORS = ['#1f6feb','#e5484d','#30a46c','#f76b15','#8e4ec6','#0d9488','#d6409f','#a16207','#64748b'];
+let region = LS.get('region', '전라남도 구례군');
+const SETTINGS_PW = '0070';          // 설정 비밀번호
+let allowTop = LS.get('allowTop', false); // 상단 엑셀 버튼 허용 여부
+let unlocked = false;                // 이번 실행 중 비밀번호 확인 여부
+let rows = LS.get('rows', []);
+let geoCache = LS.get('geo', {});
+let map, geocoder, info, markers = [], filterTown = null, colorOf = {};
+
+/* ---------- 지번 파싱 ----------
+   "구례읍 봉동리 89-0,1, 구례읍 봉동리 90-5" → ["구례읍 봉동리 89", "구례읍 봉동리 90-5"]
+   "마산면 사도리 876-3, 4."  → "마산면 사도리 876-3"
+   "용방면 용강리 417-16,471-17,417-18" → "용방면 용강리 417-16" */
+function parsePlace(raw){
+  const s = String(raw||'').replace(/\(.*?\)/g,'').replace(/\s+/g,' ').trim();
+  if(!s) return [];
+  // 읍·면·동 또는 리 이름으로 시작하는 구간마다 나눔
+  const parts = s.split(/,\s*(?=[가-힣]+(?:읍|면|동|리)\s)/);
+  const out = [];
+  for(const p of parts){
+    const m = p.match(/^(.*?[가-힣](?:리|동|가))\s*(산\s*)?(\d+)(?:-(\d+))?/);
+    if(!m){ out.push(p.replace(/[.,\s]+$/,'')); continue; }
+    const base = m[1].trim(), san = m[2] ? '산 ' : '';
+    const main = m[3], sub = m[4] && m[4] !== '0' ? '-' + m[4] : '';
+    out.push(`${base} ${san}${main}${sub}`);
+  }
+  return out;
+}
+
+function geocodeOne(addr){
+  return new Promise(res => {
+    geocoder.addressSearch(addr, (r, st) => {
+      if(st === kakao.maps.services.Status.OK && r.length) res({lat:+r[0].y, lng:+r[0].x});
+      else res(null);
+    });
+  });
+}
+async function geocodePlace(place){
+  const key = region + '|' + place;
+  if(geoCache[key] !== undefined) return geoCache[key];
+  const cands = [];
+  const full = `${region} ${place}`.trim();
+  cands.push(full);
+  const noSub = full.replace(/(\d+)-\d+$/, '$1');
+  if(noSub !== full) cands.push(noSub);
+  cands.push(full.replace(/\s*(산\s*)?\d+(-\d+)?$/, ''));   // 리 단위 근사
+  let hit = null;
+  for(let i=0;i<cands.length;i++){
+    hit = await geocodeOne(cands[i]);
+    if(hit){ hit.approx = i === cands.length-1; break; }
+  }
+  geoCache[key] = hit; LS.set('geo', geoCache);
+  if(hit && window.syncGeo) syncGeo(key, hit);
+  return hit;
+}
+
+/* ---------- 엑셀 읽기 ---------- */
+function pick(obj, names){
+  for(const k of Object.keys(obj)){
+    const kk = k.replace(/\s/g,'');
+    if(names.some(n => kk.includes(n))) return obj[k];
+  }
+  return '';
+}
+function readWorkbook(buf){
+  const wb = XLSX.read(buf, {type:'array'});
+  const ws = wb.Sheets[wb.SheetNames.find(n => !/작성요령/.test(n)) || wb.SheetNames[0]];
+  const json = XLSX.utils.sheet_to_json(ws, {defval:''});
+  return json.map(r => ({
+    name: String(pick(r,['성명','이름','보조사업자'])).trim(),
+    town: String(pick(r,['읍면'])).trim(),
+    addr: String(pick(r,['주소'])).trim(),
+    tel: String(pick(r,['연락처','전화'])).trim(),
+    place: String(pick(r,['사업장장소','사업장','지번','장소'])).trim(),
+    item: String(pick(r,['품목'])).trim(),
+    area: pick(r,['사업량','면적']),
+    biz: String(pick(r,['사업명'])).trim(),
+    note: String(pick(r,['비고'])).trim()
+  })).filter(r => r.name || r.place);
+}
+
+/* ---------- 화면 ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function setStatus(t){ $('status').textContent = t; }
+
+function buildColors(){
+  colorOf = {};
+  [...new Set(rows.map(r => r.town || '기타'))].forEach((t,i) => colorOf[t] = COLORS[i % COLORS.length]);
+}
+function markerImage(color){
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38"><path d="M14 1C7 1 1 6.6 1 13.6 1 23 14 37 14 37s13-14 13-23.4C27 6.6 21 1 14 1z" fill="${color}" stroke="#fff" stroke-width="2"/><circle cx="14" cy="13.5" r="5" fill="#fff"/></svg>`;
+  return new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
+    new kakao.maps.Size(28,38), {offset:new kakao.maps.Point(14,37)});
+}
+function infoHtml(r, pt){
+  const tel = r.tel.replace(/[^\d+]/g,'');
+  const area = r.area !== '' ? Number(r.area).toLocaleString() + '㎡' : '';
+  const to = `https://map.kakao.com/link/to/${encodeURIComponent(r.name + ' 사업장')},${pt.lat},${pt.lng}`;
+  const view = `https://map.kakao.com/link/map/${encodeURIComponent(r.name + ' 사업장')},${pt.lat},${pt.lng}`;
+  return `<div class="iw"><b>${esc(r.name)}</b> <span style="color:#6b7280">${esc(r.town)}</span><br>
+    ${esc(r.place)}${pt.approx?' <span class="fail">(리 단위 근사 위치)</span>':''}<br>
+    품목 ${esc(r.item)}${area?' · '+area:''}<br>
+    ${r.addr?'주소 '+esc(r.addr)+'<br>':''}
+    ${r.note?'비고 '+esc(r.note)+'<br>':''}
+    <div style="margin-top:6px">${tel?`<a href="tel:${tel}">전화</a>`:''}<a href="${to}" target="_blank" rel="noopener">길찾기</a><a href="${view}" target="_blank" rel="noopener">카카오맵</a></div>
+    <button type="button" onclick="openInspect(${rows.indexOf(r)})" style="margin-top:8px;width:100%;background:#1f6feb;color:#fff;padding:8px">현장 점검${typeof sortedTpls === 'function' ? ' · ' + esc(sortedTpls()[0].name) : ''}</button></div>`;
+}
+
+function renderFilters(){
+  const towns = Object.keys(colorOf);
+  $('filters').innerHTML = (towns.length>1 ? [`<button class="chip ${!filterTown?'on':''}" data-t="">전체</button>`]
+    .concat(towns.map(t => `<button class="chip ${filterTown===t?'on':''}" data-t="${esc(t)}"><span class="dot" style="background:${colorOf[t]}"></span>${esc(t)}</button>`)) : []).join('');
+}
+function visible(r){
+  const q = $('q').value.trim();
+  if(filterTown && (r.town||'기타') !== filterTown) return false;
+  if(!q) return true;
+  return [r.name,r.place,r.item,r.addr,r.town].join(' ').includes(q);
+}
+function renderList(){
+  const ul = $('list'); ul.innerHTML = '';
+  rows.forEach((r,i) => {
+    if(!visible(r)) return;
+    const li = document.createElement('li');
+    const ok = r._pts && r._pts.length;
+    li.innerHTML = `<div class="n"><span class="dot" style="background:${colorOf[r.town||'기타']}"></span>${esc(r.name)} <span style="font-weight:400;color:#6b7280">${esc(r.item)}</span>${window.inspDone && inspDone.has(r.name+'|'+r.place) ? `<span class="badge ${/보완|부적합/.test(inspDone.get(r.name+'|'+r.place))?'warn':''}">${esc(inspDone.get(r.name+'|'+r.place))}</span>` : ''}</div>
+      <div class="s">${esc(r.place)}</div>${ok?'':'<div class="fail">위치를 찾지 못했습니다</div>'}`;
+    li.insertAdjacentHTML('afterbegin', `<button type="button" class="chip" data-insp="${i}" style="float:right;margin-left:6px">점검</button>`);
+    li.onclick = e => { if(e.target.closest('[data-insp]')) return openInspect(i); focusRow(i); };
+    ul.appendChild(li);
+  });
+  markers.forEach(m => m.setMap(visible(rows[m._i]) ? map : null));
+  if(window.inspDone && rows.length){
+    const done = rows.filter(r => inspDone.has((r.name||'') + '|' + (r.place||''))).length;
+    const ft = filterTown ? rows.filter(r => (r.town||'기타') === filterTown) : null;
+    const fd = ft ? ft.filter(r => inspDone.has((r.name||'') + '|' + (r.place||''))).length : 0;
+    $('rate').style.display = 'block';
+    $('rate').innerHTML = `전체 점검률 <b style="color:#1f6feb">${Math.round(done / rows.length * 1000) / 10}%</b> (${done}/${rows.length}명)`
+      + (ft ? ` · ${esc(filterTown)} <b style="color:#1f6feb">${ft.length ? Math.round(fd / ft.length * 1000) / 10 : 0}%</b> (${fd}/${ft.length}명)` : '')
+      + ` · <a href="#" onclick="openList();return false" style="color:#1f6feb">읍면별 보기</a>`;
+  } else $('rate').style.display = 'none';
+  $('empty').style.display = (rows.length && map) ? 'none' : 'flex';
+}
+function focusRow(i){
+  const m = markers.find(m => m._i === i);
+  if(!m) return;
+  map.setLevel(3); map.panTo(m.getPosition());
+  info.setContent(infoHtml(rows[i], m._pt)); info.open(map, m);
+  if(innerWidth <= 760) $('side').classList.add('hide');
+}
+
+async function plot(){
+  markers.forEach(m => m.setMap(null)); markers = []; if(info) info.close();
+  buildColors(); renderFilters(); renderList();
+  if(!rows.length || !map) return;
+  const bounds = new kakao.maps.LatLngBounds();
+  let done = 0, okCnt = 0;
+  for(let i=0;i<rows.length;i++){
+    const r = rows[i]; r._pts = [];
+    for(const p of parsePlace(r.place)){
+      const pt = await geocodePlace(p);
+      if(!pt) continue;
+      r._pts.push(pt);
+      const m = new kakao.maps.Marker({position:new kakao.maps.LatLng(pt.lat,pt.lng), image:markerImage(colorOf[r.town||'기타']), title:r.name});
+      m._i = i; m._pt = pt; m.setMap(map); markers.push(m);
+      kakao.maps.event.addListener(m, 'click', () => { info.setContent(infoHtml(r, pt)); info.open(map, m); });
+      bounds.extend(m.getPosition());
+    }
+    if(r._pts.length) okCnt++;
+    done++; setStatus(`위치 찾는 중… ${done}/${rows.length}`);
+  }
+  if(markers.length) map.setBounds(bounds);
+  renderList();
+  setStatus(`총 ${rows.length}명 · 지도 표시 ${okCnt}명` + (okCnt<rows.length ? ` · 못 찾음 ${rows.length-okCnt}명` : ''));
+}
+
+/* ---------- 시작 ---------- */
+function bindUi(){
+  $('file').onchange = async e => {
+    const f = e.target.files[0]; if(!f) return;
+    try{
+      rows = readWorkbook(await f.arrayBuffer());
+      LS.set('rows', rows.map(({_pts,...r}) => r));
+      LS.set('rosterPending', true); if(window.syncRoster) syncRoster(rows, f);
+      filterTown = null; $('q').value = '';
+      setStatus(`${f.name} · ${rows.length}명 불러옴`);
+      plot();
+    }catch(err){ alert('엑셀을 읽지 못했습니다: ' + err.message); }
+    e.target.value = '';
+  };
+  $('q').oninput = renderList;
+  $('filters').onclick = e => {
+    const b = e.target.closest('.chip'); if(!b) return;
+    filterTown = b.dataset.t || null; renderFilters(); renderList();
+  };
+  $('toggle').onclick = () => $('side').classList.toggle('hide');
+  const applyTop = () => { $('openTop').style.display = allowTop ? 'inline-block' : 'none'; };
+  applyTop();
+  $('openTop').onclick = () => $('file').click();
+  $('openInSet').onclick = () => { $('dlg').close(); $('file').click(); };
+  const openSettings = () => { $('region').value = region; $('allowTop').checked = allowTop; $('dlg').showModal(); };
+  $('gear').onclick = () => {
+    if(unlocked) return openSettings();
+    $('pw').value = ''; $('pwMsg').textContent = ''; $('pwDlg').showModal(); $('pw').focus();
+  };
+  $('pwForm').addEventListener('submit', e => {
+    if(e.submitter && e.submitter.value === 'cancel') return;
+    if($('pw').value === SETTINGS_PW){ unlocked = true; return; }
+    e.preventDefault(); $('pwMsg').textContent = '비밀번호가 맞지 않습니다.'; $('pw').select();
+  });
+  $('pwDlg').addEventListener('close', () => { if(unlocked && $('pwDlg').returnValue !== 'cancel') openSettings(); });
+  $('dlg').addEventListener('close', () => {
+    const v = $('dlg').returnValue;
+    if(v === 'ok'){
+      allowTop = $('allowTop').checked; LS.set('allowTop', allowTop); applyTop();
+      const nv = $('region').value.trim();
+      if(nv !== region){ region = nv; LS.set('region', region); plot(); }
+    } else if(v === 'clear'){
+      if(confirm('이 기기에 저장된 명단과 위치 기록을 지울까요?')){
+        LS.del('rows'); LS.del('geo'); rows = []; geoCache = {}; plot(); setStatus('저장 데이터를 지웠습니다.');
+      }
+    }
+  });
+}
+
+bindUi();
+function mapFail(){
+  if(map) return;
+  $('empty').style.display = 'flex';
+  $('empty').innerHTML = location.protocol === 'file:'
+    ? '내 PC에 저장된 파일로 열면 카카오맵이 표시되지 않습니다.<br>카카오에 등록한 <b>https 주소</b>(예: GitHub Pages)로 접속해 주세요.<br><small>명단 목록과 검색은 이 상태에서도 사용할 수 있습니다.</small>'
+    : '카카오맵을 불러오지 못했습니다.<br>인터넷 연결과, 카카오디벨로퍼스의 <b>JS SDK 도메인</b>에<br><b>' + esc(location.origin) + '</b> 이 등록되어 있는지 확인해 주세요.';
+}
+setTimeout(mapFail, 6000);
+if(!window.kakao || !kakao.maps){
+  mapFail();
+} else {
+  kakao.maps.load(() => {
+    map = new kakao.maps.Map($('map'), {center:new kakao.maps.LatLng(35.2025,127.4627), level:8}); // 구례군청 부근
+    map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+    map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
+    geocoder = new kakao.maps.services.Geocoder();
+    info = new kakao.maps.InfoWindow({removable:true});
+    if(rows.length) setStatus(`저장된 명단 ${rows.length}명 불러오는 중…`);
+    plot();
+  });
+}
+// 안드로이드 크롬: '앱 설치' 버튼
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; $('install').style.display = 'inline-block'; });
+$('install').onclick = async () => { if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; $('install').style.display = 'none'; };
+window.addEventListener('appinstalled', () => { $('install').style.display = 'none'; });
+if('serviceWorker' in navigator && location.protocol === 'https:'){
+  fetch('sw.js',{method:'HEAD'}).then(r=>{ if(r.ok) navigator.serviceWorker.register('sw.js'); }).catch(()=>{});
+}
+</script>
+<script>
+/* =====================================================================
+   현장 점검 모듈
+   - 서식(문서 제목·점검항목·선택지·추가사항 표·넣을 내용)은 편집 가능
+   - 편집하면 새 서식으로 추가되어 맨 위(최근)에 표시, 이전 서식은 목록에서 선택
+   - PDF 미리보기에서 글자 수정, 표·사진 넣기/빼기, 행 추가/삭제, 쪽 골라 저장
+   - 점검 기록·사진·서명은 이 기기(IndexedDB)에만 저장
+   ===================================================================== */
+const SECS = [
+  ['info', '기본 사항'], ['items', '점검 내용'], ['overall', '종합 의견'],
+  ['extra', '추가 사항'], ['sign', '서명'], ['photos', '현장 사진']
+];
+const DEFAULT_SEC = {info:true, items:true, overall:true, extra:false, sign:true, photos:true};
+const DEFAULT_TPL = {
+  name: '기본 현장점검표',
+  title: '현장점검표',
+  items: [
+    '화재 감지기 설치 여부',
+    '감지기 작동 확인',
+    '경보장치(사이렌·문자알림) 작동',
+    '전기 배선·분전반 상태',
+    '소화기 비치',
+    '사업계획 대비 설치 수량·위치 일치',
+    '보조사업 표지판 부착'
+  ],
+  opts: ['이상 없음', '보완 필요', '해당 없음'],
+  extra: ['보조금액', '자부담', '준공일'],
+  sec: {...DEFAULT_SEC}
+};
+const OVERALL = ['적합', '보완 필요', '부적합'];
+const BAD = /보완|부적합|불량|미설치|미흡|아니오/;
+
+/* ---------- IndexedDB ---------- */
+const idb = {
+  _db: null,
+  open(){
+    if(this._db) return Promise.resolve(this._db);
+    return new Promise((res, rej) => {
+      const q = indexedDB.open('fieldmap', 1);
+      q.onupgradeneeded = () => q.result.createObjectStore('insp', {keyPath:'id'});
+      q.onsuccess = () => res(this._db = q.result);
+      q.onerror = () => rej(q.error);
+    });
+  },
+  async tx(mode, fn){
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const t = db.transaction('insp', mode), r = fn(t.objectStore('insp'));
+      t.oncomplete = () => res(r && r.result);
+      t.onerror = () => rej(t.error);
+    });
+  },
+  all(){ return this.tx('readonly', s => s.getAll()); },
+  put(rec){ return this.tx('readwrite', s => s.put(rec)); },
+  del(id){ return this.tx('readwrite', s => s.delete(id)); },
+  get(id){ return this.tx('readonly', s => s.get(id)); }
+};
+
+/* ---------- 서식(버전 관리) ---------- */
+const normTpl = t => ({
+  ...t,
+  name: t.name || t.title,
+  extra: Array.isArray(t.extra) ? t.extra : [...DEFAULT_TPL.extra],
+  sec: {...DEFAULT_SEC, ...(t.sec || {})}
+});
+let tpls = LS.get('tpls', null);
+if(!Array.isArray(tpls) || !tpls.length){
+  const now = Date.now();
+  tpls = [{id:'t_default', ...DEFAULT_TPL, savedAt:now, usedAt:now}];
+}
+tpls = tpls.map(normTpl);
+const saveTpls = () => { LS.set('tpls', tpls); if(window.fillMainTpl) fillMainTpl(); };
+saveTpls();
+const sortedTpls = () => [...tpls].sort((a,b) => b.usedAt - a.usedAt);
+const tplById = id => tpls.find(t => t.id === id);
+const tplKey = t => JSON.stringify([t.title, t.items, t.opts, t.extra, SECS.map(([k]) => !!t.sec[k]), t.hwpx ? t.hwpx.key : '']);
+function useTpl(id){ const t = tplById(id); if(t){ t.usedAt = Date.now(); saveTpls(); } }
+/* 같은 내용의 서식이 있으면 그것을 최근으로, 없으면 새 서식으로 추가 */
+function upsertTpl(d, name){
+  const now = Date.now();
+  const clean = normTpl({
+    title: (d.title || '').trim() || '현장점검표',
+    items: (d.items || []).map(s => String(s).trim()).filter(Boolean),
+    opts: (d.opts || []).map(s => String(s).trim()).filter(Boolean),
+    extra: (d.extra || []).map(s => String(s).trim()).filter(Boolean),
+    sec: d.sec,
+    hwpx: d.hwpx || null
+  });
+  if(!clean.opts.length) clean.opts = [...DEFAULT_TPL.opts];
+  let t = tpls.find(x => tplKey(x) === tplKey(clean));
+  if(t){ t.usedAt = now; if(name) t.name = name; }
+  else {
+    t = {id:'t' + now, ...clean, name: name || `${clean.title} (편집 ${fmtTs(now).slice(5)})`, savedAt:now, usedAt:now};
+    tpls.push(t);
+    if(tpls.length > 50) tpls = sortedTpls().slice(0, 50);
+  }
+  saveTpls();
+  return t;
+}
+const curAsTpl = () => ({title:cur.title, items:cur.items.map(x => x.label), opts:cur.opts, extra:cur.extra.map(x => x.label), sec:cur.sec, hwpx:cur.hwpx || null});
+
+/* ---------- 공통 ---------- */
+const pad = n => String(n).padStart(2, '0');
+const localDT = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fmtDT = v => { if(!v) return ''; const [d, t] = v.split('T'); const [y, m, dd] = d.split('-'); return `${y}. ${+m}. ${+dd}. ${t||''}`.trim(); };
+function fmtTs(ts){ const d = new Date(ts); return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+const rowKey = r => (r.name||'') + '|' + (r.place||'');
+const safeName = s => String(s).replace(/[\\/:*?"<>|\s]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+const gpsStr = g => g ? `${g.lat.toFixed(6)}, ${g.lng.toFixed(6)} (오차 ±${Math.round(g.acc)}m)` : '';
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2600); }
+function saveBlob(blob, name){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+
+let allRecs = [];
+let cur = null;
+let dirty = false;
+window.inspDone = new Map();
+async function reloadRecs(){
+  try{ allRecs = (await idb.all() || []).map(fixRec); }catch(e){ allRecs = []; }
+  allRecs.sort((a,b) => (b.date||'').localeCompare(a.date||'') || b.savedAt - a.savedAt);
+  inspDone = new Map();
+  for(const r of allRecs) if(!inspDone.has(r.key)) inspDone.set(r.key, r.overall || '점검');
+}
+/* 이전 버전 기록 호환 */
+function fixRec(r){
+  if(!Array.isArray(r.extra)) r.extra = [];
+  r.sec = {...DEFAULT_SEC, ...(r.sec || {}), ...(r.sec ? {} : {extra:false})};
+  if(!Array.isArray(r.capt)) r.capt = [];
+  if(!Array.isArray(r.photos)) r.photos = [];
+  if(!Array.isArray(r.photoIds)) r.photoIds = [];
+  while(r.photoIds.length < r.photos.length) r.photoIds.push(null);
+  while(r.photos.length < r.photoIds.length) r.photos.push(null);
+  return r;
+}
+
+/* ---------- 점검 화면 ---------- */
+function newRecord(r){
+  const t = sortedTpls()[0];
+  return {
+    id: 'r' + Date.now() + Math.random().toString(36).slice(2, 6), key: rowKey(r), tplId: t.id, title: t.title,
+    items: t.items.map(label => ({label, result:'', note:''})), opts: [...t.opts],
+    extra: t.extra.map(label => ({label, value:''})), sec: {...t.sec}, hwpx: t.hwpx || null,
+    overall: '', memo: '', date: localDT(new Date()), dateText: '', gpsText: '',
+    inspector: LS.get('inspector', ''), gps: null, photos: [], photoIds: [], capt: [], sign: null, signId: null,
+    target: {name:r.name, town:r.town, tel:r.tel, addr:r.addr, place:r.place, item:r.item, area:r.area, biz:r.biz},
+    savedAt: 0
+  };
+}
+function applyTplToCur(t){
+  const oldI = new Map(cur.items.map(x => [x.label, x])), oldX = new Map(cur.extra.map(x => [x.label, x]));
+  cur.tplId = t.id; cur.title = t.title; cur.opts = [...t.opts]; cur.sec = {...t.sec}; cur.hwpx = t.hwpx || null;
+  cur.items = t.items.map(label => oldI.get(label) || {label, result:'', note:''});
+  cur.extra = t.extra.map(label => oldX.get(label) || {label, value:''});
+}
+
+function fillTplSel(){
+  const sel = $('tplSel'), list = sortedTpls();
+  sel.innerHTML = list.map((t, i) => `<option value="${t.id}">${t.hwpx?'[한글] ':''}${esc(t.name)} · ${t.items.length}항목 · ${fmtTs(t.savedAt).slice(2)}${i===0?' (최근)':''}</option>`).join('');
+  if(cur && !tplById(cur.tplId)) sel.insertAdjacentHTML('afterbegin', `<option value="${cur.tplId}">${esc(cur.title)} (이 기록 전용)</option>`);
+  sel.value = cur ? cur.tplId : list[0].id;
+}
+function renderTarget(){
+  const t = cur.target;
+  const area = t.area !== '' && t.area != null ? (isNaN(t.area) ? t.area : Number(t.area).toLocaleString() + '㎡') : '';
+  $('iTarget').innerHTML = `<b>${esc(t.name)}</b> <span style="color:var(--mut)">${esc(t.town||'')}</span><br>
+    ${esc(t.place)}<br>품목 ${esc(t.item||'')}${area ? ' · ' + esc(area) : ''}${t.tel ? ' · ' + esc(t.tel) : ''}`;
+  $('iHead').textContent = (cur.title || '현장 점검') + ' · ' + t.name;
+}
+function segHtml(opts, val, attrs){
+  return opts.map(o => `<button type="button" class="${o===val?'on':''}${BAD.test(o)?' bad':''}" ${attrs} data-v="${esc(o)}">${esc(o)}</button>`).join('');
+}
+function renderItems(){
+  $('iItemsHead').textContent = `점검 항목 (${cur.items.length})`;
+  $('iItems').innerHTML = cur.items.map((it, i) => `<div class="it">
+      <div class="lb">${i+1}. ${esc(it.label)}</div>
+      <div class="seg">${segHtml(cur.opts, it.result, `data-i="${i}"`)}</div>
+      <input class="inp" data-note="${i}" placeholder="비고 (선택)" value="${esc(it.note)}">
+    </div>`).join('');
+  $('iExtra').innerHTML = cur.extra.length ? cur.extra.map((x, i) => `<label class="fl">${esc(x.label)}</label>
+      <input class="inp" data-x="${i}" value="${esc(x.value)}">`).join('') : '<small style="color:var(--mut)">서식 편집에서 항목을 추가하세요</small>';
+  $('iOverall').innerHTML = segHtml(OVERALL, cur.overall, 'data-o="1"');
+}
+function renderThumbs(){
+  $('iThumbs').innerHTML = cur.photos.map((p, i) => `<div>${p ? `<img src="${p}" alt="사진 ${i+1}">` : '<small style="display:flex;height:100%;align-items:center;justify-content:center;color:#6b7280">불러오는 중</small>'}<button type="button" data-rm="${i}">삭제</button></div>`).join('');
+}
+function renderPrev(){
+  const mine = allRecs.filter(r => r.key === cur.key);
+  $('iPrevWrap').style.display = mine.length ? 'block' : 'none';
+  $('iPrev').innerHTML = `<button type="button" class="bline ${cur.savedAt ? '' : 'on'}" data-new="1">+ 새 점검</button>` +
+    mine.map(r => `<button type="button" class="bline ${r.id===cur.id?'on':''}" data-rec="${r.id}">${esc(fmtDT(r.date))}${r.overall?' · '+esc(r.overall):''}</button>`).join('');
+  $('iDel').style.display = cur.savedAt ? 'inline-block' : 'none';
+}
+function renderSecs(){
+  $('cItems').style.display = cur.sec.items ? '' : 'none';
+  $('cExtra').style.display = cur.sec.extra ? '' : 'none';
+  $('cOverall').style.display = cur.sec.overall ? '' : 'none';
+  $('cPhotos').style.display = cur.sec.photos ? '' : 'none';
+  $('cSign').style.display = cur.sec.sign ? '' : 'none';
+}
+function renderForm(){
+  fillTplSel(); renderTarget(); renderItems(); renderThumbs(); renderPrev(); renderSecs();
+  $('iDate').value = cur.date || '';
+  $('iWho').value = cur.inspector || '';
+  $('iMemo').value = cur.memo || '';
+  $('iGps').value = cur.gps ? `${cur.gps.lat.toFixed(6)}, ${cur.gps.lng.toFixed(6)} (±${Math.round(cur.gps.acc)}m)` : '';
+  sig.load(cur.sign);
+  $('iHwp').style.display = cur.hwpx ? '' : 'none';
+}
+function locate(silent){
+  if(!navigator.geolocation){ if(!silent) toast('이 기기에서는 위치를 가져올 수 없습니다'); return; }
+  $('iGps').value = '위치 확인 중…';
+  navigator.geolocation.getCurrentPosition(p => {
+    cur.gps = {lat:p.coords.latitude, lng:p.coords.longitude, acc:p.coords.accuracy}; cur.gpsText = ''; dirty = true;
+    $('iGps').value = `${cur.gps.lat.toFixed(6)}, ${cur.gps.lng.toFixed(6)} (±${Math.round(cur.gps.acc)}m)`;
+  }, () => {
+    $('iGps').value = cur.gps ? `${cur.gps.lat.toFixed(6)}, ${cur.gps.lng.toFixed(6)}` : '';
+    if(!silent) toast('위치를 가져오지 못했습니다 (https 접속·위치 권한 확인)');
+  }, {enableHighAccuracy:true, timeout:15000, maximumAge:30000});
+}
+window.openInspect = async function(i){
+  const r = rows[i]; if(!r) return;
+  if(info) info.close();
+  await reloadRecs();
+  cur = newRecord(r); dirty = false;
+  $('insp').hidden = false;
+  renderForm(); locate(true);
+};
+function openRecord(rec){
+  cur = fixRec(JSON.parse(JSON.stringify(rec))); dirty = false;
+  $('insp').hidden = false; renderForm();
+  if(window.syncMedia){ const me = cur; syncMedia(me).then(ok => { if(ok && cur === me && !$('insp').hidden){ renderThumbs(); if(!dirty) sig.load(cur.sign); } }); }
+}
+function collectForm(){
+  cur.date = $('iDate').value;
+  cur.inspector = $('iWho').value.trim();
+  cur.memo = $('iMemo').value;
+  document.querySelectorAll('#iItems [data-note]').forEach(el => { const it = cur.items[+el.dataset.note]; if(it) it.note = el.value; });
+  document.querySelectorAll('#iExtra [data-x]').forEach(el => { const x = cur.extra[+el.dataset.x]; if(x) x.value = el.value; });
+  cur.sign = sig.data();
+}
+async function saveCur(quiet){
+  if(!$('pv').hidden) readPreviewEdits(); else collectForm();
+  cur.savedAt = Date.now(); cur._dirty = true;
+  if(cur.inspector) LS.set('inspector', cur.inspector);
+  useTpl(cur.tplId);
+  try{ await idb.put(cur); }catch(e){ alert('저장하지 못했습니다: ' + e.message); return false; }
+  dirty = false;
+  await reloadRecs(); renderPrev(); fillTplSel();
+  if(typeof renderList === 'function') renderList();
+  if(window.syncSoon) syncSoon();
+  if(!quiet) toast('저장했습니다');
+  return true;
+}
+
+/* ---------- 서명 ---------- */
+const sig = (() => {
+  const c = () => $('sign');
+  let drawing = false, has = false, last = null, orig = null, touched = false;
+  function size(){
+    const cv = c(), r = cv.getBoundingClientRect();
+    if(!r.width) return;
+    const keep = has ? cv.toDataURL() : null;
+    cv.width = Math.round(r.width * devicePixelRatio); cv.height = Math.round(160 * devicePixelRatio);
+    const g = cv.getContext('2d'); g.scale(devicePixelRatio, devicePixelRatio);
+    g.lineWidth = 2.4; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#111';
+    if(keep) draw(keep);
+  }
+  function draw(src){
+    const img = new Image();
+    img.onload = () => { const cv = c(), g = cv.getContext('2d'); g.save(); g.setTransform(1,0,0,1,0,0); g.drawImage(img, 0, 0, cv.width, cv.height); g.restore(); };
+    img.src = src;
+  }
+  function pos(e){ const r = c().getBoundingClientRect(); return {x:e.clientX - r.left, y:e.clientY - r.top}; }
+  function bind(){
+    const cv = c();
+    cv.addEventListener('pointerdown', e => { drawing = true; has = true; touched = true; dirty = true; last = pos(e); cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointermove', e => {
+      if(!drawing) return; const p = pos(e), g = cv.getContext('2d');
+      g.beginPath(); g.moveTo(last.x, last.y); g.lineTo(p.x, p.y); g.stroke(); last = p;
+    });
+    ['pointerup','pointercancel','pointerleave'].forEach(t => cv.addEventListener(t, () => drawing = false));
+    addEventListener('resize', () => { if(!$('insp').hidden && $('pv').hidden) size(); });
+  }
+  return {
+    bind,
+    clear(){ has = false; touched = true; orig = null; size(); },
+    load(src){ has = false; touched = false; orig = src || null; size(); if(src){ has = true; draw(src); } },
+    data(){ return has ? (touched || !orig ? c().toDataURL('image/png') : orig) : null; }
+  };
+})();
+
+/* ---------- 사진 ---------- */
+function shrink(file, max = 1400, q = 0.78){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const cv = document.createElement('canvas'); cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url); res(cv.toDataURL('image/jpeg', q));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('사진을 읽지 못했습니다')); };
+    img.src = url;
+  });
+}
+async function addPhotos(files){
+  for(const f of files){ try{ cur.photos.push(await shrink(f)); cur.photoIds.push(null); dirty = true; }catch(e){ toast(e.message); } }
+  renderThumbs();
+}
+
+/* ---------- PDF 블록·쪽 나누기 ---------- */
+const PAGE_INNER = 1123 - 52 * 2;
+function buildBlocks(rec, edit){
+  const t = rec.target, E = f => edit ? ` contenteditable="true" data-f="${f}"` : '';
+  const area = t.area !== '' && t.area != null ? (isNaN(t.area) ? String(t.area) : Number(t.area).toLocaleString() + '㎡') : '';
+  const blocks = [];
+  let n = 0;
+  const cap = s => `<div class="cap">${++n}. ${s}</div>`;
+  blocks.push(`<h1${E('title')}>${esc(rec.title)}</h1><div class="sub"${E('biz')}>${esc(t.biz || '')}</div>`);
+  if(rec.sec.info) blocks.push(`${cap('기본 사항')}<table>
+      <colgroup><col style="width:17%"><col style="width:33%"><col style="width:17%"><col style="width:33%"></colgroup>
+      <tr><th>보조사업자</th><td${E('t.name')}>${esc(t.name)}</td><th>연락처</th><td${E('t.tel')}>${esc(t.tel||'')}</td></tr>
+      <tr><th>사업장</th><td colspan="3"${E('t.place')}>${esc(t.place)}</td></tr>
+      <tr><th>품목</th><td${E('t.item')}>${esc(t.item||'')}</td><th>사업량</th><td${E('t.area')}>${esc(area)}</td></tr>
+      <tr><th>점검 일시</th><td${E('date')}>${esc(rec.dateText || fmtDT(rec.date))}</td><th>점검자</th><td${E('inspector')}>${esc(rec.inspector||'')}</td></tr>
+      <tr><th>점검 위치</th><td colspan="3"${E('gps')}>${esc(rec.gpsText || gpsStr(rec.gps))}</td></tr>
+    </table>`);
+  if(rec.sec.items) blocks.push(`${cap('점검 내용')}<table>
+      <colgroup><col style="width:7%"><col style="width:45%"><col style="width:16%"><col style="width:32%"></colgroup>
+      <tr><th>번호</th><th>점검 항목</th><th>결과</th><th>비고</th></tr>
+      ${rec.items.map((it, i) => `<tr><td class="c">${i+1}</td><td${E('il'+i)}>${esc(it.label)}</td>
+        <td class="c${BAD.test(it.result)?' bad':''}"${E('ir'+i)}>${esc(it.result)}</td><td${E('in'+i)}>${esc(it.note)}</td></tr>`).join('')}
+    </table>`);
+  if(rec.sec.overall) blocks.push(`${cap('종합 의견')}<table>
+      <colgroup><col style="width:17%"><col></colgroup>
+      <tr><th>판정</th><td class="${BAD.test(rec.overall)?'bad':''}"${E('overall')}>${esc(rec.overall)}</td></tr>
+      <tr><th>특이사항<br>보완 요구</th><td style="height:90px;vertical-align:top;white-space:pre-wrap"${E('memo')}>${esc(rec.memo)}</td></tr>
+    </table>`);
+  if(rec.sec.extra && rec.extra.length) blocks.push(`${cap('추가 사항')}<table>
+      <colgroup><col style="width:25%"><col></colgroup>
+      ${rec.extra.map((x, i) => `<tr><th${E('xl'+i)}>${esc(x.label)}</th><td${E('xv'+i)}>${esc(x.value)}</td></tr>`).join('')}
+    </table>`);
+  if(rec.sec.sign) blocks.push(`<table>
+      <colgroup><col style="width:17%"><col style="width:33%"><col style="width:17%"><col style="width:33%"></colgroup>
+      <tr><th>확인자<br>(보조사업자)</th><td class="sg">${rec.sign ? `<img src="${rec.sign}" alt="서명">` : '(서명)'}</td>
+          <th>점검자</th><td class="sg">${esc(rec.inspector||'')}</td></tr>
+    </table>`);
+  if(rec.sec.photos && rec.photos.length){
+    const total = Math.ceil(rec.photos.length / 4);
+    for(let i = 0, k = 1; i < rec.photos.length; i += 4, k++){
+      const chunk = rec.photos.slice(i, i + 4);
+      blocks.push(`<div class="cap">현장 사진${total>1?` (${k}/${total})`:''} — ${esc(t.name)}</div>
+        <div class="ph">${chunk.map((p, j) => `<figure><img src="${p||''}"><figcaption${E('pc'+(i+j))}>${esc(rec.capt[i+j] || '사진 ' + (i+j+1))}</figcaption></figure>`).join('')}</div>`);
+    }
+  }
+  return blocks;
+}
+/* 블록 높이를 재서 A4 쪽으로 나눔 */
+function paginate(rec){
+  const blocks = buildBlocks(rec, false);
+  const box = document.createElement('div');
+  box.className = 'pg'; box.style.cssText = 'position:fixed;left:-10000px;top:0;height:auto';
+  box.innerHTML = blocks.map(b => `<div class="blk">${b}</div>`).join('');
+  document.body.appendChild(box);
+  const hs = [...box.children].map(el => el.offsetHeight);
+  box.remove();
+  const groups = []; let g = [], used = 0;
+  hs.forEach((h, i) => {
+    if(g.length && used + h > PAGE_INNER){ groups.push(g); g = []; used = 0; }
+    g.push(i); used += h;
+  });
+  if(g.length) groups.push(g);
+  return groups;
+}
+function buildPages(rec, edit, groups){
+  groups = groups || paginate(rec);
+  const blocks = buildBlocks(rec, edit);
+  return groups.map(g => `<div class="pg${edit?' edit':''}">${g.map(i => `<div class="blk">${blocks[i]}</div>`).join('')}</div>`);
+}
+
+/* ---------- 미리보기(편집) ---------- */
+let pvSel = null;   // 저장할 쪽 번호
+function readPreviewEdits(){
+  const q = f => document.querySelector(`#pvPages [data-f="${f}"]`);
+  const val = f => { const el = q(f); return el ? el.innerText.replace(/ /g, ' ').trim() : null; };
+  const set = (f, fn) => { const v = val(f); if(v !== null) fn(v); };
+  set('title', v => cur.title = v || '현장점검표');
+  set('biz', v => cur.target.biz = v);
+  set('t.name', v => cur.target.name = v);
+  set('t.tel', v => cur.target.tel = v);
+  set('t.place', v => cur.target.place = v);
+  set('t.item', v => cur.target.item = v);
+  set('t.area', v => { const n = v.replace(/[,\s㎡m²]/g, ''); cur.target.area = /^\d+(\.\d+)?$/.test(n) ? +n : v; });
+  set('date', v => { cur.dateText = v !== fmtDT(cur.date) ? v : ''; });
+  set('inspector', v => cur.inspector = v);
+  set('gps', v => { cur.gpsText = v !== gpsStr(cur.gps) ? v : ''; });
+  set('overall', v => cur.overall = v);
+  set('memo', v => cur.memo = v);
+  cur.items.forEach((it, i) => { set('il'+i, v => it.label = v); set('ir'+i, v => it.result = v); set('in'+i, v => it.note = v); });
+  cur.extra.forEach((x, i) => { set('xl'+i, v => x.label = v); set('xv'+i, v => x.value = v); });
+  cur.photos.forEach((_, i) => set('pc'+i, v => cur.capt[i] = v));
+  // 이름을 모두 지운 행은 삭제
+  cur.items = cur.items.filter(it => it.label);
+  cur.extra = cur.extra.filter(x => x.label);
+}
+/* 서식 구조(제목·항목·표·넣을 내용)가 바뀌었으면 새 서식으로 추가 */
+function syncTplFromCur(name){
+  const t = tplById(cur.tplId), now = curAsTpl();
+  if(!name && t && tplKey(t) === tplKey(normTpl(now))) return null;
+  const nt = upsertTpl(now, name);
+  const isNew = nt.id !== cur.tplId;
+  cur.tplId = nt.id;
+  return isNew || name ? nt : null;
+}
+function renderPreview(keepSel){
+  const groups = paginate(cur);
+  if(!keepSel || !pvSel) pvSel = new Set(groups.map((_, i) => i));
+  const z = Math.min(1, (innerWidth - 16) / 794);
+  $('pvSec').innerHTML = SECS.map(([k, l]) => `<button type="button" data-sec="${k}" class="${cur.sec[k]?'on':''}">${cur.sec[k]?'✓ ':''}${l}</button>`).join('');
+  $('pvAddExtra').style.display = cur.sec.extra ? '' : 'none';
+  $('pvAddItem').style.display = cur.sec.items ? '' : 'none';
+  $('pvPages').innerHTML = buildPages(cur, true, groups).map((p, i) => `<div class="pgw ${pvSel.has(i)?'':'off'}">
+      <label class="pgsel"><input type="checkbox" data-pg="${i}" ${pvSel.has(i)?'checked':''}> ${i+1}쪽 / ${groups.length}쪽 저장</label>
+      <div style="zoom:${z}">${p}</div></div>`).join('');
+  $('pvPdf').textContent = pvSel.size === groups.length ? 'PDF 저장' : `PDF 저장 (${pvSel.size}쪽)`;
+}
+function openPreview(){
+  collectForm(); pvSel = null;
+  renderPreview(false);
+  $('pv').hidden = false; $('pvBody').scrollTop = 0;
+}
+function closePreview(){
+  readPreviewEdits();
+  const nt = syncTplFromCur();
+  if(nt) toast(`편집한 서식을 '${nt.name}'(으)로 추가했습니다`);
+  dirty = true; $('pv').hidden = true; renderForm();
+}
+
+/* html → PDF */
+async function makePdf(jobs, filename){
+  if(!window.html2canvas || !window.jspdf){ alert('PDF 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.'); return; }
+  $('busy').hidden = false;
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px';
+  document.body.appendChild(box);
+  try{
+    const pdf = new jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait', compress:true});
+    let first = true;
+    for(const {rec, pages} of jobs){
+      if(window.syncMedia && (rec.photos.some(p => !p) || (!rec.sign && rec.signId))) await syncMedia(rec);
+      const all = buildPages(rec, false);
+      for(let i = 0; i < all.length; i++){
+        if(pages && !pages.has(i)) continue;
+        box.innerHTML = all[i];
+        await Promise.all([...box.querySelectorAll('img')].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; })));
+        const canvas = await html2canvas(box.firstElementChild, {scale:2, backgroundColor:'#ffffff', logging:false});
+        if(!first) pdf.addPage();
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 210, 297);
+        first = false;
+      }
+    }
+    if(first){ toast('저장할 쪽을 한 개 이상 선택해 주세요'); return; }
+    const blob = pdf.output('blob');
+    saveBlob(blob, filename);
+    if(window.syncPdf) syncPdf(blob, filename, {pages: pdf.getNumberOfPages(),
+      recId: jobs.length === 1 ? jobs[0].rec.id : '',
+      inspector: [...new Set(jobs.map(j => j.rec.inspector).filter(Boolean))].join(',') || '',
+      tplName: (tplById(jobs[0].rec.tplId) || {}).name || jobs[0].rec.title,
+      target: [...new Set(jobs.map(j => j.rec.target.name))].join(', '), title: [...new Set(jobs.map(j => j.rec.title))].join(', ')});
+    toast('PDF를 저장했습니다 (다운로드 폴더)');
+  }catch(e){ alert('PDF를 만들지 못했습니다: ' + e.message); }
+  finally{ box.remove(); $('busy').hidden = true; }
+}
+const pdfName = rec => `${safeName(rec.title)}_${safeName(rec.target.name)}_${(rec.date||'').slice(0,10)}.pdf`;
+
+/* ---------- 점검 목록 · 묶음 저장 ---------- */
+/* 읍면별 점검률 (명단 기준, 사업자별 최근 점검의 판정) */
+let listTown = null;
+function renderStats(){
+  const by = new Map(), tot = {n:0, done:0, ok:0, fix:0, bad:0};
+  rows.forEach(r => {
+    const t = r.town || '기타';
+    if(!by.has(t)) by.set(t, {n:0, done:0, ok:0, fix:0, bad:0});
+    const s = by.get(t); s.n++;
+    if(!inspDone.has(rowKey(r))) return;
+    s.done++;
+    const o = inspDone.get(rowKey(r));
+    if(/부적합/.test(o)) s.bad++; else if(/보완/.test(o)) s.fix++; else if(o && o !== '점검') s.ok++;
+  });
+  by.forEach(s => Object.keys(tot).forEach(k => tot[k] += s[k]));
+  const pct = s => s.n ? Math.round(s.done / s.n * 1000) / 10 : 0;
+  const tr = (t, s, cls) => `<tr class="${cls||''}${listTown===t?' sel':''}" ${t?`data-town="${esc(t)}"`:''}>
+      <td>${t ? `<span class="dot" style="background:${colorOf[t]||'#999'}"></span>${esc(t)}` : '합계'}</td>
+      <td>${s.n}</td><td>${s.done}</td><td>${s.n - s.done}</td>
+      <td><b>${pct(s)}%</b><div class="bar"><i style="width:${pct(s)}%"></i></div></td>
+      <td>${s.ok}</td><td class="${s.fix?'w':''}">${s.fix}</td><td class="${s.bad?'w':''}">${s.bad}</td></tr>`;
+  $('lStats').innerHTML = rows.length ? `<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:14px;color:var(--mut)">전체 점검률</span><b style="font-size:26px;color:var(--b)">${pct(tot)}%</b>
+      <span style="font-size:14px">${tot.done} / ${tot.n}명 점검 · 미점검 ${tot.n - tot.done}명${tot.fix ? ` · <span class="fail">보완 ${tot.fix}</span>` : ''}${tot.bad ? ` · <span class="fail">부적합 ${tot.bad}</span>` : ''}</span></div>
+    <div class="bar" style="height:10px;margin-bottom:12px"><i style="width:${pct(tot)}%"></i></div>
+    <h3 style="margin:0 0 6px;font-size:14px;color:var(--mut)">읍면별 점검률 <small style="font-weight:400">(읍면을 누르면 그 읍면 기록만 보기)</small></h3>
+    <div style="overflow-x:auto"><table class="st">
+      <tr><th>읍면</th><th>대상</th><th>점검</th><th>미점검</th><th>점검률</th><th>적합</th><th>보완</th><th>부적합</th></tr>
+      ${[...by].map(([t, s]) => tr(t, s)).join('')}${tr('', tot, 'tot')}
+    </table></div>` : '<small style="color:var(--mut)">명단을 불러오면 읍면별 점검률이 표시됩니다</small>';
+}
+async function openList(){
+  await reloadRecs();
+  renderStats();
+  const townOf = r => r.target.town || '기타';
+  const shown = listTown ? allRecs.filter(r => townOf(r) === listTown) : allRecs;
+  $('lRecs').innerHTML = shown.length ? shown.map(r => `<div class="rec">
+      <input type="checkbox" data-id="${r.id}">
+      <div class="m" data-open="${r.id}">
+        <div>${esc(r.target.name)} <span class="badge ${BAD.test(r.overall)?'warn':''}" ${r.overall?'':'style="background:#eef0f3;color:#555"'}>${esc(r.overall || '판정 없음')}</span></div>
+        <div>${esc(r.title)} · ${esc(fmtDT(r.date))} · ${esc(r.target.place)}</div>
+      </div></div>`).join('')
+    : listTown ? `<div style="color:var(--mut);text-align:center;padding:20px">${esc(listTown)}에는 아직 점검 기록이 없습니다.</div>`
+    : '<div style="color:var(--mut);text-align:center;padding:20px">아직 저장된 점검 기록이 없습니다.<br>목록의 <b>점검</b> 버튼이나 지도 마커에서 시작하세요.</div>';
+  $('lAll').checked = false;
+  $('ilist').hidden = false;
+}
+const checkedRecs = () => [...document.querySelectorAll('#lRecs input:checked')].map(c => allRecs.find(r => r.id === c.dataset.id)).filter(Boolean);
+function exportXlsx(recs){
+  const labels = [], xl = [];
+  recs.forEach(r => { r.items.forEach(it => { if(!labels.includes(it.label)) labels.push(it.label); }); r.extra.forEach(x => { if(!xl.includes(x.label)) xl.push(x.label); }); });
+  const data = recs.map(r => {
+    const o = {'점검일시':r.dateText || fmtDT(r.date), '문서':r.title, '보조사업자':r.target.name, '읍면':r.target.town||'', '사업장':r.target.place,
+      '품목':r.target.item||'', '사업량(㎡)':r.target.area, '점검자':r.inspector||''};
+    labels.forEach(l => { const it = r.items.find(x => x.label === l); o[l] = it ? it.result + (it.note ? ` (${it.note})` : '') : ''; });
+    xl.forEach(l => { const x = r.extra.find(y => y.label === l); o[l] = x ? x.value : ''; });
+    Object.assign(o, {'종합의견':r.overall, '특이사항':r.memo, '위도':r.gps ? r.gps.lat : '', '경도':r.gps ? r.gps.lng : '', '사진(매)':r.photos.length, '서명':r.sign ? '있음' : ''});
+    return o;
+  });
+  const ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '점검결과');
+  const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  saveBlob(new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}), `점검결과_${localDT(new Date()).slice(0,10)}.xlsx`);
+}
+
+/* ---------- 서식 편집 ---------- */
+function openTplEditor(){
+  collectForm();
+  const t = tplById(cur.tplId);
+  $('tName').value = t ? t.name : cur.title;
+  $('tTitle').value = cur.title;
+  $('tItems').value = cur.items.map(x => x.label).join('\n');
+  $('tOpts').value = cur.opts.join(', ');
+  $('tExtra').value = cur.extra.map(x => x.label).join('\n');
+  $('tSecs').innerHTML = SECS.map(([k, l]) => `<label><input type="checkbox" data-s="${k}" ${cur.sec[k]?'checked':''}> ${l}</label>`).join('');
+  $('tDel').style.display = tpls.length > 1 && t ? 'inline-block' : 'none';
+  $('tplDlg').showModal();
+}
+$('tplDlg').addEventListener('close', () => {
+  const v = $('tplDlg').returnValue;
+  if(v === 'ok'){
+    const items = $('tItems').value.split('\n').map(s => s.trim()).filter(Boolean);
+    if(!items.length){ toast('점검 항목을 한 개 이상 넣어 주세요'); return; }
+    const sec = {}; document.querySelectorAll('#tSecs [data-s]').forEach(c => sec[c.dataset.s] = c.checked);
+    const old = tplById(cur.tplId), name = $('tName').value.trim();
+    const d = {title:$('tTitle').value, items, opts:$('tOpts').value.split(','), extra:$('tExtra').value.split('\n'), sec, hwpx: cur.hwpx || null};
+    let t;
+    if(old && tplKey(old) === tplKey(normTpl(upsertPreview(d))) && name && name !== old.name){
+      old.name = name; old.usedAt = Date.now(); saveTpls(); t = old;               // 이름만 바꿈
+    } else {
+      t = upsertTpl(d, name && (!old || name !== old.name) ? name : '');           // 새 서식으로 추가
+    }
+    applyTplToCur(t); dirty = true; renderForm(); toast(`'${t.name}' 서식을 저장했습니다 (맨 위에 표시)`);
+  } else if(v === 'del'){
+    if(!confirm('이 서식을 목록에서 지울까요? (이미 저장된 점검 기록은 그대로 남습니다)')) return;
+    if(window.syncTplDel) syncTplDel(cur.tplId);
+    tpls = tpls.filter(t => t.id !== cur.tplId); saveTpls();
+    applyTplToCur(sortedTpls()[0]); renderForm();
+  }
+});
+function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 수행
+  const c = {title:(d.title||'').trim() || '현장점검표', items:d.items.map(s => s.trim()).filter(Boolean),
+    opts:d.opts.map(s => s.trim()).filter(Boolean), extra:d.extra.map(s => s.trim()).filter(Boolean), sec:d.sec, hwpx:d.hwpx || null};
+  if(!c.opts.length) c.opts = [...DEFAULT_TPL.opts];
+  return c;
+}
+
+/* ---------- 이벤트 연결 ---------- */
+(function bindInspect(){
+  sig.bind();
+  $('iBack').onclick = async () => {
+    if(dirty && confirm('저장하지 않은 내용이 있습니다. 저장할까요?')) await saveCur(true);
+    $('insp').hidden = true;
+  };
+  $('iSave').onclick = () => saveCur();
+  $('iDel').onclick = async () => {
+    if(!confirm('이 점검 기록을 지울까요? 되돌릴 수 없습니다.')) return;
+    await idb.del(cur.id); if(window.syncDelete) syncDelete(cur.id); await reloadRecs(); if(typeof renderList === 'function') renderList();
+    $('insp').hidden = true; toast('점검 기록을 지웠습니다');
+  };
+  $('tplSel').onchange = e => {
+    const t = tplById(e.target.value); if(!t) return;
+    collectForm(); useTpl(t.id); applyTplToCur(t); dirty = true; renderForm();
+  };
+  $('tplEditBtn').onclick = openTplEditor;
+  $('iPrev').onclick = e => {
+    const b = e.target.closest('button'); if(!b) return;
+    if(dirty && !confirm('저장하지 않은 내용은 사라집니다. 계속할까요?')) return;
+    if(b.dataset.new){ const r = rows.find(x => rowKey(x) === cur.key) || cur.target; cur = newRecord(r); dirty = false; renderForm(); locate(true); }
+    else { const rec = allRecs.find(r => r.id === b.dataset.rec); if(rec) openRecord(rec); }
+  };
+  $('iGpsBtn').onclick = () => locate(false);
+  ['iDate','iWho','iMemo'].forEach(id => $(id).addEventListener('input', () => dirty = true));
+  $('iItems').addEventListener('click', e => {
+    const b = e.target.closest('button[data-i]'); if(!b) return;
+    const it = cur.items[+b.dataset.i];
+    it.result = it.result === b.dataset.v ? '' : b.dataset.v; dirty = true;
+    b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === it.result));
+  });
+  $('iItems').addEventListener('input', () => dirty = true);
+  $('iExtra').addEventListener('input', () => dirty = true);
+  $('iOverall').addEventListener('click', e => {
+    const b = e.target.closest('button[data-o]'); if(!b) return;
+    cur.overall = cur.overall === b.dataset.v ? '' : b.dataset.v; dirty = true;
+    $('iOverall').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.v === cur.overall));
+  });
+  $('iCam').onclick = () => $('iCamIn').click();
+  $('iPick').onclick = () => $('iPickIn').click();
+  ['iCamIn','iPickIn'].forEach(id => $(id).onchange = async e => { await addPhotos([...e.target.files]); e.target.value = ''; });
+  $('iThumbs').onclick = e => {
+    const b = e.target.closest('[data-rm]'); if(!b) return;
+    const i = +b.dataset.rm; cur.photos.splice(i, 1); cur.photoIds.splice(i, 1); cur.capt.splice(i, 1); dirty = true; renderThumbs();
+  };
+  $('signClr').onclick = () => { sig.clear(); dirty = true; };
+  $('iPreview').onclick = openPreview;
+  $('iPdf').onclick = async () => { if(await saveCur(true)) makePdf([{rec:cur}], pdfName(cur)); };
+
+  /* 미리보기 도구 */
+  $('pvBack').onclick = closePreview;
+  $('pvSec').onclick = e => {
+    const b = e.target.closest('[data-sec]'); if(!b) return;
+    readPreviewEdits(); cur.sec[b.dataset.sec] = !cur.sec[b.dataset.sec]; dirty = true; renderPreview(false);
+  };
+  $('pvAddItem').onclick = () => { readPreviewEdits(); cur.items.push({label:'새 점검항목', result:'', note:''}); dirty = true; renderPreview(false); };
+  $('pvAddExtra').onclick = () => { readPreviewEdits(); cur.extra.push({label:'새 항목', value:''}); dirty = true; renderPreview(false); };
+  $('pvPages').addEventListener('input', () => dirty = true);
+  $('pvPages').addEventListener('change', e => {
+    const c = e.target.closest('[data-pg]'); if(!c) return;
+    const i = +c.dataset.pg; c.checked ? pvSel.add(i) : pvSel.delete(i);
+    c.closest('.pgw').classList.toggle('off', !c.checked);
+    const n = $('pvPages').querySelectorAll('[data-pg]').length;
+    $('pvPdf').textContent = pvSel.size === n ? 'PDF 저장' : `PDF 저장 (${pvSel.size}쪽)`;
+  });
+  $('pvSaveTpl').onclick = () => {
+    readPreviewEdits();
+    const name = prompt('새 서식 이름을 입력하세요', `${cur.title} ${fmtTs(Date.now()).slice(5, 10)}`);
+    if(name === null) return;
+    const nt = syncTplFromCur(name.trim() || cur.title);
+    if(nt) toast(`'${nt.name}' 서식으로 저장했습니다 (맨 위에 표시)`);
+    renderPreview(true);
+  };
+  $('pvPdf').onclick = async () => {
+    readPreviewEdits(); syncTplFromCur();
+    const sel = new Set(pvSel);
+    if(!sel.size) return toast('저장할 쪽을 한 개 이상 선택해 주세요');
+    if(await saveCur(true)){
+      const n = paginate(cur).length;
+      const name = sel.size === n ? pdfName(cur) : pdfName(cur).replace(/\.pdf$/, `_${[...sel].sort((a,b)=>a-b).map(i=>i+1).join(',')}쪽.pdf`);
+      await makePdf([{rec:cur, pages:sel}], name);
+      renderPreview(true);
+    }
+  };
+
+  /* 점검 목록 */
+  $('inspAll').onclick = openList;
+  $('lBack').onclick = () => $('ilist').hidden = true;
+  $('lStats').onclick = e => {
+    const t = e.target.closest('tr[data-town]'); if(!t) return;
+    listTown = listTown === t.dataset.town ? null : t.dataset.town; openList();
+  };
+  $('lAll').onchange = e => document.querySelectorAll('#lRecs input[type=checkbox]').forEach(c => c.checked = e.target.checked);
+  $('lRecs').onclick = e => {
+    const m = e.target.closest('[data-open]'); if(!m) return;
+    const rec = allRecs.find(r => r.id === m.dataset.open); if(rec){ $('ilist').hidden = true; openRecord(rec); }
+  };
+  $('lPdf').onclick = () => {
+    const recs = checkedRecs(); if(!recs.length) return toast('저장할 점검 기록을 선택해 주세요');
+    makePdf(recs.map(rec => ({rec})), recs.length === 1 ? pdfName(recs[0]) : `점검결과_${recs.length}건_${localDT(new Date()).slice(0,10)}.pdf`);
+  };
+  $('lXls').onclick = () => {
+    const recs = checkedRecs(); if(!recs.length) return toast('저장할 점검 기록을 선택해 주세요');
+    exportXlsx(recs);
+  };
+  reloadRecs().then(() => { if(typeof renderList === 'function' && rows.length) renderList(); });
+})();
+</script>
+<script>
+/* =====================================================================
+   구글 동기화 모듈 (Apps Script 웹앱 연동)
+   - 명단: 엑셀 업로드 시 구글시트 '명단' + 원본 엑셀은 드라이브 / 시트에서 고친 내용도 모든 기기에 반영
+   - 점검기록: 시트 '점검기록', 사진·서명은 드라이브
+   - 서식·위치 공유, PDF는 드라이브 'PDF' 폴더 + 시트 'PDF기록'
+   - 누가·어느 기기로 무엇을 했는지 시트 '사용기록'
+   - 인터넷이 끊겨도 이 기기에 저장해 두었다가 연결되면 자동으로 올림
+   ===================================================================== */
+const SYNC_URL_FIXED = '';   // ← 배포한 웹앱 URL을 넣어 두면 동료는 '이름·팀 키'만 입력하면 됩니다
+const ROSTER_KEYS = ['name','town','addr','tel','place','item','area','biz','note'];
+const SY = {
+  url(){ return LS.get('syncUrl', '') || SYNC_URL_FIXED; },
+  key(){ return LS.get('syncKey', ''); },
+  on(){ return !!(this.url() && this.key()); },
+  busy:false, again:false, err:'', timer:null
+};
+function autoDevice(){
+  const u = navigator.userAgent;
+  const os = /iPhone/.test(u) ? 'iPhone' : /iPad/.test(u) ? 'iPad' : /Android/.test(u) ? 'Android' : /Windows/.test(u) ? 'Windows PC' : /Mac/.test(u) ? 'Mac' : '기타';
+  const br = /SamsungBrowser/.test(u) ? '삼성인터넷' : /Whale/.test(u) ? '웨일' : /Edg\//.test(u) ? '엣지' : /CriOS|Chrome/.test(u) ? '크롬' : /Safari/.test(u) ? '사파리' : '브라우저';
+  return `${os} ${br}`;
+}
+function devId(){
+  let d = LS.get('devId', '');
+  if(!d){ d = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); LS.set('devId', d); }
+  return d;
+}
+const who = () => ({
+  name: LS.get('syncUser', '') || LS.get('inspector', ''),
+  device: LS.get('syncDev', '') || autoDevice(),
+  devId: devId(), ua: navigator.userAgent
+});
+function hashStr(s){ let h = 5381; for(let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + '_' + s.length; }
+const blobToDataUrl = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
+
+async function api(action, data, ms){
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), ms || 90000);
+  try{
+    const r = await fetch(SY.url(), {
+      method:'POST', redirect:'follow', signal:ctl.signal,
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({...(data || {}), action, key:SY.key(), who:who()})
+    });
+    let j; try{ j = await r.json(); }catch(e){ throw new Error('서버 응답을 읽지 못했습니다 (웹앱 URL·배포 설정 확인)'); }
+    if(!j.ok) throw new Error(j.error || '서버 오류');
+    return j;
+  }catch(e){
+    if(e.name === 'AbortError') throw new Error('응답 시간 초과');
+    if(e instanceof TypeError) throw new Error('서버에 연결하지 못했습니다 (인터넷·웹앱 URL 확인)');
+    throw e;
+  }finally{ clearTimeout(tm); }
+}
+
+function syState(t, st){
+  const b = $('syncBtn'); if(!b) return;
+  b.textContent = '☁ ' + t; b.dataset.st = st || '';
+  const last = LS.get('syncLast', 0);
+  b.title = '구글 동기화' + (last ? ' · 마지막 ' + fmtTs(last) : '') + (SY.err ? ' · ' + SY.err : '');
+}
+function syncSoon(){ clearTimeout(SY.timer); SY.timer = setTimeout(() => syncAll(false), 1200); }
+window.syncSoon = syncSoon;
+
+/* ---------- 각 기능에서 부르는 연결점 ---------- */
+window.syncGeo = (k, hit) => { if(!hit) return; const g = LS.get('geoNew', {}); g[k] = hit; LS.set('geoNew', g); };
+window.syncRoster = async (rs, file) => {
+  if(!SY.on()) return;
+  try{
+    const payload = {rows: rs.map(({_pts, ...r}) => r)};
+    if(file && file.size < 15e6) payload.file = {name:file.name, data: await blobToDataUrl(file)};
+    await api('setRoster', payload, 180000);
+    LS.set('rosterPending', false);
+    toast('명단을 구글 시트에 올렸습니다 (모든 기기에 반영)');
+  }catch(e){ toast('명단 올리기 실패 — 연결되면 다시 올립니다: ' + e.message); }
+};
+window.syncDelete = id => { const q = LS.get('recDel', []); q.push(id); LS.set('recDel', q); syncSoon(); };
+window.syncTplDel = id => { const q = LS.get('tplDel', []); if(!q.includes(id)) q.push(id); LS.set('tplDel', q); syncSoon(); };
+window.syncPdf = async (blob, name, meta) => {
+  if(!SY.on() || LS.get('pdfDrive', true) === false) return;
+  try{
+    if(meta && meta.recId){   // 점검 폴더가 먼저 만들어지도록 기록부터 올림
+      clearTimeout(SY.timer);
+      while(SY.busy) await new Promise(r => setTimeout(r, 300));
+      await syncAll(false);
+    }
+    await api('savePdf', {name, data: await blobToDataUrl(blob), ...(meta || {})}, 240000);
+    toast('구글 드라이브 점검 폴더에도 보관했습니다');
+  }catch(e){ toast('드라이브 PDF 보관 실패: ' + e.message); }
+};
+/* 다른 기기에서 받은 기록의 사진·서명 내려받기 */
+window.syncMedia = async rec => {
+  fixRec(rec);
+  const need = [];
+  rec.photos.forEach((p, i) => { if(!p && rec.photoIds[i]) need.push(rec.photoIds[i]); });
+  if(!rec.sign && rec.signId && !rec._signCleared) need.push(rec.signId);
+  if(!need.length || !SY.on()) return false;
+  try{
+    const got = {};
+    for(let i = 0; i < need.length; i += 6) Object.assign(got, (await api('files', {ids:need.slice(i, i + 6)}, 120000)).files || {});
+    const fill = r => {
+      r.photoIds.forEach((id, i) => { if(!r.photos[i] && got[id]) r.photos[i] = got[id]; });
+      if(!r.sign && r.signId && got[r.signId]){ r.sign = got[r.signId]; r._signHash = hashStr(r.sign); }
+    };
+    fill(rec);
+    const st = await idb.get(rec.id);
+    if(st){ fixRec(st); fill(st); await idb.put(st); }
+    return true;
+  }catch(e){ toast('사진을 불러오지 못했습니다: ' + e.message); return false; }
+};
+
+/* ---------- 서버 형식 변환 ---------- */
+function toServer(rec){
+  const {photos, sign, photoIds, signId, _dirty, _signHash, _signCleared, ...o} = rec;
+  o.photos = (photos || []).map((p, i) => photoIds[i] ? {id:photoIds[i]} : (p ? {data:p} : null)).filter(Boolean);
+  if(sign) o.sign = (signId && hashStr(sign) === _signHash) ? {id:signId} : {data:sign};
+  else o.sign = (signId && !_signCleared) ? {id:signId} : null;
+  return o;
+}
+async function pushRec(rec){
+  const o = toServer(rec); o.tplName = (tplById(rec.tplId) || {}).name || rec.title;
+  const res = await api('saveRec', {rec: o}, 300000);
+  const sent = (rec.photos || []).filter((p, i) => rec.photoIds[i] || p);
+  const map = new Map(); sent.forEach((p, i) => { if(p) map.set(p, res.photoIds[i]); });
+  const apply = r => {
+    fixRec(r);
+    r.photoIds = r.photos.map((p, i) => r.photoIds[i] || (p && map.get(p)) || null);
+    if(r.sign && r.sign === rec.sign){ r.signId = res.signId; r._signHash = res.signId ? hashStr(r.sign) : undefined; }
+    else if(!r.sign && !rec.sign) r.signId = res.signId;
+    r.photoFolder = res.photoFolder;
+    if(r.savedAt === rec.savedAt){ r._dirty = false; r._signCleared = false; }
+  };
+  const st = await idb.get(rec.id);
+  if(st){ apply(st); await idb.put(st); }
+  if(cur && cur.id === rec.id) apply(cur);
+}
+function mergeServerRec(sr, l){
+  const r = fixRec({...sr, photos:[], sign:null});
+  const cache = new Map();
+  if(l){ fixRec(l); l.photoIds.forEach((id, i) => { if(id && l.photos[i]) cache.set(id, l.photos[i]); }); }
+  r.photoIds = r.photoIds || [];
+  r.photos = r.photoIds.map(id => cache.get(id) || null);
+  if(l && l.sign && l.signId && l.signId === r.signId){ r.sign = l.sign; r._signHash = l._signHash; }
+  r._dirty = false;
+  return r;
+}
+const rosterSig = rs => JSON.stringify((rs || []).map(r => ROSTER_KEYS.map(k => String(r[k] ?? '').trim())));
+function applyServerTpls(list){
+  let L = list.map(normTpl).sort((a, b) => (b.usedAt || 0) - (a.usedAt || 0));
+  const seen = new Set(), drop = [];
+  L.forEach(t => { const k = tplKey(t); if(seen.has(k)) drop.push(t.id); else seen.add(k); });
+  if(drop.length){ L = L.filter(t => !drop.includes(t.id)); LS.set('tplDel', [...new Set([...LS.get('tplDel', []), ...drop])]); }
+  if(L.length){ tpls = L; saveTpls(); }
+}
+
+/* ---------- 전체 동기화 ---------- */
+async function syncAll(manual){
+  if(!SY.on()){ syState(SY.url() ? '연결' : '동기화', ''); return; }
+  if(SY.busy){ SY.again = true; return; }
+  if(!navigator.onLine){ syState('오프라인', 'err'); return; }
+  SY.busy = true; syState('동기화 중…', 'run');
+  let up = 0, down = 0;
+  try{
+    // 0) 한글 서식 원본
+    if(window.uploadHwpxTpls) await uploadHwpxTpls();
+    // 1) 삭제 대기분
+    for(const id of LS.get('recDel', [])){
+      await api('delRec', {id});
+      LS.set('recDel', LS.get('recDel', []).filter(x => x !== id));
+    }
+    // 2) 명단 대기분
+    if(LS.get('rosterPending', false) && rows.length){
+      await api('setRoster', {rows: rows.map(({_pts, ...r}) => r)});
+      LS.set('rosterPending', false);
+    }
+    // 3) 서식·위치 교환 + 서버 목록
+    const geoNew = LS.get('geoNew', {}), tplDel = LS.get('tplDel', []);
+    const res = await api('sync', {tpls, tplDel, geo:geoNew});
+    const gLeft = LS.get('geoNew', {}); Object.keys(geoNew).forEach(k => delete gLeft[k]); LS.set('geoNew', gLeft);
+    LS.set('tplDel', LS.get('tplDel', []).filter(id => !tplDel.includes(id)));
+    if(Array.isArray(res.tpls) && res.tpls.length) applyServerTpls(res.tpls);
+    let replot = false;
+    for(const [k, v] of Object.entries(res.geo || {})) if(!geoCache[k]){ geoCache[k] = v; replot = true; }
+    if(replot) LS.set('geo', geoCache);
+    if(Array.isArray(res.roster)){
+      if(res.roster.length){
+        if(rosterSig(res.roster) !== rosterSig(rows)){ rows = res.roster; LS.set('rows', rows); filterTown = null; replot = true; }
+      } else if(rows.length){
+        await api('setRoster', {rows: rows.map(({_pts, ...r}) => r)});
+      }
+    }
+    // 4) 점검기록 올리기 / 받기
+    const local = new Map(((await idb.all()) || []).map(r => [r.id, fixRec(r)]));
+    const srv = new Map((res.recs || []).map(m => [m.id, m]));
+    for(const [id, m] of srv){
+      const l = local.get(id);
+      if(m.del && l && !l._dirty){ await idb.del(id); local.delete(id); down++; }
+    }
+    const toPush = [...local.values()].filter(r => r.savedAt && (r._dirty || !srv.has(r.id)));
+    for(const r of toPush){ syState(`올리는 중 ${++up}/${toPush.length}`, 'run'); await pushRec(r); }
+    const pushed = new Set(toPush.map(r => r.id));
+    const need = [...srv.values()].filter(m => {
+      if(m.del || pushed.has(m.id)) return false;
+      const l = local.get(m.id);
+      return !l || (!l._dirty && (l.savedAt || 0) < m.v);
+    }).map(m => m.id);
+    for(let i = 0; i < need.length; i += 20){
+      const got = (await api('getRecs', {ids:need.slice(i, i + 20)})).recs || [];
+      for(const sr of got){ await idb.put(mergeServerRec(sr, local.get(sr.id))); down++; }
+    }
+    await reloadRecs();
+    if(replot) plot(); else renderList();
+    if(down && !$('ilist').hidden) openList();
+    SY.err = ''; LS.set('syncLast', Date.now());
+    syState('동기화 ✓', 'ok');
+    if(manual) toast(`동기화 완료 · 올림 ${up}건 · 받음 ${down}건`);
+  }catch(e){
+    SY.err = e.message; syState('동기화 오류', 'err');
+    if(manual) toast('동기화 실패: ' + e.message);
+  }finally{
+    SY.busy = false;
+    if(SY.again){ SY.again = false; setTimeout(() => syncAll(false), 500); }
+  }
+}
+
+/* ---------- 동기화 설정 창 ---------- */
+function openSyncDlg(){
+  $('syUrl').value = LS.get('syncUrl', '') || SYNC_URL_FIXED;
+  $('syKey').value = SY.key();
+  $('syUser').value = LS.get('syncUser', '') || LS.get('inspector', '');
+  $('syDev').value = LS.get('syncDev', '');
+  $('syDev').placeholder = autoDevice();
+  $('syPdf').checked = LS.get('pdfDrive', true) !== false;
+  const lk = LS.get('syLinks', null), last = LS.get('syncLast', 0);
+  $('syInfo').innerHTML = (SY.on() ? (last ? `마지막 동기화 ${esc(fmtTs(last))}` : '아직 동기화하지 않았습니다') : '연결되지 않았습니다')
+    + (SY.err ? `<br><span class="fail">${esc(SY.err)}</span>` : '')
+    + (lk && SY.on() ? `<br><a href="${esc(lk.sheetUrl)}" target="_blank" rel="noopener">구글 시트 열기</a><a href="${esc(lk.folderUrl)}" target="_blank" rel="noopener">드라이브 폴더 열기</a>` : '');
+  $('syncDlg').showModal();
+}
+$('syncBtn').onclick = openSyncDlg;
+$('syncDlg').addEventListener('close', async () => {
+  const v = $('syncDlg').returnValue;
+  if(v === 'off'){
+    if(!confirm('이 기기의 구글 동기화를 끌까요? (이 기기에 저장된 기록은 그대로 남습니다)')) return;
+    LS.del('syncKey'); LS.del('syLinks'); SY.err = ''; syState(SY.url() ? '연결' : '동기화', ''); toast('동기화를 껐습니다');
+    return;
+  }
+  if(v !== 'ok') return;
+  const url = $('syUrl').value.trim(), key = $('syKey').value.trim(), user = $('syUser').value.trim();
+  if(!url || !key){ toast('웹앱 URL과 팀 키를 모두 입력해 주세요'); return; }
+  if(!user){ toast('사용자 이름을 입력해 주세요 (사용기록에 남습니다)'); return; }
+  LS.set('syncUrl', url === SYNC_URL_FIXED ? '' : url);
+  LS.set('syncKey', key); LS.set('syncUser', user);
+  LS.set('syncDev', $('syDev').value.trim());
+  LS.set('pdfDrive', $('syPdf').checked);
+  if(!LS.get('inspector', '')) LS.set('inspector', user);
+  syState('연결 중…', 'run');
+  try{
+    const p = await api('ping', {});
+    LS.set('syLinks', {sheetUrl:p.sheetUrl, folderUrl:p.folderUrl});
+    toast('구글 연결 성공 — 동기화합니다');
+    syncAll(true);
+  }catch(e){
+    SY.err = e.message; syState('동기화 오류', 'err'); alert('연결하지 못했습니다: ' + e.message);
+  }
+});
+
+/* ---------- 자동 동기화 ---------- */
+syState(SY.on() ? '동기화' : (SY.url() ? '연결' : '동기화'), '');
+if(SY.on()) setTimeout(() => syncAll(false), 800);
+else if(SYNC_URL_FIXED) setTimeout(() => { toast('☁ 연결을 눌러 이름과 팀 키를 입력하면 함께 쓸 수 있습니다'); }, 1500);
+setInterval(() => { if(document.visibilityState === 'visible') syncAll(false); }, 3 * 60 * 1000);
+addEventListener('online', syncSoon);
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && Date.now() - LS.get('syncLast', 0) > 60000) syncSoon();
+});
+</script>
+<script>
+/* =====================================================================
+   한글(hwpx) 서식 모듈
+   - 서식 카드의 [+ 한글 서식]으로 .hwpx 양식을 올리면 서식 목록에 추가 (동기화 시 모든 기기 공유)
+   - 양식 안의 {{성명}} {{항목1_결과}} 같은 자리표시 또는 표 이름칸(성명·사업장·점검항목·결과…)을 찾아 채움
+   - [한글 저장]을 누르면 그 양식 모양 그대로 채워진 .hwpx 를 내려받고, 드라이브 점검 폴더에도 보관
+   ===================================================================== */
+const fdb = {   // 한글 서식 원본 파일 (이 기기 보관)
+  _db: null,
+  open(){
+    if(this._db) return Promise.resolve(this._db);
+    return new Promise((res, rej) => {
+      const q = indexedDB.open('fieldmap_files', 1);
+      q.onupgradeneeded = () => q.result.createObjectStore('f');
+      q.onsuccess = () => res(this._db = q.result); q.onerror = () => rej(q.error);
+    });
+  },
+  async get(k){ const db = await this.open(); return new Promise((res, rej) => { const r = db.transaction('f').objectStore('f').get(k); r.onsuccess = () => res(r.result || null); r.onerror = () => rej(r.error); }); },
+  async put(k, v){ const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction('f', 'readwrite'); t.objectStore('f').put(v, k); t.oncomplete = () => res(); t.onerror = () => rej(t.error); }); }
+};
+
+const nz = s => String(s ?? '').replace(/[\s·ㆍ:：()（）\[\]<>「」『』※*\-_.,]/g, '');
+const fmtArea = a => a !== '' && a != null ? (isNaN(a) ? String(a) : Number(a).toLocaleString() + '㎡') : '';
+/* 이름칸 → 채울 값 */
+const HF = [
+  ['성명',   /^(성명|성명대표자|대표자|대표자성명|보조사업자|보조사업자명|사업자|사업자명|신청인|신청자|신청자성명|농가명|경영주|사업주체|대상자|대상자성명|업체명)$/, r => r.target.name],
+  ['연락처', /^(연락처|전화|전화번호|휴대폰|휴대전화|핸드폰|휴대폰번호)$/, r => r.target.tel],
+  ['사업장', /^(사업장|사업장소|사업장위치|사업장소재지|소재지|지번|설치장소|설치위치|사업대상지|대상지|사업위치|농지소재지|사업지|시공장소)$/, r => r.target.place],
+  ['주소',   /^(주소|주소지|거주지|신청인주소)$/, r => r.target.addr],
+  ['품목',   /^(품목|작목|재배품목|작물|축종)$/, r => r.target.item],
+  ['사업량', /^(사업량|면적|규모|사업규모|재배면적|수량)$/, r => fmtArea(r.target.area)],
+  ['사업명', /^(사업명|사업명칭|보조사업명|세부사업명|사업내용)$/, r => r.target.biz],
+  ['읍면',   /^(읍면|읍면동|읍면명)$/, r => r.target.town],
+  ['점검일시', /^(점검일시|점검일자|점검일|점검기간|확인일자|확인일시|점검날짜|점검년월일|일시|일자)$/, r => r.dateText || fmtDT(r.date)],
+  ['점검자', /^(점검자|확인자|점검공무원|담당자|점검관|점검자성명|담당공무원|점검반|점검자소속성명)$/, r => r.inspector],
+  ['종합의견', /^(종합의견|판정|종합판정|최종판정|적합여부|판정결과|종합결과|점검결과판정)$/, r => r.overall],
+  ['특이사항', /^(특이사항|보완사항|보완요구사항|지적사항|조치사항|조치내용|점검의견|비고사항|보완내용)$/, r => r.memo],
+  ['점검위치', /^(위치|gps|좌표|점검위치|위치정보)$/i, r => r.gpsText || gpsStr(r.gps)]
+];
+const SKIP_LAB = /^(번호|구분|순번|연번|계|합계|소계|단위|비고|내용|항목|서명|날인|인|확인|성명서명|서명또는인)$|서명|날인/;
+
+/* ---------- XML 도우미 ---------- */
+const kidsNS = (el, name) => [...el.getElementsByTagNameNS('*', name)];
+const childs = (el, name) => [...el.childNodes].filter(n => n.localName === name);
+function ownTs(p){ const out = []; for(const r of childs(p, 'run')) for(const t of childs(r, 't')) out.push(t); return out; }
+const paraText = p => ownTs(p).map(t => t.textContent).join('');
+function writeT(t, text){
+  while(t.firstChild) t.removeChild(t.firstChild);
+  String(text).split('\n').forEach((line, i) => {
+    if(i) t.appendChild(t.ownerDocument.createElementNS(t.namespaceURI, 'hp:lineBreak'));
+    t.appendChild(t.ownerDocument.createTextNode(line));
+  });
+}
+function setParaText(p, text){
+  const ts = ownTs(p);
+  if(ts.length){ writeT(ts[0], text); ts.slice(1).forEach(t => t.parentNode.removeChild(t)); }
+  else {
+    const doc = p.ownerDocument, ns = p.namespaceURI;
+    let run = childs(p, 'run')[0];
+    if(!run){
+      run = doc.createElementNS(ns, 'hp:run'); run.setAttribute('charPrIDRef', '0');
+      p.insertBefore(run, childs(p, 'linesegarray')[0] || null);
+    }
+    const t = doc.createElementNS(ns, 'hp:t'); run.appendChild(t); writeT(t, text);
+  }
+  childs(p, 'linesegarray').forEach(n => p.removeChild(n));   // 줄 배치는 한글이 다시 계산
+}
+const cellParas = tc => { const sl = childs(tc, 'subList')[0]; return sl ? childs(sl, 'p') : []; };
+const cText = tc => cellParas(tc).map(paraText).join('\n');
+const colOf = tc => { const a = childs(tc, 'cellAddr')[0]; return a ? +a.getAttribute('colAddr') : -1; };
+const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+function markBox(tc, val){
+  const v = nz(val); if(!v) return false;
+  const tries = [v]; const first = String(val).trim().split(/\s+/)[0];
+  if(first && first.length >= 2 && nz(first) !== v) tries.push(nz(first));
+  for(const w of tries){
+    const pat = new RegExp('[□☐](\\s*)(' + w.split('').map(reEsc).join('\\s*') + ')');
+    for(const p of cellParas(tc)) for(const t of ownTs(p)) for(const n of t.childNodes){
+      if(n.nodeType === 3 && pat.test(n.nodeValue)){ n.nodeValue = n.nodeValue.replace(pat, '■$1$2'); childs(p, 'linesegarray').forEach(x => p.removeChild(x)); return true; }
+    }
+  }
+  return false;
+}
+function fillVal(tc, v){
+  if(!tc || v == null || v === '') return false;
+  const tx = cText(tc);
+  if(/[□☐]/.test(tx)) return markBox(tc, v);
+  if(!tx.trim()){ const ps = cellParas(tc); if(!ps.length) return false; setParaText(ps[0], String(v)); return true; }
+  return false;   // 이미 글자가 있는 칸은 건드리지 않음
+}
+
+/* ---------- 양식 분석·채우기 (dry=true 이면 분석만) ---------- */
+function walkHwpx(docs, rec, dry){
+  const res = {mode:'auto', ph:[], items:[], extra:[], found:[], filled:0, slots:{sign:[], photo:[], photoCell:null, signCell:null}};
+  const ext = new Map(rec ? rec.extra.map(x => [nz(x.label), x.value]) : []);
+  const resolve = raw => {
+    const key = nz(raw);
+    if(/^(서명|확인서명|사업자서명|보조사업자서명|농가서명|날인)$/.test(key)) return {kind:'sign', v:''};
+    const pm = key.match(/^(?:현장)?사진(\d*)$/); if(pm) return {kind:'photo', n: pm[1] ? +pm[1] : 0, v:''};
+    const f = HF.find(f => f[1].test(key));
+    if(f) return {kind:'field', name:f[0], v: rec ? f[2](rec) : ''};
+    const m = key.match(/^(?:점검)?항목(\d+)(결과|비고|내용|명|이름)?$/);
+    if(m){
+      const it = rec && rec.items[+m[1] - 1], part = m[2] || '';
+      return {kind:'item', i:+m[1], part, v: it ? (part === '결과' ? it.result : part === '비고' ? it.note : it.label) : ''};
+    }
+    return {kind:'extra', label:String(raw).trim(), v: ext.get(key) ?? ''};
+  };
+
+  // 1) 자리표시 {{ }}
+  const itemLabels = {};
+  for(const doc of docs) for(const p of kidsNS(doc, 'p')){
+    const tx = paraText(p);
+    if(!/\{\{[^{}]+\}\}/.test(tx)) continue;
+    const out = tx.replace(/\{\{([^{}]+)\}\}/g, (_, raw) => {
+      const r = resolve(raw);
+      res.ph.push(raw.trim());
+      if(r.kind === 'sign' || r.kind === 'photo'){
+        if(dry) res.found.push(r.kind === 'sign' ? '서명' : '사진');
+        else if(r.kind === 'sign') res.slots.sign.push(p); else res.slots.photo.push({p, n:r.n});
+        return '';
+      }
+      if(dry){
+        if(r.kind === 'field') res.found.push(r.name);
+        else if(r.kind === 'extra' && !res.extra.includes(r.label)) res.extra.push(r.label);
+        else if(r.kind === 'item' && !itemLabels[r.i]){
+          // 같은 행 앞쪽 칸의 글자를 항목 이름으로 사용
+          let lab = '';
+          let tc = p.parentNode; while(tc && tc.localName !== 'tc') tc = tc.parentNode;
+          const tr = tc && tc.parentNode;
+          if(tr) for(const c of childs(tr, 'tc')){ if(c === tc) break; const s = cText(c).replace(/\{\{[^{}]+\}\}/g, '').trim(); if(s && !/^\d+[.)]?$/.test(s)) lab = s; }
+          itemLabels[r.i] = lab || ('항목 ' + r.i);
+        }
+      }
+      return String(r.v ?? '');
+    });
+    if(!dry){ setParaText(p, out); res.filled++; }
+  }
+  if(res.ph.length){
+    res.mode = 'ph';
+    const n = Math.max(0, ...Object.keys(itemLabels).map(Number));
+    for(let i = 1; i <= n; i++) res.items.push(itemLabels[i] || ('항목 ' + i));
+    return res;
+  }
+
+  // 2) 표 자동 인식
+  for(const doc of docs) for(const tbl of kidsNS(doc, 'tbl')){
+    let ck = null;
+    for(const tr of childs(tbl, 'tr')){
+      const cells = childs(tr, 'tc'), texts = cells.map(c => nz(cText(c)));
+      if(!ck){
+        const iI = texts.findIndex(t => /^(점검|확인|세부)?(점검)?(항목|내용|사항)(명)?$/.test(t) && t.length <= 8);
+        const iR = texts.findIndex((t, i) => i !== iI && t.length <= 10 && /(결과|적합|여부|유무|판정|양호|이행)/.test(t));
+        if(iI >= 0 && iR >= 0){
+          const iN = texts.findIndex((t, i) => i !== iI && i !== iR && /^(비고|조치사항|의견|지적사항|확인내용|세부내용)$/.test(t));
+          ck = {item:colOf(cells[iI]), result:colOf(cells[iR]), note: iN >= 0 ? colOf(cells[iN]) : -1, n:0};
+          continue;
+        }
+      } else if(texts.some(t => HF.some(f => f[1].test(t)))){
+        ck = null;   // 점검표가 끝나고 다른 이름칸(종합의견 등)이 나옴
+      } else {
+        const byCol = new Map(cells.map(c => [colOf(c), c]));
+        const ic = byCol.get(ck.item);
+        const label = ic ? cText(ic).trim().replace(/^\(?\d+\)?[.)]?\s*/, '') : '';
+        if(label && !/[□☐]/.test(label)){
+          const i = ck.n++;
+          if(dry) res.items.push(label);
+          else {
+            const it = rec.items[i];
+            if(it){
+              if(fillVal(byCol.get(ck.result), it.result)) res.filled++;
+              if(ck.note >= 0 && fillVal(byCol.get(ck.note), it.note)) res.filled++;
+            }
+          }
+        }
+        continue;
+      }
+      // 이름칸 → 오른쪽 칸 채우기
+      for(let i = 0; i < cells.length - 1; i++){
+        const lab = texts[i];
+        if(!lab || lab.length > 14) continue;
+        const nx = cells[i + 1], nxt = cText(nx).trim();
+        if(/서명|날인|확인자인$|^확인자$/.test(lab) && (!nxt || /^\(?(인|서명|서명또는인)\)?$/.test(nz(nxt)))){
+          if(dry) res.found.push('서명'); else if(!res.slots.signCell) res.slots.signCell = nx;
+          i++; continue;
+        }
+        if(/^(현장)?사진(대지)?$|^점검사진$|^사진첨부$/.test(lab) && !nxt){
+          if(dry) res.found.push('사진'); else if(!res.slots.photoCell) res.slots.photoCell = nx;
+          i++; continue;
+        }
+        const f = HF.find(f => f[1].test(lab));
+        if(f){
+          if(dry){ if(!nxt || /[□☐]/.test(nxt)) res.found.push(f[0]); }
+          else if(fillVal(nx, f[2](rec))) res.filled++;
+          i++; continue;
+        }
+        if(!nxt && /^[가-힣A-Za-z]{2,}$/.test(lab) && !SKIP_LAB.test(lab)){
+          const label = cText(cells[i]).trim().replace(/\s+/g, ' ');
+          if(dry){ if(!res.extra.includes(label) && res.extra.length < 12) res.extra.push(label); }
+          else if(fillVal(nx, ext.get(lab))) res.filled++;
+          i++;
+        }
+      }
+    }
+  }
+  return res;
+}
+
+/* ---------- 사진·서명 넣기 ---------- */
+const HP_NS = 'http://www.hancom.co.kr/hwpml/2011/paragraph', HC_NS = 'http://www.hancom.co.kr/hwpml/2011/core';
+const MM = 283.465;   // 1mm = 283.465 HWPUNIT
+function imgDims(src){
+  return new Promise(res => {
+    const im = new Image(), done = v => { clearTimeout(tm); res(v); };
+    const tm = setTimeout(() => done({w:1200, h:900}), 4000);
+    im.onload = () => done({w:im.naturalWidth || 1200, h:im.naturalHeight || 900});
+    im.onerror = () => done({w:1200, h:900});
+    im.src = src;
+  });
+}
+let picSeq = 0;
+function picXml(binId, dim, maxW, maxH){
+  const ow = Math.round(dim.w * 75), oh = Math.round(dim.h * 75);
+  const s = Math.min(maxW / ow, maxH / oh, 1);
+  const w = Math.round(ow * s), h = Math.round(oh * s);
+  const id = 1900000000 + (++picSeq) * 7 + Math.floor(Math.random() * 5);
+  return `<hp:pic xmlns:hp="${HP_NS}" xmlns:hc="${HC_NS}" id="${id}" zOrder="${picSeq}" numberingType="PICTURE" textWrap="TOP_AND_BOTTOM" textFlow="BOTH_SIDES" lock="0" dropcapstyle="None" href="" groupLevel="0" instid="${id + 1}" reverse="0">`
+    + `<hp:offset x="0" y="0"/><hp:orgSz width="${ow}" height="${oh}"/><hp:curSz width="${w}" height="${h}"/><hp:flip horizontal="0" vertical="0"/>`
+    + `<hp:rotationInfo angle="0" centerX="${Math.round(w / 2)}" centerY="${Math.round(h / 2)}" rotateimage="1"/>`
+    + `<hp:renderingInfo><hc:transMatrix e1="1" e2="0" e3="0" e4="0" e5="1" e6="0"/><hc:scaMatrix e1="${(w / ow).toFixed(6)}" e2="0" e3="0" e4="0" e5="${(h / oh).toFixed(6)}" e6="0"/><hc:rotMatrix e1="1" e2="0" e3="0" e4="0" e5="1" e6="0"/></hp:renderingInfo>`
+    + `<hc:img binaryItemIDRef="${binId}" bright="0" contrast="0" effect="REAL_PIC" alpha="0"/>`
+    + `<hp:imgRect><hc:pt0 x="0" y="0"/><hc:pt1 x="${ow}" y="0"/><hc:pt2 x="${ow}" y="${oh}"/><hc:pt3 x="0" y="${oh}"/></hp:imgRect>`
+    + `<hp:imgClip left="0" right="${ow}" top="0" bottom="${oh}"/><hp:inMargin left="0" right="0" top="0" bottom="0"/><hp:imgDim dimwidth="${ow}" dimheight="${oh}"/><hp:effects/>`
+    + `<hp:sz width="${w}" widthRelTo="ABSOLUTE" height="${h}" heightRelTo="ABSOLUTE" protect="0"/>`
+    + `<hp:pos treatAsChar="1" affectLSpacing="0" flowWithText="1" allowOverlap="0" holdAnchorAndSO="0" vertRelTo="PARA" horzRelTo="COLUMN" vertAlign="TOP" horzAlign="LEFT" vertOffset="0" horzOffset="0"/>`
+    + `<hp:outMargin left="0" right="0" top="0" bottom="0"/><hp:shapeComment>현장지도 앱에서 넣은 그림</hp:shapeComment></hp:pic>`;
+}
+async function placeImages(zip, docs, rec, slots){
+  const hpfName = Object.keys(zip.files).find(n => /content\.hpf$/i.test(n));
+  if(!hpfName) return 0;
+  const hpfStr = await zip.file(hpfName).async('string');
+  const hpf = new DOMParser().parseFromString(hpfStr, 'application/xml');
+  const manifest = hpf.getElementsByTagNameNS('*', 'manifest')[0];
+  if(!manifest) return 0;
+  let n = 0, added = 0;
+  const addBin = dataUrl => {
+    const m = /^data:image\/(png|jpe?g|gif|bmp);base64,(.*)$/i.exec(dataUrl || ''); if(!m) return null;
+    const ext = m[1].toLowerCase().replace('jpeg', 'jpg');
+    let id; do{ id = 'fmimg' + (++n); }while(zip.file(`BinData/${id}.${ext}`));
+    zip.file(`BinData/${id}.${ext}`, m[2], {base64:true});
+    const it = hpf.createElementNS(manifest.namespaceURI, 'opf:item');
+    it.setAttribute('id', id); it.setAttribute('href', `BinData/${id}.${ext}`);
+    it.setAttribute('media-type', 'image/' + (ext === 'jpg' ? 'jpeg' : ext)); it.setAttribute('isEmbeded', '1');
+    manifest.appendChild(it);
+    return id;
+  };
+  const putPic = async (p, dataUrl, maxW, maxH) => {
+    const id = addBin(dataUrl); if(!id) return false;
+    const pic = new DOMParser().parseFromString(picXml(id, await imgDims(dataUrl), maxW, maxH), 'application/xml').documentElement;
+    const run = p.ownerDocument.createElementNS(HP_NS, 'hp:run'); run.setAttribute('charPrIDRef', (childs(p, 'run')[0] || {getAttribute:() => '0'}).getAttribute('charPrIDRef') || '0');
+    run.appendChild(p.ownerDocument.importNode(pic, true));
+    p.insertBefore(run, childs(p, 'linesegarray')[0] || null);
+    childs(p, 'linesegarray').forEach(x => p.removeChild(x));
+    added++; return true;
+  };
+  const cellW = tc => { const z = childs(tc, 'cellSz')[0]; return z ? Math.max(20 * MM, +z.getAttribute('width') - 4 * MM) : 60 * MM; };
+  // 서명
+  if(rec.sign && rec.sec.sign !== false){
+    if(slots.sign.length){ for(const p of slots.sign) await putPic(p, rec.sign, 40 * MM, 15 * MM); }
+    else if(slots.signCell){ const ps = cellParas(slots.signCell); if(ps[0]) await putPic(ps[0], rec.sign, Math.min(cellW(slots.signCell), 40 * MM), 15 * MM); }
+  }
+  // 사진
+  const photos = rec.photos.filter(Boolean);
+  if(photos.length && rec.sec.photos !== false){
+    if(slots.photo.length){
+      let k = 0;
+      for(const {p, n:num} of slots.photo){
+        if(num){ if(photos[num - 1]) await putPic(p, photos[num - 1], 80 * MM, 60 * MM); }
+        else { while(k < photos.length) await putPic(p, photos[k++], 80 * MM, 60 * MM); }
+      }
+    } else if(slots.photoCell){
+      const ps = cellParas(slots.photoCell), w = cellW(slots.photoCell);
+      for(const ph of photos) if(ps[0]) await putPic(ps[0], ph, photos.length > 1 ? w / 2 - MM : w, 70 * MM);
+    } else {
+      // 자리가 없으면 문서 끝에 '현장 사진' 쪽을 붙임
+      const doc = docs[docs.length - 1].d, sec = doc.documentElement;
+      const newP = text => {
+        const p = doc.createElementNS(HP_NS, 'hp:p');
+        [['id', '0'], ['paraPrIDRef', '0'], ['styleIDRef', '0'], ['pageBreak', '0'], ['columnBreak', '0'], ['merged', '0']].forEach(([k, v]) => p.setAttribute(k, v));
+        if(text != null){ const r = doc.createElementNS(HP_NS, 'hp:run'); r.setAttribute('charPrIDRef', '0'); const t = doc.createElementNS(HP_NS, 'hp:t'); writeT(t, text); r.appendChild(t); p.appendChild(r); }
+        sec.appendChild(p); return p;
+      };
+      const head = newP(`현장 사진 — ${rec.target.name || ''}`); head.setAttribute('pageBreak', '1');
+      for(let i = 0; i < photos.length; i += 2){
+        const p = newP(null);
+        await putPic(p, photos[i], 82 * MM, 62 * MM);
+        if(photos[i + 1]) await putPic(p, photos[i + 1], 82 * MM, 62 * MM);
+        newP([i, i + 1].filter(j => photos[j]).map(j => rec.capt[j] || ('사진 ' + (j + 1))).join('   /   '));
+      }
+    }
+  }
+  if(added){
+    let out = new XMLSerializer().serializeToString(hpf);
+    const decl = (hpfStr.match(/^\s*<\?xml[^>]*\?>/) || [''])[0].trim();
+    if(decl && !/^<\?xml/.test(out)) out = decl + out;
+    zip.file(hpfName, out);
+  }
+  return added;
+}
+
+/* ---------- 파일 읽기·만들기 ---------- */
+async function hwpxDocs(dataUrl){
+  if(!window.JSZip) throw new Error('한글 서식 도구를 불러오지 못했습니다 (인터넷 연결 확인)');
+  const zip = await JSZip.loadAsync(String(dataUrl).split(',')[1], {base64:true});
+  const names = Object.keys(zip.files).filter(n => /^Contents\/section\d+\.xml$/i.test(n))
+    .sort((a, b) => parseInt(a.replace(/\D/g, '')) - parseInt(b.replace(/\D/g, '')));
+  if(!names.length) throw new Error('한글(hwpx) 문서가 아닙니다');
+  const docs = [];
+  for(const n of names){
+    const s = await zip.file(n).async('string');
+    const d = new DOMParser().parseFromString(s, 'application/xml');
+    if(d.getElementsByTagName('parsererror').length) throw new Error('문서 구조를 읽지 못했습니다');
+    docs.push({n, d, decl: (s.match(/^\s*<\?xml[^>]*\?>/) || [''])[0].trim()});
+  }
+  return {zip, docs};
+}
+async function hwpxFile(h){
+  if(!h) throw new Error('한글 서식이 아닙니다');
+  let d = await fdb.get(h.key);
+  const driveId = h.driveId || ((tpls.find(t => t.hwpx && t.hwpx.key === h.key) || {}).hwpx || {}).driveId;
+  if(!d && driveId && typeof SY !== 'undefined' && SY.on()){
+    const j = await api('files', {ids:[driveId]}, 120000);
+    d = (j.files || {})[driveId];
+    if(d) await fdb.put(h.key, d);
+  }
+  if(!d) throw new Error('이 기기에 서식 파일이 없습니다. ☁ 동기화를 켜거나 서식을 다시 올려 주세요.');
+  return d;
+}
+async function makeHwpx(rec){
+  if(window.syncMedia && (rec.photos.some(p => !p) || (!rec.sign && rec.signId))) await syncMedia(rec);
+  const {zip, docs} = await hwpxDocs(await hwpxFile(rec.hwpx));
+  const r = walkHwpx(docs.map(x => x.d), rec, false);
+  r.filled += await placeImages(zip, docs, rec, r.slots);
+  const ser = new XMLSerializer();
+  for(const x of docs){
+    let s = ser.serializeToString(x.d);
+    if(x.decl && !/^<\?xml/.test(s)) s = x.decl + s;
+    zip.file(x.n, s);
+  }
+  const mt = zip.file('mimetype');
+  if(mt) zip.file('mimetype', await mt.async('string'), {compression:'STORE'});
+  const blob = await zip.generateAsync({type:'blob', compression:'DEFLATE', mimeType:'application/hwp+zip'});
+  return {blob, filled:r.filled};
+}
+
+/* ---------- 드라이브에 서식 원본 보관 (동기화 시 다른 기기도 사용) ---------- */
+async function uploadHwpxTpls(){
+  if(typeof SY === 'undefined' || !SY.on()) return;
+  for(const t of tpls){
+    if(!t.hwpx || t.hwpx.driveId) continue;
+    const d = await fdb.get(t.hwpx.key); if(!d) continue;
+    const r = await api('saveTplFile', {name:t.hwpx.name, tplName:t.name, data:d}, 180000);
+    t.hwpx.driveId = r.id; t.usedAt = Date.now(); saveTpls();
+  }
+}
+window.uploadHwpxTpls = uploadHwpxTpls;
+
+/* ---------- 화면 연결 ---------- */
+$('tplHwpBtn').onclick = () => $('tplHwpIn').click();
+$('tplHwpIn').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if(!f) return;
+  if(/\.hwp$/i.test(f.name)) return alert('.hwp 파일은 바로 쓸 수 없습니다.\n한글에서 [파일 → 다른 이름으로 저장 → 파일 형식: 한글 표준 문서(*.hwpx)]로 저장한 뒤 올려 주세요.');
+  try{
+    const data = await blobToDataUrl(f);
+    const {docs} = await hwpxDocs(data);
+    const a = walkHwpx(docs.map(x => x.d), null, true);
+    const base = f.name.replace(/\.hwpx$/i, '');
+    const name = (prompt('서식 이름 (목록에 표시)', base) || base).trim() || base;
+    const key = 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    await fdb.put(key, data);
+    collectForm();
+    const now = Date.now();
+    const t = normTpl({
+      id:'t' + now, name, title:name,
+      items: a.items.length ? a.items : cur.items.map(x => x.label),
+      opts:[...cur.opts], extra:a.extra,
+      sec:{...DEFAULT_SEC, extra: a.extra.length > 0},
+      hwpx:{key, name:f.name, mode:a.mode, driveId:''}, savedAt:now, usedAt:now
+    });
+    tpls.push(t); saveTpls();
+    applyTplToCur(t); dirty = true; renderForm();
+    const found = [...new Set(a.found)];
+    alert(`'${name}' 한글 서식을 추가했습니다.\n\n`
+      + `인식 방식: ${a.mode === 'ph' ? `자리표시 {{ }} ${a.ph.length}곳` : '표 이름칸 자동 인식'}\n`
+      + `점검 항목: ${a.items.length ? a.items.length + '개' : '찾지 못함 (현재 항목 사용)'}\n`
+      + `자동으로 채울 칸: ${found.length ? found.join(', ') : '없음'}\n`
+      + `추가 사항(직접 입력): ${a.extra.length ? a.extra.join(', ') : '없음'}\n\n`
+      + (found.length || a.items.length ? '현장 점검 화면 아래 [한글 저장]으로 채워진 한글 파일을 받을 수 있습니다.'
+         : '칸을 잘 찾지 못했습니다. 양식의 빈칸에 {{성명}}, {{사업장}}, {{점검일시}}, {{항목1_결과}} 처럼 적어 두고 다시 올리면 정확히 채워집니다.'));
+    if(window.syncSoon) syncSoon();
+  }catch(err){ alert('서식을 읽지 못했습니다: ' + err.message); }
+};
+/* ---------- 지도 화면의 '점검 서식' 선택 ---------- */
+window.fillMainTpl = () => {
+  const sel = $('mainTpl'); if(!sel) return;
+  const list = sortedTpls();
+  sel.innerHTML = list.map(t => `<option value="${t.id}">${t.hwpx ? '[한글] ' : ''}${esc(t.name)}</option>`).join('');
+  sel.value = list[0].id;
+};
+$('mainTpl').onchange = e => { useTpl(e.target.value); fillMainTpl(); toast(`'${(tplById(e.target.value) || {}).name}' 서식으로 점검합니다 — 지도 핀이나 목록의 [점검]을 누르세요`); };
+fillMainTpl();
+
+$('iHwp').onclick = async () => {
+  if(!cur || !cur.hwpx) return;
+  if(!(await saveCur(true))) return;
+  $('busy').textContent = '한글 문서 만드는 중…'; $('busy').hidden = false;
+  try{
+    const {blob, filled} = await makeHwpx(cur);
+    const name = pdfName(cur).replace(/\.pdf$/, '.hwpx');
+    saveBlob(blob, name);
+    toast(`한글 문서를 저장했습니다 (채운 칸 ${filled}곳)`);
+    if(window.syncPdf) syncPdf(blob, name, {recId:cur.id, tplName:(tplById(cur.tplId) || {}).name || cur.title,
+      target:cur.target.name, title:cur.title, pages:''});
+  }catch(err){ alert('한글 문서를 만들지 못했습니다: ' + err.message); }
+  finally{ $('busy').hidden = true; $('busy').textContent = 'PDF 만드는 중…'; }
+};
+</script>
+</body>
+</html>
