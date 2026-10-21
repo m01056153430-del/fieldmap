@@ -706,6 +706,8 @@ function bindUi(){
     if(unlocked) return openSettings();
     $('pw').value = ''; $('pwMsg').textContent = ''; $('pwDlg').showModal(); $('pw').focus();
   };
+  // 엔터(모바일 '이동')를 누르면 '취소'가 먼저 눌리던 문제 → 엔터 = 확인
+  $('pw').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); $('pwOk').click(); } });
   $('pwForm').addEventListener('submit', e => {
     if(e.submitter && e.submitter.value === 'cancel') return;
     if($('pw').value === SETTINGS_PW){ unlocked = true; return; }
