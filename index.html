@@ -187,7 +187,7 @@
         <span style="font-size:13px;color:var(--mut);white-space:nowrap">점검 서식</span>
         <select id="mainTpl" style="flex:1;min-width:0;padding:8px;border:1px solid var(--ln);border-radius:8px;font-size:14px;background:#fff"></select>
       </div>
-      <input id="q" type="search" placeholder="이름·주소·품목 검색">
+      <input id="q" type="search" placeholder="모든 항목 검색 (띄어쓰기로 여러 단어)">
       <div id="filters"></div>
       <ul id="list"></ul>
       <div id="status">엑셀 파일을 열어 주세요.</div>
@@ -212,7 +212,10 @@
 <dialog id="dlg">
   <form method="dialog">
     <div class="sec">엑셀 업로드</div>
-    <button type="button" id="openInSet" class="wide">엑셀 열기 (명단 불러오기)</button>
+    <button type="button" id="tplXlsBtn" class="wide" style="background:#fff;color:var(--b);border:1px solid var(--b);margin-bottom:6px">업로드용 엑셀 서식 받기 (빈 서식)</button>
+    <button type="button" id="curXlsBtn" class="wide" style="background:#fff;color:var(--b);border:1px solid var(--b);margin-bottom:6px">현재 명단을 서식으로 받기 (추가·수정용)</button>
+    <button type="button" id="openInSet" class="wide">엑셀 올리기 (명단 불러오기)</button>
+    <small style="display:block;color:var(--mut);margin:6px 0 4px">☁ 연결된 상태에서 올리면 모든 사용자에게 같은 명단이 공유됩니다.</small>
     <label class="chk"><input type="checkbox" id="allowTop"> 상단에 '엑셀 열기' 버튼 표시<br><small>켜면 비밀번호 없이 누구나 명단을 바꿀 수 있습니다</small></label>
     <div class="sec">지도</div>
     <label for="region">지번 앞에 붙일 시·군</label>
@@ -475,6 +478,7 @@ async function geocodePlace(place){
 
 /* ---------- 엑셀 읽기 ---------- */
 function pick(obj, names){
+  for(const n of names) for(const k of Object.keys(obj)) if(k.replace(/\s/g,'') === n) return obj[k];   // 정확히 같은 제목 우선
   for(const k of Object.keys(obj)){
     const kk = k.replace(/\s/g,'');
     if(names.some(n => kk.includes(n))) return obj[k];
@@ -492,10 +496,61 @@ function readWorkbook(buf){
     tel: String(pick(r,['연락처','전화'])).trim(),
     place: String(pick(r,['사업장장소','사업장','지번','장소'])).trim(),
     item: String(pick(r,['품목'])).trim(),
-    area: pick(r,['사업량','면적']),
+    detail: String(pick(r,['세부사업'])).trim(),
+    area: numOr(pick(r,['사업량','면적'])),
+    total: numOr(pick(r,['사업비총액','총사업비','사업비'])),
+    subsidy: numOr(pick(r,['보조액','보조금'])),
+    self: numOr(pick(r,['자부담'])),
     biz: String(pick(r,['사업명'])).trim(),
     note: String(pick(r,['비고'])).trim()
   })).filter(r => r.name || r.place);
+}
+/* 숫자로 바꿀 수 있으면 숫자, 아니면 원래 글자 */
+function numOr(v){
+  const t = String(v ?? '').trim();
+  if(t === '') return '';
+  const n = Number(t.replace(/[,\s원]/g, ''));
+  return isNaN(n) ? t : n;
+}
+/* ---------- 업로드용 엑셀 서식 ---------- */
+const XLS_COLS = [
+  ['성명','name'],['읍면','town'],['주소','addr'],['연락처','tel'],['사업장장소','place'],
+  ['품목','item'],['세부사업','detail'],['사업량','area'],['사업비 총액','total'],['보조액','subsidy'],['자부담액','self'],
+  ['사업명','biz'],['비고','note']
+];
+const XLS_GUIDE = [
+  ['항목','설명'],
+  ['성명','보조사업자 이름 (성명 또는 사업장장소 중 하나는 꼭 입력)'],
+  ['읍면','사업자 주소지 읍·면'],
+  ['주소','사업자 주소'],
+  ['연락처','전화번호'],
+  ['사업장장소','지도에 찍힐 지번. 시·군은 빼고 「읍면 리 번지」로 (예: 구례읍 봉동리 89-1). 여러 곳은 쉼표로 구분. 지도의 읍면 선택은 이 칸 기준'],
+  ['품목','재배 품목'],
+  ['세부사업','세부사업명'],
+  ['사업량','면적(㎡) 등. 숫자만 쓰면 ㎡로 표시'],
+  ['사업비 총액','총사업비(원), 숫자만'],
+  ['보조액','보조금(원), 숫자만'],
+  ['자부담액','자부담(원), 숫자만'],
+  ['사업명','보조사업명'],
+  ['비고','기타'],
+  ['',''],
+  ['참고','첫 행 제목은 바꾸지 마세요. 이 「작성요령」 시트는 올릴 때 자동으로 무시됩니다.']
+];
+function downloadRosterXlsx(withData){
+  const head = XLS_COLS.map(c => c[0]);
+  const body = withData && rows.length
+    ? rows.map(r => XLS_COLS.map(c => r[c[1]] ?? ''))
+    : [['홍길동','구례읍','구례군 구례읍 봉성로 1','010-0000-0000','구례읍 봉동리 89-1, 구례읍 봉동리 90-5','감','저온저장고','1200',10000000,5000000,5000000,'과수 생산시설 현대화','예시 행 - 지우고 작성']];
+  const ws = XLSX.utils.aoa_to_sheet([head, ...body]);
+  ws['!cols'] = [10,9,26,15,38,10,14,9,13,12,12,22,18].map(w => ({wch:w}));
+  const g = XLSX.utils.aoa_to_sheet(XLS_GUIDE); g['!cols'] = [{wch:12},{wch:90}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '명단');
+  XLSX.utils.book_append_sheet(wb, g, '작성요령');
+  const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const d = new Date(), ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  saveBlob(new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
+    withData && rows.length ? `현장지도_명단_${ymd}.xlsx` : '현장지도_명단_업로드서식.xlsx');
 }
 
 /* ---------- 화면 ---------- */
@@ -503,9 +558,15 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function setStatus(t){ $('status').textContent = t; }
 
+/* 지도 읍면 = 사업장장소 첫 읍·면 (없으면 읍면 칸) */
+function placeTown(r){
+  const m = String(r.place || '').match(/([가-힣]+(?:읍|면))(?=\s|$)/);
+  return m ? m[1] : (r.town || '기타');
+}
 function buildColors(){
   colorOf = {};
-  [...new Set(rows.map(r => r.town || '기타'))].forEach((t,i) => colorOf[t] = COLORS[i % COLORS.length]);
+  [...new Set(rows.map(placeTown))].sort((a,b) => a === '기타' ? 1 : b === '기타' ? -1 : a.localeCompare(b, 'ko'))
+    .forEach((t,i) => colorOf[t] = COLORS[i % COLORS.length]);
 }
 function markerImage(color){
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38"><path d="M14 1C7 1 1 6.6 1 13.6 1 23 14 37 14 37s13-14 13-23.4C27 6.6 21 1 14 1z" fill="${color}" stroke="#fff" stroke-width="2"/><circle cx="14" cy="13.5" r="5" fill="#fff"/></svg>`;
@@ -514,12 +575,17 @@ function markerImage(color){
 }
 function infoHtml(r, pt){
   const tel = r.tel.replace(/[^\d+]/g,'');
-  const area = r.area !== '' ? Number(r.area).toLocaleString() + '㎡' : '';
+  const areaN = Number(String(r.area ?? '').replace(/,/g,''));
+  const area = r.area === '' || r.area == null ? '' : (isNaN(areaN) ? String(r.area) : areaN.toLocaleString() + '㎡');
+  const won = v => { if(v === '' || v == null) return ''; const n = Number(String(v).replace(/,/g,'')); return isNaN(n) ? esc(v) : n.toLocaleString() + '원'; };
+  const money = [['총액',r.total],['보조',r.subsidy],['자부담',r.self]].filter(x => won(x[1])).map(x => x[0] + ' ' + won(x[1])).join(' · ');
   const to = `https://map.kakao.com/link/to/${encodeURIComponent(r.name + ' 사업장')},${pt.lat},${pt.lng}`;
   const view = `https://map.kakao.com/link/map/${encodeURIComponent(r.name + ' 사업장')},${pt.lat},${pt.lng}`;
-  return `<div class="iw"><b>${esc(r.name)}</b> <span style="color:#6b7280">${esc(r.town)}</span><br>
+  return `<div class="iw"><b>${esc(r.name)}</b> <span style="color:#6b7280">${esc(placeTown(r))}</span><br>
     ${esc(r.place)}${pt.approx?' <span class="fail">(리 단위 근사 위치)</span>':''}<br>
-    품목 ${esc(r.item)}${area?' · '+area:''}<br>
+    품목 ${esc(r.item)}${r.detail?' · '+esc(r.detail):''}${area?' · '+esc(area):''}<br>
+    ${r.biz?'사업 '+esc(r.biz)+'<br>':''}
+    ${money?'사업비 '+money+'<br>':''}
     ${r.addr?'주소 '+esc(r.addr)+'<br>':''}
     ${r.note?'비고 '+esc(r.note)+'<br>':''}
     <div style="margin-top:6px">${tel?`<a href="tel:${tel}">전화</a>`:''}<a href="${to}" target="_blank" rel="noopener">길찾기</a><a href="${view}" target="_blank" rel="noopener">카카오맵</a></div>
@@ -532,10 +598,21 @@ function renderFilters(){
     .concat(towns.map(t => `<button class="chip ${filterTown===t?'on':''}" data-t="${esc(t)}"><span class="dot" style="background:${colorOf[t]}"></span>${esc(t)}</button>`)) : []).join('');
 }
 function visible(r){
-  const q = $('q').value.trim();
-  if(filterTown && (r.town||'기타') !== filterTown) return false;
-  if(!q) return true;
-  return [r.name,r.place,r.item,r.addr,r.town].join(' ').includes(q);
+  if(filterTown && placeTown(r) !== filterTown) return false;
+  const words = $('q').value.toLowerCase().split(/\s+/).filter(Boolean);
+  if(!words.length) return true;
+  const hay = [...XLS_COLS.map(c => r[c[1]]), placeTown(r)].map(v => String(v ?? '')).join(' ').toLowerCase();
+  const hayNoSp = hay.replace(/[\s-]/g, '');
+  return words.every(w => hay.includes(w) || hayNoSp.includes(w.replace(/-/g, '')));
+}
+/* 보이는 핀만 지도에 꽉 차게 */
+function fitVisible(){
+  if(!map) return;
+  const vis = markers.filter(m => visible(rows[m._i]));
+  if(!vis.length) return;
+  if(info) info.close();
+  if(vis.length === 1){ map.setLevel(4); map.panTo(vis[0].getPosition()); return; }
+  const b = new kakao.maps.LatLngBounds(); vis.forEach(m => b.extend(m.getPosition())); map.setBounds(b);
 }
 function renderList(){
   const ul = $('list'); ul.innerHTML = '';
@@ -543,16 +620,18 @@ function renderList(){
     if(!visible(r)) return;
     const li = document.createElement('li');
     const ok = r._pts && r._pts.length;
-    li.innerHTML = `<div class="n"><span class="dot" style="background:${colorOf[r.town||'기타']}"></span>${esc(r.name)} <span style="font-weight:400;color:#6b7280">${esc(r.item)}</span>${window.inspDone && inspDone.has(r.name+'|'+r.place) ? `<span class="badge ${/보완|부적합/.test(inspDone.get(r.name+'|'+r.place))?'warn':''}">${esc(inspDone.get(r.name+'|'+r.place))}</span>` : ''}</div>
+    li.innerHTML = `<div class="n"><span class="dot" style="background:${colorOf[placeTown(r)]}"></span>${esc(r.name)} <span style="font-weight:400;color:#6b7280">${esc(r.item)}${r.detail?' · '+esc(r.detail):''}</span>${window.inspDone && inspDone.has(r.name+'|'+r.place) ? `<span class="badge ${/보완|부적합/.test(inspDone.get(r.name+'|'+r.place))?'warn':''}">${esc(inspDone.get(r.name+'|'+r.place))}</span>` : ''}</div>
       <div class="s">${esc(r.place)}</div>${ok?'':'<div class="fail">위치를 찾지 못했습니다</div>'}`;
     li.insertAdjacentHTML('afterbegin', `<button type="button" class="chip" data-insp="${i}" style="float:right;margin-left:6px">점검</button>`);
     li.onclick = e => { if(e.target.closest('[data-insp]')) return openInspect(i); focusRow(i); };
     ul.appendChild(li);
   });
   markers.forEach(m => m.setMap(visible(rows[m._i]) ? map : null));
+  const shown = rows.filter(visible).length;
+  if(rows.length && (filterTown || $('q').value.trim())) setStatus(`검색·선택 결과 ${shown}명 / 전체 ${rows.length}명`);
   if(window.inspDone && rows.length){
     const done = rows.filter(r => inspDone.has((r.name||'') + '|' + (r.place||''))).length;
-    const ft = filterTown ? rows.filter(r => (r.town||'기타') === filterTown) : null;
+    const ft = filterTown ? rows.filter(r => placeTown(r) === filterTown) : null;
     const fd = ft ? ft.filter(r => inspDone.has((r.name||'') + '|' + (r.place||''))).length : 0;
     $('rate').style.display = 'block';
     $('rate').innerHTML = `전체 점검률 <b style="color:#1f6feb">${Math.round(done / rows.length * 1000) / 10}%</b> (${done}/${rows.length}명)`
@@ -581,7 +660,7 @@ async function plot(){
       const pt = await geocodePlace(p);
       if(!pt) continue;
       r._pts.push(pt);
-      const m = new kakao.maps.Marker({position:new kakao.maps.LatLng(pt.lat,pt.lng), image:markerImage(colorOf[r.town||'기타']), title:r.name});
+      const m = new kakao.maps.Marker({position:new kakao.maps.LatLng(pt.lat,pt.lng), image:markerImage(colorOf[placeTown(r)]), title:r.name});
       m._i = i; m._pt = pt; m.setMap(map); markers.push(m);
       kakao.maps.event.addListener(m, 'click', () => { info.setContent(infoHtml(r, pt)); info.open(map, m); });
       bounds.extend(m.getPosition());
@@ -608,11 +687,15 @@ function bindUi(){
     }catch(err){ alert('엑셀을 읽지 못했습니다: ' + err.message); }
     e.target.value = '';
   };
-  $('q').oninput = renderList;
+  let qTm = null;
+  $('q').oninput = () => { renderList(); clearTimeout(qTm); qTm = setTimeout(fitVisible, 500); };
   $('filters').onclick = e => {
     const b = e.target.closest('.chip'); if(!b) return;
-    filterTown = b.dataset.t || null; renderFilters(); renderList();
+    filterTown = (b.dataset.t || null) === filterTown ? null : (b.dataset.t || null);
+    renderFilters(); renderList(); fitVisible();
   };
+  $('tplXlsBtn').onclick = () => downloadRosterXlsx(false);
+  $('curXlsBtn').onclick = () => { if(!rows.length){ alert('불러온 명단이 없어 빈 서식을 내려받습니다.'); } downloadRosterXlsx(true); };
   $('toggle').onclick = () => $('side').classList.toggle('hide');
   const applyTop = () => { $('openTop').style.display = allowTop ? 'inline-block' : 'none'; };
   applyTop();
@@ -820,7 +903,7 @@ function newRecord(r){
     extra: t.extra.map(label => ({label, value:''})), sec: {...t.sec}, hwpx: t.hwpx || null,
     overall: '', memo: '', date: localDT(new Date()), dateText: '', gpsText: '',
     inspector: LS.get('inspector', ''), gps: null, photos: [], photoIds: [], capt: [], sign: null, signId: null,
-    target: {name:r.name, town:r.town, tel:r.tel, addr:r.addr, place:r.place, item:r.item, area:r.area, biz:r.biz},
+    target: {name:r.name, town:r.town, tel:r.tel, addr:r.addr, place:r.place, item:r.item, detail:r.detail||'', area:r.area, biz:r.biz},
     savedAt: 0
   };
 }
@@ -1377,7 +1460,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
    - 인터넷이 끊겨도 이 기기에 저장해 두었다가 연결되면 자동으로 올림
    ===================================================================== */
 const SYNC_URL_FIXED = 'https://script.google.com/macros/s/AKfycbx7aTE2O3bmA974LWIp3ZfyTYRlnofvgpZvBr6XbGzG186L5ot1JDs954ZBHF53n4mFwA/exec';   // ← 배포한 웹앱 URL을 넣어 두면 동료는 '이름·팀 키'만 입력하면 됩니다
-const ROSTER_KEYS = ['name','town','addr','tel','place','item','area','biz','note'];
+const ROSTER_KEYS = ['name','town','addr','tel','place','item','detail','area','total','subsidy','self','biz','note'];
 const SY = {
   url(){ return LS.get('syncUrl', '') || SYNC_URL_FIXED; },
   key(){ return LS.get('syncKey', ''); },
@@ -1512,7 +1595,7 @@ function mergeServerRec(sr, l){
   r._dirty = false;
   return r;
 }
-const rosterSig = rs => JSON.stringify((rs || []).map(r => ROSTER_KEYS.map(k => String(r[k] ?? '').trim())));
+const rosterSig = rs => JSON.stringify((rs || []).map(r => ROSTER_KEYS.map(k => String(r[k] ?? '').replace(/,/g,'').trim())));
 function applyServerTpls(list){
   let L = list.map(normTpl).sort((a, b) => (b.usedAt || 0) - (a.usedAt || 0));
   const seen = new Set(), drop = [];
