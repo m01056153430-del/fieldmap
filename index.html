@@ -247,6 +247,7 @@
 
 <dialog id="dlg">
   <form method="dialog">
+    <button value="cancel" type="submit" aria-label="닫기" title="닫기" style="float:right;margin:-8px -6px 0 0;background:none;border:0;font-size:24px;line-height:1;color:var(--mut);padding:4px 8px">✕</button>
     <div class="sec">엑셀 업로드</div>
     <button type="button" id="tplXlsBtn" class="wide" style="background:#fff;color:var(--b);border:1px solid var(--b);margin-bottom:6px">업로드용 엑셀 서식 받기 (빈 서식)</button>
     <button type="button" id="curXlsBtn" class="wide" style="background:#fff;color:var(--b);border:1px solid var(--b);margin-bottom:6px">현재 명단을 서식으로 받기 (추가·수정용)</button>
@@ -264,6 +265,8 @@
     <input id="region" placeholder="예) 전라남도 구례군">
     <div class="row">
       <button value="clear" id="clearBtn" type="submit">저장 데이터 삭제</button>
+      <span style="flex:1"></span>
+      <button value="cancel" type="submit">닫기</button>
       <button value="ok" type="submit">저장</button>
     </div>
   </form>
@@ -836,6 +839,7 @@ function bindUi(){
     if(unlocked) return openSettings();
     $('pw').value = ''; $('pwMsg').textContent = ''; $('pwDlg').showModal(); $('pw').focus();
   };
+  $('region').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); $('dlg').querySelector('button[value="ok"]').click(); } });
   // 엔터(모바일 '이동')를 누르면 '취소'가 먼저 눌리던 문제 → 엔터 = 확인
   $('pw').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); $('pwOk').click(); } });
   $('pwForm').addEventListener('submit', e => {
