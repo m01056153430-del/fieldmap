@@ -122,6 +122,35 @@
   .pg .blk{padding-bottom:12px}
   .pg .blk table{margin-bottom:0}
   .pg .blk table+table{margin-top:10px}
+  /* ===== 창(팝업) 이동·크기 조절 ===== */
+  dialog{overflow:auto;max-height:92vh;box-sizing:border-box}
+  dialog .wbar{display:flex;align-items:center;gap:6px;margin:-18px -18px 12px;padding:8px 8px 8px 16px;background:#f1f5f9;border-bottom:1px solid var(--ln);cursor:move;touch-action:none;position:sticky;top:-18px;z-index:3;user-select:none}
+  dialog .wbar .wt{flex:1;font-weight:700;font-size:14px;color:#334155}
+  dialog .wbar button{border:0!important;background:transparent;font-size:18px;line-height:1;padding:6px 9px;border-radius:6px;color:#475569}
+  dialog .wbar button:hover{background:#e2e8f0}
+  .wrh{position:absolute;right:0;bottom:0;width:22px;height:22px;cursor:nwse-resize;touch-action:none;z-index:4;
+    background:linear-gradient(135deg,transparent 50%,#94a3b8 50%,#94a3b8 58%,transparent 58%,transparent 70%,#94a3b8 70%,#94a3b8 78%,transparent 78%)}
+  dialog.wfull{width:100vw!important;height:100dvh!important;max-width:none!important;max-height:none!important;margin:0!important;inset:0!important;border-radius:0}
+  .ov .ovmax{display:none}
+  .ov .ovrh{display:none}
+  @media (min-width:761px){
+    .ov .ovmax{display:inline-block;background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:6px;padding:6px 10px;font-size:16px}
+    .ov.win{border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.35);overflow:hidden}
+    .ov.win .ovh{cursor:move;touch-action:none;user-select:none}
+    .ov.win .ovrh{display:block}
+  }
+  #tmList .tmi{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--ln);border-radius:10px;cursor:pointer;font-size:14px;margin:0}
+  #tmList .tmi.on{border-color:var(--b);background:#eff6ff}
+  #tmList .tmi input{width:auto;margin-top:3px}
+  #tmList small{color:var(--mut)}
+  #tmList .tag{background:var(--b);color:#fff;border-radius:999px;padding:1px 7px;font-size:11px}
+  .tmb{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+  .tmb button{padding:10px 6px;border-radius:8px;font-size:14px;background:#fff}
+  .tmb #tmUse{grid-column:1/-1}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chips .chip{font-size:12px;padding:4px 9px;cursor:pointer}
+  #fsBtn{white-space:nowrap}
+  @media (max-width:760px){ #fsBtn .fst{display:none} header h1{font-size:16px} }
   /* ===== 양식 디자인 ===== */
   .pg.lay{padding:0;position:relative}
   .pg.lay .le{position:absolute;box-sizing:border-box;overflow:hidden;line-height:1.4}
@@ -216,12 +245,14 @@
     <button id="syncBtn" title="구글 동기화">☁ 동기화</button>
     <button id="inspAll">점검목록</button>
     <button id="gear" title="설정">설정</button>
+    <button id="fsBtn" title="전체화면">⛶ <span class="fst">전체화면</span></button>
   </header>
   <div id="main">
     <aside id="side">
       <div style="display:flex;gap:6px;align-items:center;padding:10px 10px 0">
         <span style="font-size:13px;color:var(--mut);white-space:nowrap">점검 서식</span>
         <select id="mainTpl" style="flex:1;min-width:0;padding:8px;border:1px solid var(--ln);border-radius:8px;font-size:14px;background:#fff"></select>
+        <button id="mainTplMgr" type="button" style="white-space:nowrap;padding:8px 10px;border:1px solid var(--b);color:var(--b);background:#fff;border-radius:8px;font-size:13px;font-weight:600">관리</button>
       </div>
       <input id="q" type="search" placeholder="모든 항목 검색 (띄어쓰기로 여러 단어)">
       <div id="filters"></div>
@@ -247,7 +278,6 @@
 
 <dialog id="dlg">
   <form method="dialog">
-    <button value="cancel" type="submit" aria-label="닫기" title="닫기" style="float:right;margin:-8px -6px 0 0;background:none;border:0;font-size:24px;line-height:1;color:var(--mut);padding:4px 8px">✕</button>
     <div class="sec">엑셀 업로드</div>
     <button type="button" id="tplXlsBtn" class="wide" style="background:#fff;color:var(--b);border:1px solid var(--b);margin-bottom:6px">업로드용 엑셀 서식 받기 (빈 서식)</button>
     <button type="button" id="curXlsBtn" class="wide" style="background:#fff;color:var(--b);border:1px solid var(--b);margin-bottom:6px">현재 명단을 서식으로 받기 (추가·수정용)</button>
@@ -333,6 +363,7 @@
       <div class="rowf">
         <select id="tplSel"></select>
         <button id="tplEditBtn" class="bline">서식 편집</button>
+        <button id="tplDesignBtn" class="bline" style="color:#0f766e!important;border-color:#0f766e!important">양식 디자인</button>
       </div>
       <div class="rowf" style="margin-top:8px">
         <button id="tplHwpBtn" class="bline" style="flex:1">+ 한글 서식(.hwpx) 추가</button>
@@ -371,6 +402,7 @@
       <h3>종합 의견</h3>
       <div class="seg" id="iOverall"></div>
       <label class="fl" for="iMemo">특이사항 · 보완 요구사항</label>
+      <div id="iMemoChips" class="chips" style="margin:2px 0 6px"></div>
       <textarea id="iMemo" rows="3"></textarea>
     </div>
 
@@ -484,6 +516,24 @@
   </div>
 </section>
 
+<!-- ===== 서식 관리 ===== -->
+<dialog id="tplMgr" style="max-width:480px">
+  <form method="dialog">
+    <div style="font-size:13px;color:var(--mut);margin-bottom:8px">서식을 고르고 아래 버튼으로 사용·편집합니다.</div>
+    <div id="tmList" style="max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:6px"></div>
+    <div class="tmb">
+      <button type="button" id="tmUse" class="bpri">이 서식으로 점검</button>
+      <button type="button" id="tmEdit">항목·제목 편집</button>
+      <button type="button" id="tmDesign" style="color:#0f766e;border-color:#0f766e">양식 디자인</button>
+      <button type="button" id="tmRename">이름 바꾸기</button>
+      <button type="button" id="tmCopy">복제</button>
+      <button type="button" id="tmNew">＋ 새 서식</button>
+      <button type="button" id="tmDel" style="color:#b91c1c">삭제</button>
+    </div>
+    <div class="row"><button value="cancel" type="submit">닫기</button></div>
+  </form>
+</dialog>
+
 <!-- ===== 양식 편집 ===== -->
 <dialog id="tplDlg">
   <form method="dialog">
@@ -495,7 +545,10 @@
     <div class="secs" id="tSecs"></div>
     <label for="tItems" style="margin-top:12px">점검 항목 <small>(한 줄에 하나씩)</small></label>
     <textarea id="tItems"></textarea>
+    <div style="font-size:12px;color:var(--mut);margin:6px 0 4px">자주 쓰는 항목 (눌러서 추가)</div>
+    <div id="tItemLib" class="chips"></div>
     <label for="tOpts" style="margin-top:12px">항목별 결과 선택지 <small>(쉼표로 구분)</small></label>
+    <select id="tOptSet" style="width:100%;padding:8px;border:1px solid var(--ln);border-radius:8px;margin-bottom:6px;font-size:14px"></select>
     <input id="tOpts" placeholder="이상 없음, 보완 필요, 해당 없음">
     <label for="tExtra" style="margin-top:12px">추가 사항 표 항목 <small>(한 줄에 하나, 예: 보조금액)</small></label>
     <textarea id="tExtra" class="sm"></textarea>
@@ -866,9 +919,9 @@ bindUi();
 function mapFail(){
   if(map) return;
   $('empty').style.display = 'flex';
-  $('empty').innerHTML = location.protocol === 'file:'
+  $('empty').innerHTML = '<div>' + (location.protocol === 'file:'
     ? '내 PC에 저장된 파일로 열면 카카오맵이 표시되지 않습니다.<br>카카오에 등록한 <b>https 주소</b>(예: GitHub Pages)로 접속해 주세요.<br><small>명단 목록과 검색은 이 상태에서도 사용할 수 있습니다.</small>'
-    : '카카오맵을 불러오지 못했습니다.<br>인터넷 연결과, 카카오디벨로퍼스의 <b>JS SDK 도메인</b>에<br><b>' + esc(location.origin) + '</b> 이 등록되어 있는지 확인해 주세요.';
+    : '카카오맵을 불러오지 못했습니다.<br>인터넷 연결과, 카카오디벨로퍼스의 <b>JS SDK 도메인</b>에<br><b>' + esc(location.origin) + '</b> 이 등록되어 있는지 확인해 주세요.') + '</div>';
 }
 setTimeout(mapFail, 6000);
 if(!window.kakao || !kakao.maps){
@@ -1730,7 +1783,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     return '';
   }
   function pageHtml(p, rec, design){
-    return `<div class="pg lay">${p.els.map(e => `<div class="le${design && sel === e.id ? ' sel' : ''}"${design ? ` data-id="${e.id}"` : ''} style="${boxStyle(e)}">${elInner(e, rec, design)}${design && sel === e.id ? '<div class="rh"></div>' : ''}</div>`).join('')}</div>`;
+    return `<div class="pg lay">${p.els.filter(e => design || e.type !== 'photo' || e.showEmpty || (rec.photos && rec.photos[(e.idx || 1) - 1])).map(e => `<div class="le${design && sel === e.id ? ' sel' : ''}"${design ? ` data-id="${e.id}"` : ''} style="${boxStyle(e)}">${elInner(e, rec, design)}${design && sel === e.id ? '<div class="rh"></div>' : ''}</div>`).join('')}</div>`;
   }
   const hasPhoto = (p, rec) => p.els.some(e => e.type === 'photo' && rec.photos && rec.photos[(e.idx || 1) - 1]);
   /* 디자인 서식의 쪽 HTML (PDF·미리보기) */
@@ -1859,7 +1912,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(e.type === 'photo'){
       h += `<div class="ldrow"><span class="ldl">몇 번째 사진</span><input type="number" min="1" max="60" data-k="idx" value="${e.idx || 1}" style="width:64px">
         <select data-k="fit">${opt('contain', e.fit || 'contain', '사진 전체 보이기')}${opt('cover', e.fit || 'contain', '칸 꽉 채우기(잘림)')}</select></div>
-        <div class="ldrow">${tog('cap', e, '사진 설명 표시')}</div>`;
+        <div class="ldrow">${tog('cap', e, '사진 설명 표시')}${tog('showEmpty', e, '사진 없어도 빈칸 표시')}</div>`;
     }
     if(e.type === 'sign'){
       h += `<div class="ldrow"><span class="ldl">서명 없을 때 글자</span><input data-k="empty" value="${esc(e.empty ?? '(서명)')}"></div>`;
@@ -2085,6 +2138,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     openDesigner();
   };
   $('pvLayEdit').onclick = () => { closePreview(); openDesigner(); };
+  $('tplDesignBtn').onclick = () => { collectForm(); openDesigner(); };
 })();
 </script>
 
@@ -2926,6 +2980,271 @@ $('iHwp').onclick = async () => {
     if(!confirm(`'${n}' 이름으로 접속하는 사용자를 모두 차단할까요?`)) return;
     try{ last = await admin('block', {target:{name:n}}); $('admName').value = ''; renderAdm(); }catch(err){ alert('실패: ' + err.message); }
   };
+})();
+</script>
+<script>
+/* =====================================================================
+   사용 편의 모듈
+   - 팝업(대화상자)·작업창: 제목줄을 끌어 이동, 오른쪽 아래 모서리로 크기 조절, ⤢ 크게/작게
+   - 전체화면 버튼 (휴대폰)
+   - 서식 관리 팝업 (지도 화면에서 바로 선택·편집·디자인·복제·삭제)
+   - 선택 위주 입력: 자주 쓰는 값 목록에서 고르고, 직접 입력도 가능
+   ===================================================================== */
+(function(){
+  const isMobile = () => innerWidth <= 760;
+  const WP = LS.get('winpos', {});
+  const saveWP = () => LS.set('winpos', WP);
+  let zTop = 60;
+
+  /* ---------- 공통: 끌기 ---------- */
+  function dragBy(handle, target, onEnd){
+    handle.addEventListener('pointerdown', ev => {
+      if(ev.target.closest('button,input,select,textarea,a')) return;
+      if(target.classList.contains('wfull') || (target.classList.contains('ov') && !target.classList.contains('win'))) return;
+      const r = target.getBoundingClientRect(), sx = ev.clientX, sy = ev.clientY;
+      target.style.margin = '0'; target.style.inset = 'auto'; target.style.left = r.left + 'px'; target.style.top = r.top + 'px';
+      const mv = m => {
+        const x = Math.max(-r.width + 80, Math.min(innerWidth - 80, r.left + m.clientX - sx));
+        const y = Math.max(0, Math.min(innerHeight - 40, r.top + m.clientY - sy));
+        target.style.left = x + 'px'; target.style.top = y + 'px'; m.preventDefault();
+      };
+      const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); if(onEnd) onEnd(); };
+      addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up);
+      ev.preventDefault();
+    });
+  }
+  function resizeBy(handle, target, minW, minH, onEnd){
+    handle.addEventListener('pointerdown', ev => {
+      const r = target.getBoundingClientRect(), sx = ev.clientX, sy = ev.clientY;
+      target.style.margin = '0'; target.style.inset = 'auto'; target.style.left = r.left + 'px'; target.style.top = r.top + 'px';
+      target.style.maxWidth = 'none'; target.style.maxHeight = 'none';
+      const mv = m => {
+        target.style.width = Math.max(minW, Math.min(innerWidth - r.left, r.width + m.clientX - sx)) + 'px';
+        target.style.height = Math.max(minH, Math.min(innerHeight - r.top, r.height + m.clientY - sy)) + 'px';
+        m.preventDefault();
+      };
+      const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); if(onEnd) onEnd(); };
+      addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up);
+      ev.preventDefault(); ev.stopPropagation();
+    });
+  }
+
+  /* ---------- 팝업(dialog) ---------- */
+  const DLG_TITLE = {pwDlg:'설정 비밀번호', dlg:'설정', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리'};
+  function winDialog(d){
+    if(d._win) return; d._win = true;
+    const bar = document.createElement('div');
+    bar.className = 'wbar';
+    bar.innerHTML = `<span class="wt">${esc(DLG_TITLE[d.id] || '')}</span><button type="button" class="wmax" title="크게 / 작게">⤢</button><button type="button" class="wx" title="닫기">✕</button>`;
+    d.prepend(bar);
+    const rh = document.createElement('div'); rh.className = 'wrh'; rh.title = '크기 조절'; d.appendChild(rh);
+    bar.querySelector('.wx').onclick = () => d.close('cancel');
+    bar.querySelector('.wmax').onclick = () => d.classList.toggle('wfull');
+    dragBy(bar, d); resizeBy(rh, d, 260, 160);
+    d.addEventListener('close', () => { d.classList.remove('wfull'); ['margin','inset','left','top','width','height','maxWidth','maxHeight'].forEach(k => d.style[k] = ''); });
+  }
+  document.querySelectorAll('dialog').forEach(winDialog);
+
+  /* ---------- 작업창(점검·목록·미리보기·디자인) ---------- */
+  const OV_DEF = {insp:{w:560, side:'right'}, ilist:{w:620, side:'right'}, pv:{full:true}, ld:{full:true}};
+  function placeOv(o){
+    const def = OV_DEF[o.id] || {};
+    if(isMobile()){ o.classList.remove('win'); ['left','top','width','height','inset'].forEach(k => o.style[k] = ''); return; }
+    const p = WP[o.id];
+    const full = p ? p.full : def.full;
+    if(full){ o.classList.remove('win'); ['left','top','width','height','inset'].forEach(k => o.style[k] = ''); return; }
+    o.classList.add('win');
+    const w = Math.min(innerWidth - 20, p ? p.w : def.w || 600), h = Math.min(innerHeight - 20, p ? p.h : innerHeight - 80);
+    const l = p ? Math.min(p.l, innerWidth - 120) : innerWidth - w - 16, t = p ? Math.min(p.t, innerHeight - 60) : 64;
+    Object.assign(o.style, {inset:'auto', left:Math.max(0, l) + 'px', top:Math.max(0, t) + 'px', width:w + 'px', height:h + 'px'});
+  }
+  function remember(o){
+    if(isMobile()) return;
+    const r = o.getBoundingClientRect();
+    WP[o.id] = o.classList.contains('win') ? {full:false, l:r.left, t:r.top, w:r.width, h:r.height} : {...(WP[o.id] || {}), full:true};
+    saveWP();
+  }
+  document.querySelectorAll('section.ov').forEach(o => {
+    const head = o.querySelector('.ovh'); if(!head) return;
+    const mx = document.createElement('button');
+    mx.type = 'button'; mx.className = 'wmax ovmax'; mx.title = '창 크게 / 작게'; mx.textContent = '⤢';
+    head.appendChild(mx);
+    mx.onclick = () => {
+      if(o.classList.contains('win')){ remember(o); WP[o.id] = {...WP[o.id], full:true}; }
+      else { WP[o.id] = {...(WP[o.id] && WP[o.id].w ? WP[o.id] : {l:innerWidth - (OV_DEF[o.id]?.w || 600) - 16, t:64, w:OV_DEF[o.id]?.w || 600, h:innerHeight - 80}), full:false}; }
+      saveWP(); placeOv(o);
+      if(o.id === 'ld' && window.dispatchEvent) dispatchEvent(new Event('resize'));
+    };
+    const rh = document.createElement('div'); rh.className = 'wrh ovrh'; o.appendChild(rh);
+    dragBy(head, o, () => remember(o));
+    resizeBy(rh, o, 360, 300, () => { remember(o); dispatchEvent(new Event('resize')); });
+    new MutationObserver(() => { if(!o.hidden){ placeOv(o); o.style.zIndex = ++zTop; } }).observe(o, {attributes:true, attributeFilter:['hidden']});
+  });
+  addEventListener('resize', () => document.querySelectorAll('section.ov:not([hidden])').forEach(placeOv));
+
+  /* ---------- 전체화면 ---------- */
+  const fs = $('fsBtn');
+  const fsOn = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  const fsLabel = () => { fs.innerHTML = fsOn() ? '⛶ <span class="fst">전체화면 끝</span>' : '⛶ <span class="fst">전체화면</span>'; };
+  fs.onclick = async () => {
+    try{
+      if(fsOn()) await (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else {
+        const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
+        if(!req) throw new Error('no');
+        await req.call(el, {navigationUI:'hide'});
+      }
+    }catch(e){
+      alert('이 브라우저는 전체화면 버튼을 지원하지 않습니다.\n\n아이폰: 사파리 아래 [공유] → [홈 화면에 추가] 후 홈 화면 아이콘으로 열면 전체화면 앱처럼 열립니다.\n안드로이드: 상단 [앱 설치]를 누르면 앱처럼 쓸 수 있습니다.');
+    }
+  };
+  document.addEventListener('fullscreenchange', fsLabel); document.addEventListener('webkitfullscreenchange', fsLabel);
+  if(matchMedia('(display-mode: standalone)').matches) fs.style.display = 'none';
+  fsLabel();
+
+  /* ---------- 서식 관리 팝업 ---------- */
+  let mgrSel = null;
+  const kind = t => t.layout ? '디자인' : t.hwpx ? '한글' : '자동 배치';
+  function sampleRow(){
+    return rows[0] || {name:'(예시) 홍길동', town:'구례읍', addr:'구례읍 ○○로 1', tel:'010-0000-0000', place:'구례읍 봉동리 89', item:'오이', detail:'배전반',
+      area:1200, total:4000000, subsidy:2400000, national:'', province:'', county:'', self:1600000, biz:'2026년 ○○ 지원사업', note:'', etc:''};
+  }
+  function renderMgr(){
+    const list = sortedTpls();
+    if(!mgrSel || !tplById(mgrSel)) mgrSel = list[0].id;
+    $('tmList').innerHTML = list.map((t, i) => `<label class="tmi${t.id === mgrSel ? ' on' : ''}">
+        <input type="radio" name="tm" value="${t.id}" ${t.id === mgrSel ? 'checked' : ''}>
+        <span><b>${esc(t.name)}</b>${i === 0 ? ' <small class="tag">사용 중</small>' : ''}<br>
+        <small>${esc(t.title)} · ${t.items.length}항목 · ${kind(t)} · ${fmtTs(t.savedAt).slice(2)}</small></span></label>`).join('');
+  }
+  function withTempRec(fn){
+    const t = tplById(mgrSel); if(!t) return;
+    useTpl(t.id);
+    if($('insp').hidden || !cur){ cur = newRecord(sampleRow()); dirty = false; }
+    else { collectForm(); applyTplToCur(t); }
+    $('tplMgr').close('cancel');
+    fn();
+  }
+  $('mainTplMgr').onclick = () => { mgrSel = sortedTpls()[0].id; renderMgr(); $('tplMgr').showModal(); };
+  $('tmList').onchange = e => { if(e.target.name === 'tm'){ mgrSel = e.target.value; renderMgr(); } };
+  $('tmUse').onclick = () => { useTpl(mgrSel); fillMainTpl(); renderMgr(); toast(`'${tplById(mgrSel).name}' 서식으로 점검합니다`); };
+  $('tmEdit').onclick = () => withTempRec(() => openTplEditor());
+  $('tmDesign').onclick = () => withTempRec(() => openDesigner());
+  $('tmNew').onclick = () => {
+    const name = prompt('새 서식 이름', '새 점검표'); if(name === null) return;
+    const now = Date.now(), {name:_n, ...d} = JSON.parse(JSON.stringify(DEFAULT_TPL));
+    const t = {...d, id:'t' + now, name:name.trim() || '새 점검표', layout:null, hwpx:null, savedAt:now, usedAt:now};
+    tpls.push(t); saveTpls();
+    mgrSel = t.id; renderMgr(); toast('새 서식을 만들었습니다 — [항목·제목 편집]으로 고치세요');
+  };
+  $('tmCopy').onclick = () => {
+    const s = tplById(mgrSel); const now = Date.now();
+    const name = prompt('복제할 서식 이름', s.name + ' 사본'); if(name === null) return;
+    const t = {...JSON.parse(JSON.stringify(s)), id:'t' + now, name:name.trim() || s.name + ' 사본', savedAt:now, usedAt:now};
+    tpls.push(t); saveTpls(); mgrSel = t.id; renderMgr();
+  };
+  $('tmRename').onclick = () => {
+    const t = tplById(mgrSel); const name = prompt('서식 이름', t.name); if(!name || !name.trim()) return;
+    t.name = name.trim(); t.savedAt = Date.now(); saveTpls(); renderMgr();
+  };
+  $('tmDel').onclick = () => {
+    if(tpls.length < 2) return toast('서식이 하나뿐이라 지울 수 없습니다');
+    const t = tplById(mgrSel);
+    if(!confirm(`'${t.name}' 서식을 지울까요? (이미 저장된 점검 기록은 그대로 남습니다)`)) return;
+    if(window.syncTplDel) syncTplDel(t.id);
+    tpls = tpls.filter(x => x.id !== t.id); saveTpls(); mgrSel = null; renderMgr();
+  };
+
+  /* ---------- 선택 위주 입력 (목록에서 고르기 + 직접 입력) ---------- */
+  const hist = k => LS.get('hist_' + k, []);
+  const addHist = (k, v) => { v = String(v || '').trim(); if(!v || v.length > 80) return; const a = hist(k).filter(x => x !== v); a.unshift(v); LS.set('hist_' + k, a.slice(0, 30)); };
+  function dl(id, values){
+    let d = document.getElementById(id);
+    if(!d){ d = document.createElement('datalist'); d.id = id; document.body.appendChild(d); }
+    d.innerHTML = [...new Set(values.map(v => String(v ?? '').trim()).filter(Boolean))].slice(0, 200).map(v => `<option value="${esc(v)}">`).join('');
+    return id;
+  }
+  const uniq = a => [...new Set(a.filter(v => v !== '' && v != null).map(String))];
+  window.histAdd = addHist;
+
+  // 검색창: 명단 값 제안
+  function searchList(){
+    dl('dlQ', [...uniq(rows.map(placeTown)), ...uniq(rows.map(r => r.item)), ...uniq(rows.map(r => r.detail)), ...uniq(rows.map(r => r.biz)), ...uniq(rows.map(r => r.name))]);
+    $('q').setAttribute('list', 'dlQ');
+  }
+  // 시·군
+  const SIGUN = ['전라남도 구례군','전라남도 곡성군','전라남도 순천시','전라남도 광양시','전라남도 여수시','전라남도 목포시','전라남도 나주시','전라남도 담양군','전라남도 화순군','전라남도 보성군','전라남도 고흥군','전라남도 장흥군','전라남도 강진군','전라남도 해남군','전라남도 영암군','전라남도 무안군','전라남도 함평군','전라남도 영광군','전라남도 장성군','전라남도 완도군','전라남도 진도군','전라남도 신안군','전북특별자치도 남원시','경상남도 하동군'];
+  dl('dlRegion', SIGUN); $('region').setAttribute('list', 'dlRegion');
+  // 운영 중단 문구, 동기화 사용자
+  dl('dlAdmMsg', ['점검 기간이 끝나 운영을 중단합니다.','시스템 점검 중입니다. 잠시 후 이용해 주세요.','관리자 승인 후 이용할 수 있습니다. 담당자에게 문의해 주세요.']);
+  $('admMsg').setAttribute('list', 'dlAdmMsg');
+  // 점검 화면
+  const NOTE_PRESET = ['정상 작동','설치 완료','사업계획과 일치','미설치','교체 필요','수량 부족','위치 변경 필요','사진으로 확인','해당 없음'];
+  const MEMO_PRESET = ['특이사항 없음','사업계획대로 설치 완료','보완 후 재점검 필요','보완 사진 제출 요청','보조사업 표지판 부착 필요','정산 서류 보완 필요'];
+  function inspLists(){
+    if(!cur) return;
+    dl('dlWho', [...hist('inspector'), LS.get('inspector', ''), LS.get('syncUser', ''), ...uniq(allRecs.map(r => r.inspector))]);
+    $('iWho').setAttribute('list', 'dlWho');
+    dl('dlNote', [...hist('note'), ...NOTE_PRESET]);
+    document.querySelectorAll('#iItems [data-note]').forEach(el => el.setAttribute('list', 'dlNote'));
+    document.querySelectorAll('#iExtra [data-x]').forEach(el => {
+      const x = cur.extra[+el.dataset.x]; if(!x) return;
+      const id = 'dlX_' + hashStr(x.label);
+      const tv = (() => { for(const [n, k] of [['보조금','subsidy'],['자부담','self'],['총사업비','total'],['사업비','total'],['국비','national'],['도비','province'],['군비','county']]) if(x.label.includes(n)) return cur.target[k]; return ''; })();
+      dl(id, [tv !== '' && tv != null ? (isNaN(tv) ? tv : Number(tv).toLocaleString() + '원') : '', ...hist('x_' + x.label), ...(/일$|일자|날짜/.test(x.label) ? [new Date().toISOString().slice(0, 10)] : [])]);
+      el.setAttribute('list', id);
+    });
+    $('iMemoChips').innerHTML = [...new Set([...MEMO_PRESET, ...hist('memo').slice(0, 6)])].map(m => `<button type="button" class="chip" data-memo="${esc(m)}">${esc(m.length > 24 ? m.slice(0, 24) + '…' : m)}</button>`).join('');
+  }
+  $('iMemoChips').onclick = e => {
+    const b = e.target.closest('[data-memo]'); if(!b) return;
+    const t = $('iMemo'); t.value = (t.value.trim() ? t.value.trim() + '\n' : '') + b.dataset.memo; dirty = true;
+  };
+  // 기존 화면 함수에 연결
+  const _renderForm = window.renderForm || renderForm;
+  window.renderForm = renderForm = function(){ _renderForm(); inspLists(); };
+  const _renderItems = renderItems;
+  renderItems = function(){ _renderItems(); inspLists(); };
+  const _saveCur = saveCur;
+  saveCur = async function(q){
+    const ok = await _saveCur(q);
+    if(ok !== false && cur){
+      addHist('inspector', cur.inspector);
+      cur.items.forEach(it => addHist('note', it.note));
+      cur.extra.forEach(x => addHist('x_' + x.label, x.value));
+      String(cur.memo || '').split('\n').forEach(m => { if(!MEMO_PRESET.includes(m.trim())) addHist('memo', m); });
+    }
+    return ok;
+  };
+  const _renderFilters = renderFilters;
+  renderFilters = function(){ _renderFilters(); searchList(); };
+  searchList();
+
+  // 서식 편집 창: 선택지 묶음 · 자주 쓰는 항목 · 제목 목록
+  const OPT_SETS = ['이상 없음, 보완 필요, 해당 없음','적합, 부적합, 해당 없음','양호, 보통, 불량','예, 아니오','설치, 미설치, 해당 없음','확인, 미확인'];
+  dl('dlTitle', ['현장점검표','준공 점검표','중간 점검표','사후관리 점검표','현장 확인서','보조사업 현장 확인 결과서']);
+  $('tTitle').setAttribute('list', 'dlTitle');
+  $('tOptSet').innerHTML = '<option value="">선택지 묶음에서 고르기…</option>' + OPT_SETS.map(o => `<option>${esc(o)}</option>`).join('');
+  $('tOptSet').onchange = e => { if(e.target.value){ $('tOpts').value = e.target.value; e.target.value = ''; } };
+  function itemLib(){
+    const have = new Set($('tItems').value.split('\n').map(s => s.trim()));
+    const lib = uniq([...DEFAULT_TPL.items, ...tpls.flatMap(t => t.items), ...hist('item')]).filter(s => !have.has(s));
+    $('tItemLib').innerHTML = lib.length ? lib.slice(0, 40).map(s => `<button type="button" class="chip" data-item="${esc(s)}">＋ ${esc(s)}</button>`).join('') : '<small style="color:var(--mut)">추가할 항목이 없습니다</small>';
+  }
+  $('tItemLib').onclick = e => {
+    const b = e.target.closest('[data-item]'); if(!b) return;
+    const t = $('tItems'); t.value = (t.value.trim() ? t.value.trim() + '\n' : '') + b.dataset.item; itemLib();
+  };
+  $('tItems').addEventListener('input', () => { clearTimeout($('tItems')._t); $('tItems')._t = setTimeout(itemLib, 400); });
+  const _openTplEditor = openTplEditor;
+  openTplEditor = function(){ _openTplEditor(); itemLib(); };
+  $('tplEditBtn').onclick = openTplEditor;
+  $('tplDlg').addEventListener('close', () => { if($('tplDlg').returnValue === 'ok') $('tItems').value.split('\n').forEach(s => addHist('item', s)); });
+
+  // 양식 디자인: 글자 크기 목록
+  dl('dlSize', [8,9,10,11,12,13,14,15,16,18,20,22,24,28,32,36,40,48]);
+  new MutationObserver(() => { document.querySelectorAll('#ldProps input[data-k="size"]').forEach(el => el.setAttribute('list', 'dlSize')); })
+    .observe($('ldProps'), {childList:true});
 })();
 </script>
 </body>
