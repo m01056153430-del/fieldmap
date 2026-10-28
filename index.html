@@ -536,7 +536,8 @@
       <div class="rowf" style="flex-wrap:wrap">
         <label style="display:flex;gap:6px;align-items:center;font-size:14px;flex:1"><input type="checkbox" id="lAll"> 전체 선택</label>
         <button id="lPdf" class="bpri">PDF 묶음 저장</button>
-        <button id="lXls" class="bline">엑셀 저장</button>
+        <button id="lXls" class="bline">선택 엑셀 저장</button>
+        <button id="lXlsDone" class="bline" style="border-color:#0f766e!important;color:#0f766e">완료 건 전체 엑셀</button>
       </div>
     </div>
     <div class="card" id="lRecs"></div>
@@ -1548,21 +1549,60 @@ async function openList(){
   $('ilist').hidden = false;
 }
 const checkedRecs = () => [...document.querySelectorAll('#lRecs input:checked')].map(c => allRecs.find(r => r.id === c.dataset.id)).filter(Boolean);
-function exportXlsx(recs){
+/* 점검 결과 엑셀: ① 점검결과(사업자 1줄, 명단 전 항목 + 점검 항목별 결과·비고) ② 항목별 상세 ③ 미완료 명단 */
+function exportXlsx(recs, opt){
+  opt = opt || {};
   const labels = [], xl = [];
   recs.forEach(r => { r.items.forEach(it => { if(!labels.includes(it.label)) labels.push(it.label); }); r.extra.forEach(x => { if(!xl.includes(x.label)) xl.push(x.label); }); });
-  const data = recs.map(r => {
-    const o = {'점검일시':r.dateText || fmtDT(r.date), '문서':r.title, '보조사업자':r.target.name, '읍면':r.target.town||'', '사업장':r.target.place,
-      '품목':r.target.item||'', '사업량(㎡)':r.target.area, '점검자':r.inspector||''};
-    labels.forEach(l => { const it = r.items.find(x => x.label === l); o[l] = it ? it.result + (it.note ? ` (${it.note})` : '') : ''; });
+  const etcHeads = [...new Set(recs.flatMap(r => Object.keys(etcOf(r.target))))];
+  const latest = new Map(); allRecs.forEach(r => { if(!latest.has(r.key)) latest.set(r.key, r.id); });
+  const num = v => { const n = Number(String(v ?? '').replace(/,/g, '')); return v === '' || v == null || isNaN(n) ? (v ?? '') : n; };
+  const gps = r => r.gps ? `${r.gps.lat.toFixed(6)}, ${r.gps.lng.toFixed(6)}` : (r.gpsText || '');
+  const wide = recs.map(r => {
+    const t = r.target, o = {};
+    o['완료'] = r.done ? '완료' : '미완료';
+    o['점검일시'] = r.dateText || fmtDT(r.date);
+    o['점검 서식'] = (tplById(r.tplId) || {}).name || r.title;
+    XLS_COLS.forEach(([k, head, , isNum]) => o[head] = isNum ? num(t[k]) : (t[k] ?? ''));
+    etcHeads.forEach(h => o[h] = etcOf(t)[h] ?? '');
+    o['점검자'] = r.inspector || '';
+    labels.forEach((l, i) => {
+      const it = r.items.find(x => x.label === l);
+      o[`${i + 1}. ${l}`] = it ? it.result || '' : '';
+      o[`${i + 1}. 비고`] = it ? it.note || '' : '';
+    });
     xl.forEach(l => { const x = r.extra.find(y => y.label === l); o[l] = x ? x.value : ''; });
-    Object.assign(o, {'종합의견':r.overall, '특이사항':r.memo, '위도':r.gps ? r.gps.lat : '', '경도':r.gps ? r.gps.lng : '', '사진(매)':r.photos.length, '서명':r.sign ? '있음' : ''});
+    Object.assign(o, {'종합 판정':r.overall || '', '특이사항·보완요구':r.memo || '', '점검 위치(GPS)':gps(r), '사진(매)':r.photos.length || (r.photoIds || []).length, '서명':(r.sign || r.signId) ? '있음' : '',
+      '최근 점검':latest.get(r.key) === r.id ? '최근' : '이전 기록', '저장 시각':r.savedAt ? fmtTs(r.savedAt) : ''});
     return o;
   });
-  const ws = XLSX.utils.json_to_sheet(data), wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, '점검결과');
+  const long = [];
+  recs.forEach(r => r.items.forEach((it, i) => long.push({'완료':r.done ? '완료' : '미완료', '보조사업자 성명':r.target.name, '읍면':r.target.town || '', '사업장 장소':r.target.place,
+    '사업명':r.target.biz || '', '세부사업':r.target.detail || '', '점검일시':r.dateText || fmtDT(r.date), '점검자':r.inspector || '', '번호':i + 1, '점검 항목':it.label, '결과':it.result || '', '비고':it.note || '', '종합 판정':r.overall || ''})));
+  const wb = XLSX.utils.book_new();
+  const add = (data, name, widths) => {
+    const ws = XLSX.utils.json_to_sheet(data.length ? data : [{'내용':'자료가 없습니다'}]);
+    const heads = Object.keys(data[0] || {'내용':''});
+    ws['!cols'] = heads.map(h => ({wch: widths && widths[h] || Math.min(40, Math.max(8, String(h).length * 2 + 2))}));
+    ws['!autofilter'] = {ref: ws['!ref']};
+    ws['!freeze'] = {xSplit:0, ySplit:1};
+    XLSX.utils.book_append_sheet(wb, ws, name);
+  };
+  add(wide, '점검결과', {'사업명':30, '사업장 장소':30, '주소':24, '특이사항·보완요구':30});
+  add(long, '항목별 상세', {'점검 항목':40, '사업명':30, '사업장 장소':30});
+  if(rows.length){
+    const done = new Set(allRecs.filter(r => r.done && latest.get(r.key) === r.id).map(r => r.key));
+    const todo = rows.filter(r => !done.has(rowKey(r))).map(r => {
+      const o = {'상태': inspDone.has(rowKey(r)) ? '점검 중(미완료)' : '미점검'};
+      XLS_COLS.forEach(([k, head, , isNum]) => o[head] = isNum ? num(r[k]) : (r[k] ?? ''));
+      return o;
+    });
+    add(todo, '미완료 명단', {'사업명':30, '사업장 장소':30, '주소':24});
+  }
   const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-  saveBlob(new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}), `점검결과_${localDT(new Date()).slice(0,10)}.xlsx`);
+  saveBlob(new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
+    `${opt.prefix || '점검결과'}_${localDT(new Date()).slice(0,10)}.xlsx`);
+  toast(`엑셀로 저장했습니다 (${recs.length}건 · 시트: 점검결과, 항목별 상세${rows.length ? ', 미완료 명단' : ''})`);
 }
 
 /* ---------- 서식 편집 ---------- */
@@ -1713,6 +1753,13 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   $('lXls').onclick = () => {
     const recs = checkedRecs(); if(!recs.length) return toast('저장할 점검 기록을 선택해 주세요');
     exportXlsx(recs);
+  };
+  $('lXlsDone').onclick = async () => {
+    await reloadRecs();
+    const seen = new Set(), recs = [];
+    for(const r of allRecs){ if(seen.has(r.key)) continue; seen.add(r.key); if(r.done) recs.push(r); }   // 사업자별 최근 기록 중 '완료'
+    if(!recs.length) return toast('점검 완료로 표시된 기록이 없습니다');
+    exportXlsx(recs, {prefix:'점검완료'});
   };
   reloadRecs().then(() => { if(typeof renderList === 'function' && rows.length) renderList(); });
 })();
