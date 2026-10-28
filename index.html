@@ -96,6 +96,12 @@
   .prev button.on{background:var(--b);color:#fff;border-color:var(--b)}
   .badge{display:inline-block;font-size:11px;font-weight:600;padding:1px 6px;border-radius:6px;background:#dcfce7;color:#166534;margin-left:6px;vertical-align:middle}
   .badge.warn{background:#fee2e2;color:#991b1b}
+  .hwprev{max-height:60vh;overflow:auto;border:1px solid var(--ln);border-radius:8px;padding:12px;background:#fff;font-size:12px;line-height:1.5;color:#111}
+  .hwprev p{margin:0 0 2px;min-height:1em;white-space:pre-wrap;word-break:break-all}
+  .hwprev table{border-collapse:collapse;width:100%;margin:4px 0 8px;table-layout:fixed}
+  .hwprev td{border:1px solid #555;padding:3px 5px;vertical-align:middle}
+  .hwprev td.hfl{background:#fff7c2}
+  .hwprev.fold{max-height:0;padding:0;border:0;overflow:hidden}
   .badge.done{background:#e5e7eb;color:#374151}
   .iw .st{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 7px;margin:4px 0 2px}
   .iw .st.ok{background:#e5e7eb;color:#374151}.iw .st.ing{background:#fef3c7;color:#92400e}.iw .st.no{background:#eff6ff;color:#1e40af}
@@ -376,6 +382,14 @@
         <span class="fl">이 사업자의 점검 기록</span>
         <div class="prev" id="iPrev"></div>
       </div>
+    </div>
+
+    <div class="card" id="cHwpPrev" style="display:none">
+      <h3 style="display:flex;align-items:center;gap:8px">한글 양식 미리보기 <span style="flex:1"></span>
+        <button type="button" id="hwpPrevBtn" class="bline" style="font-size:12px;padding:5px 9px">새로고침</button>
+        <button type="button" id="hwpPrevFold" class="bline" style="font-size:12px;padding:5px 9px">접기</button></h3>
+      <div id="hwpPrev" class="hwprev"></div>
+      <small style="display:block;margin-top:6px;color:var(--mut)">입력한 내용이 채워질 모습입니다 (서명·사진은 [한글 저장] 파일에 들어갑니다). 노란 칸이 앱이 채우는 곳입니다.</small>
     </div>
 
     <div class="card">
@@ -2490,7 +2504,7 @@ const nz = s => String(s ?? '').replace(/[\s·ㆍ:：()（）\[\]<>「」『』�
 const fmtArea = a => a !== '' && a != null ? (isNaN(a) ? String(a) : Number(a).toLocaleString() + '㎡') : '';
 /* 이름칸 → 채울 값 */
 const HF = [
-  ['성명',   /^(성명|성명대표자|대표자|대표자성명|보조사업자|보조사업자명|사업자|사업자명|신청인|신청자|신청자성명|농가명|경영주|사업주체|대상자|대상자성명|업체명)$/, r => r.target.name],
+  ['성명',   /^(성명|성명대표자|대표자|대표자성명|보조사업자|보조사업자명|사업자|사업자명|신청인|신청자|신청자성명|농가명|경영주|사업주체|대상자|대상자성명|업체명|사업장명|농장명|상호)$/, r => r.target.name],
   ['연락처', /^(연락처|전화|전화번호|휴대폰|휴대전화|핸드폰|휴대폰번호)$/, r => r.target.tel],
   ['사업장', /^(사업장|사업장소|사업장위치|사업장소재지|소재지|지번|설치장소|설치위치|사업대상지|대상지|사업위치|농지소재지|사업지|시공장소)$/, r => r.target.place],
   ['주소',   /^(주소|주소지|거주지|신청인주소)$/, r => r.target.addr],
@@ -2548,11 +2562,54 @@ function markBox(tc, val){
   }
   return false;
 }
+/* 칸 안의 안내 글 (예: '(성명, 연락처)', '* 작성할 내용이 많은 경우…') 은 빈칸으로 봄 */
+const isHint = t => { t = String(t || '').trim(); return !!t && t.length <= 80 && /^[(（*※]/.test(t) && !/[□☐]/.test(t); };
+const PUA = /[\uE000-\uF8FF]|[\u{F0000}-\u{FFFFD}]/gu;
+/* 이름칸 글자 정리: 괄호 안 설명·별표 빼기 */
+const cleanLab = t => String(t || '').replace(PUA, '').replace(/\([^()]*\)\)?|（[^（）]*）/g, '').replace(/[*※]/g, '').replace(/\s+/g, ' ').trim();
+const BUL = /^\s*(?:[\uE000-\uF8FF\u{F0000}-\u{FFFFD}•◦○●◎◇◆▶▷▪▫■□☐❍✓✔·ㆍ\-–]|\d{1,2}[.)]|[①-⑳])\s*/u;
+/* 점검 항목 글머리표 목록 찾기 (표 칸 안 또는 '점검 내용' 제목 아래) */
+function findBullets(docs){
+  let best = null;
+  for(const doc of docs) for(const tc of kidsNS(doc, 'tc')){
+    const ps = cellParas(tc).filter(p => paraText(p).trim());
+    const bs = ps.filter(p => BUL.test(paraText(p)));
+    if(bs.length >= 3 && bs.length >= ps.length * 0.6 && (!best || bs.length > best.length)) best = bs;
+  }
+  if(best) return best;
+  for(const doc of docs){
+    const top = childs(doc.documentElement, 'p');
+    let on = false; const out = [];
+    for(const p of top){
+      const t = paraText(p).trim(); if(!t) continue;
+      if(/^[□■◆◇▣]/.test(t)){ if(on && out.length) break; on = /점검\s*(내용|항목|사항)/.test(t); continue; }
+      if(on && BUL.test(t)) out.push(p);
+    }
+    if(out.length >= 2) return out;
+  }
+  return [];
+}
+const bulText = p => paraText(p).replace(BUL, '').replace(PUA, '').trim();
+/* 문서 제목 찾기 */
+function findTitle(docs){
+  for(const doc of docs){
+    for(const tbl of kidsNS(doc, 'tbl')){
+      const tcs = kidsNS(tbl, 'tc');
+      if(tcs.length === 1){ const t = cText(tcs[0]).replace(PUA, '').replace(/\s+/g, ' ').trim(); if(t && t.length <= 60) return t; }
+      break;
+    }
+    for(const p of childs(doc.documentElement, 'p')){
+      const t = paraText(p).replace(PUA, '').replace(/\s+/g, ' ').trim().replace(/^[<〈《【\[]|[>〉》】\]]$/g, '').trim();
+      if(t && t.length <= 60 && /(점검|확인|결과|조사|검사)/.test(t) && !/^\[?첨부/.test(t)) return t;
+    }
+  }
+  return '';
+}
 function fillVal(tc, v){
   if(!tc || v == null || v === '') return false;
   const tx = cText(tc);
   if(/[□☐]/.test(tx)) return markBox(tc, v);
-  if(!tx.trim()){ const ps = cellParas(tc); if(!ps.length) return false; setParaText(ps[0], String(v)); return true; }
+  if(!tx.trim() || isHint(tx)){ const ps = cellParas(tc); if(!ps.length) return false; setParaText(ps[0], String(v)); return true; }
   return false;   // 이미 글자가 있는 칸은 건드리지 않음
 }
 
@@ -2620,7 +2677,7 @@ function walkHwpx(docs, rec, dry){
         const iR = texts.findIndex((t, i) => i !== iI && t.length <= 10 && /(결과|적합|여부|유무|판정|양호|이행)/.test(t));
         if(iI >= 0 && iR >= 0){
           const iN = texts.findIndex((t, i) => i !== iI && i !== iR && /^(비고|조치사항|의견|지적사항|확인내용|세부내용)$/.test(t));
-          ck = {item:colOf(cells[iI]), result:colOf(cells[iR]), note: iN >= 0 ? colOf(cells[iN]) : -1, n:0};
+          ck = {item:colOf(cells[iI]), result:colOf(cells[iR]), note: iN >= 0 ? colOf(cells[iN]) : -1, n:0}; res.hasCk = true;
           continue;
         }
       } else if(texts.some(t => HF.some(f => f[1].test(t)))){
@@ -2644,9 +2701,9 @@ function walkHwpx(docs, rec, dry){
       }
       // 이름칸 → 오른쪽 칸 채우기
       for(let i = 0; i < cells.length - 1; i++){
-        const lab = texts[i];
-        if(!lab || lab.length > 14) continue;
-        const nx = cells[i + 1], nxt = cText(nx).trim();
+        const lab = nz(cleanLab(cText(cells[i])));
+        if(!lab || lab.length > 24) continue;
+        const nx = cells[i + 1], nxRaw = cText(nx).trim(), nxt = isHint(nxRaw) ? '' : nxRaw;
         if(/서명|날인|확인자인$|^확인자$/.test(lab) && (!nxt || /^\(?(인|서명|서명또는인)\)?$/.test(nz(nxt)))){
           if(dry) res.found.push('서명'); else if(!res.slots.signCell) res.slots.signCell = nx;
           i++; continue;
@@ -2661,8 +2718,8 @@ function walkHwpx(docs, rec, dry){
           else if(fillVal(nx, f[2](rec))) res.filled++;
           i++; continue;
         }
-        if(!nxt && /^[가-힣A-Za-z]{2,}$/.test(lab) && !SKIP_LAB.test(lab)){
-          const label = cText(cells[i]).trim().replace(/\s+/g, ' ');
+        if(!nxt && /^[가-힣A-Za-z0-9]{2,}$/.test(lab) && !/^\d+$/.test(lab) && !SKIP_LAB.test(lab)){
+          const label = cleanLab(cText(cells[i]));
           if(dry){ if(!res.extra.includes(label) && res.extra.length < 12) res.extra.push(label); }
           else if(fillVal(nx, ext.get(lab))) res.filled++;
           i++;
@@ -2670,6 +2727,19 @@ function walkHwpx(docs, rec, dry){
       }
     }
   }
+  // 3) 표 점검칸이 없으면 글머리표 목록을 점검 항목으로
+  if(!res.items.length && !res.hasCk){
+    const bl = findBullets(docs);
+    if(bl.length){
+      res.bullets = true;
+      if(dry) bl.forEach(p => res.items.push(bulText(p)));
+      else bl.forEach((p, i) => {
+        const it = rec.items[i]; if(!it || (!it.result && !it.note)) return;
+        setParaText(p, paraText(p).replace(/\s+☞.*$/, '') + `  ☞ ${it.result || ''}${it.note ? ' (' + it.note + ')' : ''}`); res.filled++;
+      });
+    }
+  }
+  if(dry) res.title = findTitle(docs);
   return res;
 }
 
@@ -2848,18 +2918,19 @@ $('tplHwpIn').onchange = async e => {
     collectForm();
     const now = Date.now();
     const t = normTpl({
-      id:'t' + now, name, title:name,
-      items: a.items.length ? a.items : cur.items.map(x => x.label),
+      id:'t' + now, name, title:a.title || name,
+      items: a.items.length ? a.items : ['(양식에서 점검 항목을 찾지 못함 — 서식 편집에서 입력)'],
       opts:[...cur.opts], extra:a.extra,
       sec:{...DEFAULT_SEC, extra: a.extra.length > 0},
-      hwpx:{key, name:f.name, mode:a.mode, driveId:''}, savedAt:now, usedAt:now
+      hwpx:{key, name:f.name, mode:a.bullets ? 'bullet' : a.mode, driveId:'', v:2}, savedAt:now, usedAt:now
     });
     tpls.push(t); saveTpls();
     applyTplToCur(t); dirty = true; renderForm();
     const found = [...new Set(a.found)];
     alert(`'${name}' 한글 서식을 추가했습니다.\n\n`
-      + `인식 방식: ${a.mode === 'ph' ? `자리표시 {{ }} ${a.ph.length}곳` : '표 이름칸 자동 인식'}\n`
-      + `점검 항목: ${a.items.length ? a.items.length + '개' : '찾지 못함 (현재 항목 사용)'}\n`
+      + `문서 제목: ${a.title || '(찾지 못함)'}\n`
+      + `인식 방식: ${a.mode === 'ph' ? `자리표시 {{ }} ${a.ph.length}곳` : a.bullets ? '표 이름칸 + 글머리표 점검 항목' : '표 이름칸 자동 인식'}\n`
+      + `점검 항목: ${a.items.length ? a.items.length + '개' : '찾지 못함 (서식 편집에서 입력)'}\n`
       + `자동으로 채울 칸: ${found.length ? found.join(', ') : '없음'}\n`
       + `추가 사항(직접 입력): ${a.extra.length ? a.extra.join(', ') : '없음'}\n\n`
       + (found.length || a.items.length ? '현장 점검 화면 아래 [한글 저장]으로 채워진 한글 파일을 받을 수 있습니다.'
@@ -2867,6 +2938,91 @@ $('tplHwpIn').onchange = async e => {
     if(window.syncSoon) syncSoon();
   }catch(err){ alert('서식을 읽지 못했습니다: ' + err.message); }
 };
+
+/* ---------- 한글 양식 미리보기 (채운 모습) ---------- */
+function hwpxRunHtml(c){
+  let h = '';
+  for(const n of c.childNodes){
+    if(n.nodeType === 3) h += esc(n.nodeValue).replace(PUA, '•');
+    else if(n.localName === 'lineBreak') h += '<br>';
+    else if(n.localName === 'tab') h += '&emsp;';
+  }
+  return h;
+}
+function hwpxParaHtml(p, filledSet){
+  let h = '';
+  for(const run of childs(p, 'run')) for(const c of run.childNodes){
+    if(c.localName === 't') h += hwpxRunHtml(c);
+    else if(c.localName === 'tbl') h += hwpxTblHtml(c, filledSet);
+    else if(c.localName === 'pic') h += '<span style="color:#888">[그림]</span>';
+  }
+  return `<p>${h || '&nbsp;'}</p>`;
+}
+function hwpxTblHtml(tbl, filledSet){
+  let h = '<table>';
+  for(const tr of childs(tbl, 'tr')){
+    h += '<tr>';
+    for(const tc of childs(tr, 'tc')){
+      const sp = childs(tc, 'cellSpan')[0], cs = sp ? +sp.getAttribute('colSpan') || 1 : 1, rs = sp ? +sp.getAttribute('rowSpan') || 1 : 1;
+      h += `<td${cs > 1 ? ` colspan="${cs}"` : ''}${rs > 1 ? ` rowspan="${rs}"` : ''}${filledSet.has(tc) ? ' class="hfl"' : ''}>${cellParas(tc).map(p => hwpxParaHtml(p, filledSet)).join('')}</td>`;
+    }
+    h += '</tr>';
+  }
+  return h + '</table>';
+}
+let _hwpPrevSeq = 0;
+async function renderHwpxPreview(){
+  const card = $('cHwpPrev');
+  if(!cur || !cur.hwpx){ card.style.display = 'none'; return; }
+  card.style.display = '';
+  const seq = ++_hwpPrevSeq, box = $('hwpPrev');
+  if(!box.innerHTML) box.innerHTML = '<small style="color:var(--mut)">양식을 불러오는 중…</small>';
+  try{
+    const {docs} = await hwpxDocs(await hwpxFile(cur.hwpx));
+    const before = new Map();
+    for(const x of docs) for(const tc of kidsNS(x.d, 'tc')) before.set(tc, cText(tc));
+    walkHwpx(docs.map(x => x.d), cur, false);
+    const filled = new Set([...before].filter(([tc, t]) => cText(tc) !== t).map(([tc]) => tc));
+    if(seq !== _hwpPrevSeq) return;
+    box.innerHTML = docs.map(x => childs(x.d.documentElement, 'p').map(p => hwpxParaHtml(p, filled)).join('')).join('<hr>');
+  }catch(e){ if(seq === _hwpPrevSeq) box.innerHTML = `<div class="fail">미리보기를 만들지 못했습니다: ${esc(e.message)}</div>`; }
+}
+/* 예전에 올린 한글 서식은 새 분석 방식으로 한 번 다시 읽음 */
+async function upgradeHwpxTpl(t){
+  if(!t || !t.hwpx || (t.hwpx.v || 1) >= 2) return false;
+  t.hwpx.v = 2;
+  try{
+    const {docs} = await hwpxDocs(await hwpxFile(t.hwpx));
+    const a = walkHwpx(docs.map(x => x.d), null, true);
+    const defaultItems = JSON.stringify(t.items) === JSON.stringify(DEFAULT_TPL.items);
+    if(a.items.length && (defaultItems || !t.items.length)) t.items = a.items;
+    if(a.title && (t.title === t.name || /^점검서식|\.hwpx$/.test(t.title))) t.title = a.title;
+    if(a.extra.length){ t.extra = [...new Set([...a.extra, ...t.extra])]; t.sec = {...t.sec, extra:true}; }
+    t.hwpx.mode = a.bullets ? 'bullet' : a.mode;
+    t.savedAt = Date.now(); saveTpls();
+    if(window.syncSoon) syncSoon();
+    return true;
+  }catch(e){ return false; }
+}
+const _rfH = renderForm;
+renderForm = function(){
+  _rfH();
+  if(!cur || !cur.hwpx){ $('cHwpPrev').style.display = 'none'; return; }
+  const t = tplById(cur.tplId);
+  if(t && t.hwpx && (t.hwpx.v || 1) < 2){
+    upgradeHwpxTpl(t).then(ch => {
+      if(ch && cur && cur.tplId === t.id){ collectForm(); applyTplToCur(t); renderForm(); toast(`'${t.name}' 한글 양식의 점검 항목 ${t.items.length}개를 다시 읽었습니다`); }
+      else renderHwpxPreview();
+    });
+  } else renderHwpxPreview();
+};
+$('hwpPrevBtn').onclick = () => { collectForm(); renderHwpxPreview(); };
+$('hwpPrevFold').onclick = () => { const f = $('hwpPrev').classList.toggle('fold'); $('hwpPrevFold').textContent = f ? '펼치기' : '접기'; };
+(() => {   // 입력할 때마다 잠시 뒤 미리보기 갱신
+  let tm = null;
+  const kick = () => { if(!cur || !cur.hwpx || $('insp').hidden) return; clearTimeout(tm); tm = setTimeout(() => { collectForm(); renderHwpxPreview(); }, 900); };
+  $('insp').addEventListener('input', kick); $('insp').addEventListener('click', e => { if(e.target.closest('.seg button')) kick(); });
+})();
 /* ---------- 지도 화면의 '점검 서식' 선택 ---------- */
 window.fillMainTpl = () => {
   const sel = $('mainTpl'); if(!sel) return;
