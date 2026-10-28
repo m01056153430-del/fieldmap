@@ -171,8 +171,14 @@
   .pg.lay .le .tx{width:100%;height:100%;display:flex;flex-direction:column;padding:2px 4px;box-sizing:border-box;word-break:break-all}
   .pg.lay .le img{display:block}
   .pg.lay .le .ph0{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#9ca3af;background:#f3f4f6;font-size:13px}
-  #ldWrap{flex:1;display:flex;min-height:0}
-  #ldTool{width:350px;flex:none;overflow:auto;padding:10px;background:#fff;border-right:1px solid var(--ln)}
+  #ldWrap{flex:1;display:flex;min-height:0;position:relative}
+  #ldTool{position:absolute;z-index:20;width:350px;display:flex;flex-direction:column;background:#fff;border:1px solid #cbd5e1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);overflow:hidden;min-width:240px;min-height:44px}
+  #ldToolBar{display:flex;align-items:center;gap:4px;padding:6px 6px 6px 12px;background:#0f766e;color:#fff;cursor:move;touch-action:none;user-select:none;flex:none}
+  #ldToolBar b{flex:1;font-size:14px}
+  #ldToolBar button{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:6px;padding:4px 9px;font-size:15px;line-height:1.2}
+  #ldToolBody{flex:1;overflow:auto;padding:10px;min-height:0}
+  #ldTool.min{height:auto!important}
+  #ldTool.min #ldToolBody,#ldTool.min .wrh{display:none}
   #ldStage{flex:1;overflow:auto;padding:14px;background:#d9dee5}
   #ldZoom{transform-origin:0 0}
   #ldPage .le{cursor:move;touch-action:none}
@@ -194,8 +200,8 @@
   #ldProps textarea{width:100%;min-height:70px;resize:vertical}
   #ldProps .hint{font-size:12px;color:var(--mut);margin:4px 0 8px;line-height:1.5}
   @media (max-width:760px){
-    #ldWrap{flex-direction:column}
-    #ldTool{width:auto;max-height:46vh;border-right:0;border-bottom:1px solid var(--ln)}
+    #ldTool{min-width:200px}
+    #ldStage{padding-bottom:50vh}
   }
   .pgw{display:flex;flex-direction:column;align-items:center;gap:6px}
   .pgsel{display:flex;gap:6px;align-items:center;color:#fff;font-size:14px;font-weight:600;background:rgba(0,0,0,.35);padding:5px 12px;border-radius:999px}
@@ -1841,6 +1847,9 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       `font-style:${e.italic ? 'italic' : 'normal'};text-decoration:${e.under ? 'underline' : 'none'};text-align:${e.align || 'left'};` +
       (e.bg ? `background:${e.bg};` : '') + (e.border ? `border:${e.bw || 1}px solid ${e.bc || '#333'};` : '');
   }
+  /* 칸 정렬 열쇠: 표는 칸마다, 점검항목표는 열마다(머리글 따로) */
+  const cellAKey = (e, r, c) => e.type === 'checklist' ? (r === 0 ? 'h:' + c : 'c:' + c) : r + ':' + c;
+  window.LAY_cellAKey = cellAKey;
   function tableHtml(e, rec, design){
     const bw = e.bw ?? 1, bc = e.bc || '#333', hb = e.hbg || '#eef1f5';
     let cells, cols, shadeR, shadeC;
@@ -1857,7 +1866,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const get = (r, c) => (cells[r] && cells[r][c] != null) ? String(cells[r][c]) : '';
     let h = `<table><colgroup>${cols.map(w => `<col style="width:${((+w || 1) / sum * 100).toFixed(3)}%">`).join('')}</colgroup>`;
     for(let r = 0; r < nr; r++){
-      h += '<tr>';
+      const rh = e.rowH && e.rowH[r];
+      h += rh ? `<tr style="height:${rh}px">` : '<tr>';
       for(let c = 0; c < nc; c++){
         const t = get(r, c);
         if(e.type === 'table' && (t === '<' || t === '^')) continue;
@@ -1874,6 +1884,9 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
           if(c === 0 || c === 2) st += 'text-align:center;';
           if(c === 2 && BAD.test(t)) st += 'color:#c62828;font-weight:700;';
         }
+        const ak = cellAKey(e, r, c);
+        if(e.ca && e.ca[ak]) st += `text-align:${e.ca[ak]};`;
+        if(e.cva && e.cva[ak]) st += `vertical-align:${e.cva[ak]};`;
         if(design && cell && sel === e.id && cell.r === r && cell.c === c) cls = ' class="csel"';
         h += `<td${cls}${cs > 1 ? ` colspan="${cs}"` : ''}${rs > 1 ? ` rowspan="${rs}"` : ''}${design ? ` data-r="${r}" data-c="${c}"` : ''} style="${st}">${fill(t, rec, design)}</td>`;
       }
@@ -1983,6 +1996,98 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   const insSel = () => `<select data-ins="1"><option value="">＋ 명단·점검 항목 넣기…</option>${fieldGroups(cur).map(([g, l]) => `<optgroup label="${esc(g)}">${l.map(n => `<option value="${esc(n)}">{${esc(n)}}</option>`).join('')}</optgroup>`).join('')}</select>`;
   const pct = a => (a || []).map(n => n + 1).join(',');
 
+  /* 선택한 칸: 정렬 · 크기 · 삭제 */
+  function colPx(e){
+    const nc = e.type === 'checklist' ? 4 : Math.max(...e.cells.map(r => r.length));
+    let cols = e.cols && e.cols.length === nc ? e.cols : (e.type === 'checklist' ? [8,46,16,30] : Array(nc).fill(1));
+    const sum = cols.reduce((a, b) => a + (+b || 1), 0);
+    return cols.map(w => e.w * (+w || 1) / sum);
+  }
+  function rowPx(e, r){
+    const node = $('ldPage').querySelector(`[data-id="${e.id}"]`);
+    const tr = node && node.querySelectorAll('tr')[r];
+    return tr ? Math.round(tr.offsetHeight) : (e.rowH && e.rowH[r]) || 30;
+  }
+  function cellTools(e){
+    if(!cell) return '';
+    const k = cellAKey(e, cell.r, cell.c), ca = (e.ca || {})[k] || '', cva = (e.cva || {})[k] || '';
+    const cb = (key, v, cur, label) => `<button type="button" data-${key}="${v}" class="${cur === v ? 'on' : ''}">${label}</button>`;
+    const cw = Math.round(colPx(e)[cell.c]), rh = rowPx(e, cell.r);
+    let h = `<div class="pt" style="margin-top:10px">칸 서식${e.type === 'checklist' ? ' <small style="font-weight:400;color:var(--mut)">(점검항목표는 같은 열 전체에 적용)</small>' : ''}</div>
+      <div class="ldrow"><span class="ldl">가로</span>${cb('ca', 'left', ca, '왼쪽')}${cb('ca', 'center', ca, '가운데')}${cb('ca', 'right', ca, '오른쪽')}${cb('ca', '', ca, '기본')}</div>
+      <div class="ldrow"><span class="ldl">세로</span>${cb('cva', 'top', cva, '위')}${cb('cva', 'middle', cva, '가운데')}${cb('cva', 'bottom', cva, '아래')}${cb('cva', '', cva, '기본')}</div>
+      <div class="ldrow"><span class="ldl">칸 너비</span><button type="button" data-cw="-10">−</button><input type="number" data-cwv="1" value="${cw}" style="width:70px"><button type="button" data-cw="10">＋</button><span class="ldl">px</span></div>
+      <div class="ldrow"><span class="ldl">행 높이</span><button type="button" data-rh="-5">−</button><input type="number" data-rhv="1" value="${rh}" style="width:70px"><button type="button" data-rh="5">＋</button><span class="ldl">px</span>${e.rowH && e.rowH[cell.r] ? '<button type="button" data-rhauto="1">자동</button>' : ''}</div>`;
+    if(e.type === 'table') h += `<div class="pt" style="margin-top:8px">칸·행·열 삭제 / 추가</div>
+      <div class="ldrow"><button type="button" data-cdel="clear">칸 비우기</button><button type="button" data-cdel="row" style="color:#b91c1c">이 행 삭제</button><button type="button" data-cdel="col" style="color:#b91c1c">이 열 삭제</button></div>
+      <div class="ldrow"><button type="button" data-cins="up">위에 행</button><button type="button" data-cins="down">아래에 행</button><button type="button" data-cins="left">왼쪽에 열</button><button type="button" data-cins="right">오른쪽에 열</button></div>`;
+    else if(cell.r > 0 && cell.c > 0) h += `<div class="ldrow"><button type="button" data-cdel="clear">칸 비우기</button></div>`;
+    return h;
+  }
+  /* 표 행·열 지우기·넣기 (합친 칸·색칠·정렬·행높이 함께 정리) */
+  function tblDelRow(e, r){
+    const nc = Math.max(...e.cells.map(x => x.length));
+    if(e.cells.length < 2) return toast('행이 하나뿐이라 지울 수 없습니다');
+    const below = e.cells[r + 1];
+    if(below) for(let c = 0; c < nc; c++) if(below[c] === '^' && e.cells[r][c] !== '^') below[c] = e.cells[r][c];
+    const ob = e.y + e.h, oh = e.h, gone = rowPx(e, r);
+    e.cells.splice(r, 1);
+    shiftMeta(e, 'r', r, -1);
+    e.h = clamp(e.h - gone, 10, PH - e.y); pushBelow(e, ob, e.h - oh);
+  }
+  function tblDelCol(e, c){
+    const nc = Math.max(...e.cells.map(x => x.length));
+    if(nc < 2) return toast('열이 하나뿐이라 지울 수 없습니다');
+    e.cells.forEach(row => { if(row[c + 1] === '<' && row[c] !== '<') row[c + 1] = row[c]; row.splice(c, 1); });
+    const px = colPx({...e, cells:e.cells.map(x => [...x, ''])}); px.splice(c, 1);
+    e.cols = px.map(v => Math.round(v)); e.w = Math.max(20, e.cols.reduce((a, b) => a + b, 0));
+    shiftMeta(e, 'c', c, -1);
+  }
+  function tblInsRow(e, at){
+    const nc = Math.max(...e.cells.map(x => x.length));
+    e.cells.splice(at, 0, Array(nc).fill(''));
+    shiftMeta(e, 'r', at, 1);
+    const ob = e.y + e.h, oh = e.h;
+    e.h = Math.min(PH - e.y, e.h + 30); pushBelow(e, ob, e.h - oh);
+  }
+  function tblInsCol(e, at){
+    const px = colPx(e), add = Math.round(px.reduce((a, b) => a + b, 0) / px.length);
+    e.cells.forEach(row => row.splice(at, 0, ''));
+    px.splice(at, 0, add); e.cols = px.map(v => Math.round(v)); e.w = Math.min(PW - e.x, e.cols.reduce((a, b) => a + b, 0));
+    shiftMeta(e, 'c', at, 1);
+  }
+  function shiftMeta(e, axis, at, d){
+    const mv = i => d < 0 ? (i === at ? null : i > at ? i - 1 : i) : (i >= at ? i + 1 : i);
+    if(axis === 'r'){
+      e.shadeR = (e.shadeR || []).map(mv).filter(i => i !== null);
+      if(e.rowH){ const o = {}; for(const k in e.rowH){ const n = mv(+k); if(n !== null) o[n] = e.rowH[k]; } e.rowH = o; }
+    } else e.shadeC = (e.shadeC || []).map(mv).filter(i => i !== null);
+    for(const key of ['ca', 'cva']) if(e[key]){
+      const o = {};
+      for(const k in e[key]){ const [r, c] = k.split(':').map(Number); const nr = axis === 'r' ? mv(r) : r, ncc = axis === 'c' ? mv(c) : c; if(nr !== null && ncc !== null) o[nr + ':' + ncc] = e[key][k]; }
+      e[key] = o;
+    }
+    e.cells.forEach((row, ri) => { if(row[0] === '<') row[0] = ''; if(ri === 0) e.cells[0] = row.map(x => x === '^' ? '' : x); });
+    cell = null;
+  }
+  function setColW(e, c, v){
+    const px = colPx(e); px[c] = Math.max(15, v);
+    const total = px.reduce((a, b) => a + b, 0);
+    if(e.x + total > PW){ toast('쪽 폭을 넘어서 더 넓힐 수 없습니다'); return; }
+    e.cols = px.map(x => Math.round(x)); e.w = Math.round(total);
+  }
+  /* 높이가 바뀐 요소 아래쪽 요소들을 같이 밀고 당김 */
+  function pushBelow(e, oldBottom, d){
+    if(!d) return;
+    page().els.forEach(x => { if(x !== e && x.y >= oldBottom - 4) x.y = clamp(x.y + d, 0, PH - x.h); });
+  }
+  function setRowH(e, r, v){
+    const curH = rowPx(e, r); v = Math.max(12, v);
+    const ob = e.y + e.h, oh = e.h;
+    e.rowH = {...(e.rowH || {}), [r]: v};
+    e.h = clamp(Math.round(e.h + (v - curH)), 10, PH - e.y);
+    pushBelow(e, ob, e.h - oh);
+  }
   function props(){
     const e = selEl(), P = $('ldProps');
     if(!e){
@@ -2019,7 +2124,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       if(cell && e.cells[cell.r]){
         h += `<div class="pt" style="margin-top:10px">선택한 칸 (${cell.r + 1}행 ${cell.c + 1}열)</div>
           <textarea id="ldTxt" data-cell="1" placeholder="칸 내용">${esc(e.cells[cell.r][cell.c] ?? '')}</textarea>${insSel()}
-          <div class="ldrow" style="margin-top:6px"><button type="button" data-mg="right">오른쪽 칸과 합치기</button><button type="button" data-mg="down">아래 칸과 합치기</button><button type="button" data-mg="off">합치기 풀기</button></div>`;
+          <div class="ldrow" style="margin-top:6px"><button type="button" data-mg="right">오른쪽 칸과 합치기</button><button type="button" data-mg="down">아래 칸과 합치기</button><button type="button" data-mg="off">합치기 풀기</button></div>` + cellTools(e);
       } else h += `<div class="hint">표 안의 칸을 누르면 그 칸의 글자를 고칠 수 있습니다.</div>`;
     }
     if(e.type === 'checklist'){
@@ -2037,6 +2142,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         else if(c === 2) h += `<div class="ldrow">${cur.opts.map(o => `<button type="button" data-cres="${esc(o)}" class="${it.result === o ? 'on' : ''}">${esc(o)}</button>`).join('')}<button type="button" data-cres="">비우기</button></div>
           <textarea id="ldTxt" data-cresv="1" placeholder="직접 입력" style="min-height:44px">${esc(it.result || '')}</textarea><div class="hint">결과·비고는 이번 점검 기록의 값입니다.</div>`;
         else h += `<textarea id="ldTxt" data-cnote="1" placeholder="비고">${esc(it.note || '')}</textarea><div class="hint">결과·비고는 이번 점검 기록의 값입니다.</div>`;
+        h += cellTools(e);
       } else h += `<div class="hint">표 안의 칸을 누르면 그 칸만 고칠 수 있습니다.</div>`;
       h += `<div class="ldrow"><span class="ldl">머리글</span><input data-k="heads" value="${esc((e.heads || ['번호','점검 항목','결과','비고']).join(','))}"></div>
         <div class="ldrow"><span class="ldl">열 너비 비율</span><input data-k="cols" value="${(e.cols || [8,46,16,30]).join(',')}"></div>
@@ -2143,6 +2249,53 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   openDesigner = function(){ _od(); setPlacing(null); };
   window.openDesigner = openDesigner;
   window.LAY = {fieldValue, fieldGroups, defaultLayout};
+
+  /* ---------- 도구 창 (이동 · 크기 조절 · 최소화) ---------- */
+  (function toolWin(){
+    const T = $('ldTool'), wrap = $('ldWrap');
+    const body = document.createElement('div'); body.id = 'ldToolBody';
+    while(T.firstChild) body.appendChild(T.firstChild);
+    const bar = document.createElement('div'); bar.id = 'ldToolBar';
+    bar.innerHTML = '<b>🛠 디자인 도구</b><button type="button" id="ldTMin" title="최소화 / 펼치기">—</button><button type="button" id="ldTReset" title="처음 위치로">⟲</button>';
+    const rh = document.createElement('div'); rh.className = 'wrh';
+    T.append(bar, body, rh);
+    const KEY = 'ldToolPos';
+    const def = () => {
+      const W = wrap.clientWidth, H = wrap.clientHeight, mob = innerWidth <= 760;
+      return mob ? {l:8, t:Math.round(H * .52), w:W - 16, h:Math.round(H * .46), min:false}
+                 : {l:Math.max(8, W - 372), t:10, w:360, h:Math.max(300, H - 20), min:false};
+    };
+    let pos = LS.get(KEY, null);
+    function apply(){
+      const W = wrap.clientWidth, H = wrap.clientHeight;
+      if(!pos || !W) pos = pos || def();
+      pos.w = Math.max(240, Math.min(W - 4, pos.w)); pos.h = Math.max(120, Math.min(H - 4, pos.h));
+      pos.l = Math.max(-pos.w + 80, Math.min(W - 80, pos.l)); pos.t = Math.max(0, Math.min(H - 40, pos.t));
+      Object.assign(T.style, {left:pos.l + 'px', top:pos.t + 'px', width:pos.w + 'px', height:pos.h + 'px'});
+      T.classList.toggle('min', !!pos.min);
+      $('ldTMin').textContent = pos.min ? '▢' : '—';
+    }
+    const save = () => LS.set(KEY, pos);
+    $('ldTMin').onclick = () => { pos.min = !pos.min; apply(); save(); };
+    $('ldTReset').onclick = () => { pos = def(); apply(); save(); };
+    bar.addEventListener('dblclick', e => { if(!e.target.closest('button')){ pos.min = !pos.min; apply(); save(); } });
+    bar.addEventListener('pointerdown', ev => {
+      if(ev.target.closest('button')) return;
+      const sx = ev.clientX, sy = ev.clientY, ol = pos.l, ot = pos.t;
+      const mv = m => { pos.l = ol + m.clientX - sx; pos.t = ot + m.clientY - sy; apply(); m.preventDefault(); };
+      const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); save(); };
+      addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up); ev.preventDefault();
+    });
+    rh.addEventListener('pointerdown', ev => {
+      const sx = ev.clientX, sy = ev.clientY, ow = pos.w, oh = pos.h;
+      const mv = m => { pos.w = ow + m.clientX - sx; pos.h = oh + m.clientY - sy; apply(); m.preventDefault(); };
+      const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); save(); };
+      addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up); ev.preventDefault(); ev.stopPropagation();
+    });
+    new MutationObserver(() => { if(!$('ld').hidden) requestAnimationFrame(apply); }).observe($('ld'), {attributes:true, attributeFilter:['hidden', 'style', 'class']});
+    addEventListener('resize', () => { if(!$('ld').hidden) apply(); });
+    window.ldToolApply = apply;
+  })();
 
   function finish(name, layout){
     cur.title = $('ldTitle').value.trim() || cur.title || '현장점검표';
@@ -2280,6 +2433,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       return;
     }
     if(e && t.tagName === 'SELECT' && t.dataset.k){ snap(); applyK(e, t.dataset.k, t.value); draw(); }
+    if(e && cell && t.dataset.cwv !== undefined){ snap(); setColW(e, cell.c, +t.value || 0); draw(); props(); }
+    if(e && cell && t.dataset.rhv !== undefined){ snap(); setRowH(e, cell.r, +t.value || 0); draw(); props(); }
   });
   P.addEventListener('click', ev => {
     const b = ev.target.closest('button'); if(!b) return;
@@ -2287,6 +2442,30 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(b.dataset.tog){ snap(); e[b.dataset.tog] = !e[b.dataset.tog]; draw(); props(); return; }
     if(b.dataset.set){ snap(); e[b.dataset.set] = b.dataset.v; draw(); props(); return; }
     if(b.dataset.clr){ snap(); e[b.dataset.clr] = ''; draw(); props(); return; }
+    if(cell && (e.type === 'table' || e.type === 'checklist')){
+      const k = cellAKey(e, cell.r, cell.c);
+      if(b.dataset.ca !== undefined){ snap(); e.ca = {...(e.ca || {})}; if(b.dataset.ca) e.ca[k] = b.dataset.ca; else delete e.ca[k]; draw(); props(); return; }
+      if(b.dataset.cva !== undefined){ snap(); e.cva = {...(e.cva || {})}; if(b.dataset.cva) e.cva[k] = b.dataset.cva; else delete e.cva[k]; draw(); props(); return; }
+      if(b.dataset.cw){ snap(); setColW(e, cell.c, colPx(e)[cell.c] + (+b.dataset.cw)); draw(); props(); return; }
+      if(b.dataset.rh){ snap(); setRowH(e, cell.r, rowPx(e, cell.r) + (+b.dataset.rh)); draw(); props(); return; }
+      if(b.dataset.rhauto){ snap(); const o = {...e.rowH}; delete o[cell.r]; e.rowH = o; draw(); props(); return; }
+      if(b.dataset.cdel){
+        const c0 = cell;
+        if(b.dataset.cdel === 'clear'){
+          snap();
+          if(e.type === 'table') e.cells[c0.r][c0.c] = '';
+          else { const it = cur.items[c0.r - 1]; if(it){ if(c0.c === 1) it.label = ''; if(c0.c === 2) it.result = ''; if(c0.c === 3) it.note = ''; dirty = true; } }
+        } else if(b.dataset.cdel === 'row'){ if(!confirm(`${c0.r + 1}행을 지울까요?`)) return; snap(); tblDelRow(e, c0.r); }
+        else if(b.dataset.cdel === 'col'){ if(!confirm(`${c0.c + 1}열을 지울까요?`)) return; snap(); tblDelCol(e, c0.c); }
+        draw(); props(); return;
+      }
+      if(b.dataset.cins){
+        snap(); const c0 = cell, d = b.dataset.cins;
+        if(d === 'up') tblInsRow(e, c0.r); if(d === 'down') tblInsRow(e, c0.r + 1);
+        if(d === 'left') tblInsCol(e, c0.c); if(d === 'right') tblInsCol(e, c0.c + 1);
+        draw(); props(); return;
+      }
+    }
     if(e.type === 'checklist' && cell && cell.r > 0){
       const i = cell.r - 1, it = cur.items[i];
       if(b.dataset.cres !== undefined && it){ it.result = b.dataset.cres; dirty = true; draw(); props(); return; }
@@ -3833,15 +4012,15 @@ $('iHwp').onclick = async () => {
           const cs = g.cs || 1, rs = g.rs || 1;
           const w = cw.slice(c, c + cs).reduce((a, b) => a + b, 0);
           const fid = S.fillId({bw, bc, bg: g.shade ? hb : (e.bg || '')});
-          const align = g.shade ? 'center' : (g.align || e.align || 'left');
+          const align = g.align || (g.shade ? 'center' : (e.align || 'left'));
           const s = {...st(e), bold: e.bold || g.shade || g.bold, color: g.color || e.color || '#111111'};
           const pid = S.paraId({align, lh:120});
           let inner = '';
           const pics = (extraPics.get(r + ':' + c) || []);
           if(pics.length) for(const pc of pics) inner += para(pid, await picRun(pc.src, Math.max(10, w - 1200), Math.max(600, pc.h * PX), S.charId(s)));
           if(!pics.length || String(g.text || '').trim()) inner += textPara(g.text || '', s, pid);
-          cells += `<hp:tc name="" header="0" hasMargin="0" protect="0" editable="0" dirty="0" borderFillIDRef="${fid}"><hp:subList id="" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="${VA(e.valign)}" linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" hasNumRef="0">${inner}</hp:subList>`
-            + `<hp:cellAddr colAddr="${c}" rowAddr="${r}"/><hp:cellSpan colSpan="${cs}" rowSpan="${rs}"/><hp:cellSz width="${w}" height="${rh * rs}"/><hp:cellMargin left="420" right="420" top="140" bottom="140"/></hp:tc>`;
+          cells += `<hp:tc name="" header="0" hasMargin="0" protect="0" editable="0" dirty="0" borderFillIDRef="${fid}"><hp:subList id="" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="${VA(g.va || e.valign)}" linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" hasNumRef="0">${inner}</hp:subList>`
+            + `<hp:cellAddr colAddr="${c}" rowAddr="${r}"/><hp:cellSpan colSpan="${cs}" rowSpan="${rs}"/><hp:cellSz width="${w}" height="${(e.rowH && e.rowH[r] ? Math.round(e.rowH[r] * PX) : rh) * rs}"/><hp:cellMargin left="420" right="420" top="140" bottom="140"/></hp:tc>`;
         }
         rows += `<hp:tr>${cells}</hp:tr>`;
       }
@@ -3855,7 +4034,8 @@ $('iHwp').onclick = async () => {
         const heads = e.heads && e.heads.length === 4 ? e.heads : ['번호','점검 항목','결과','비고'];
         const items = rec.items.length ? rec.items : [{label:'', result:'', note:''}];
         return [heads.map(t => ({text:t, shade:true})), ...items.map((it, i) => [
-          {text:String(i + 1), align:'center'}, {text:it.label}, {text:it.result || '', align:'center', bold:BAD.test(it.result), color:BAD.test(it.result) ? '#C62828' : ''}, {text:it.note || ''}])];
+          {text:String(i + 1), align:'center'}, {text:it.label}, {text:it.result || '', align:'center', bold:BAD.test(it.result), color:BAD.test(it.result) ? '#C62828' : ''}, {text:it.note || ''}])]
+          .map((row, r) => row.map((g, c) => { const k = window.LAY_cellAKey(e, r, c); return {...g, align:(e.ca || {})[k] || g.align, va:(e.cva || {})[k]}; }));
       }
       const cells = e.cells || [['']], nr = cells.length, nc = Math.max(...cells.map(r => r.length));
       const get = (r, c) => (cells[r] && cells[r][c] != null) ? String(cells[r][c]) : '';
@@ -3869,7 +4049,7 @@ $('iHwp').onclick = async () => {
           let cs = 1, rs = 1;
           while(c + cs < nc && get(r, c + cs) === '<') cs++;
           while(r + rs < nr && get(r + rs, c) === '^') rs++;
-          g[r][c] = {text:fillPlain(t, rec), cs, rs, shade: sr.includes(r) || sc.includes(c)};
+          g[r][c] = {text:fillPlain(t, rec), cs, rs, shade: sr.includes(r) || sc.includes(c), align:(e.ca || {})[r + ':' + c], va:(e.cva || {})[r + ':' + c]};
         }
       }
       return g;
