@@ -1827,7 +1827,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
           if(c === 0 || c === 2) st += 'text-align:center;';
           if(c === 2 && BAD.test(t)) st += 'color:#c62828;font-weight:700;';
         }
-        if(design && e.type === 'table' && cell && sel === e.id && cell.r === r && cell.c === c) cls = ' class="csel"';
+        if(design && cell && sel === e.id && cell.r === r && cell.c === c) cls = ' class="csel"';
         h += `<td${cls}${cs > 1 ? ` colspan="${cs}"` : ''}${rs > 1 ? ` rowspan="${rs}"` : ''}${design ? ` data-r="${r}" data-c="${c}"` : ''} style="${st}">${fill(t, rec, design)}</td>`;
       }
       h += '</tr>';
@@ -1976,6 +1976,21 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       } else h += `<div class="hint">표 안의 칸을 누르면 그 칸의 글자를 고칠 수 있습니다.</div>`;
     }
     if(e.type === 'checklist'){
+      const heads = e.heads && e.heads.length === 4 ? e.heads : ['번호','점검 항목','결과','비고'];
+      if(cell){
+        const r = cell.r, c = cell.c, it = r > 0 ? cur.items[r - 1] : null;
+        h += `<div class="pt" style="margin-top:4px;color:#b45309">선택한 칸 (${r === 0 ? '머리글' : r + '번 항목'} · ${esc(heads[c] || '')})</div>`;
+        if(r === 0) h += `<textarea id="ldTxt" data-chead="${c}" placeholder="머리글">${esc(heads[c] || '')}</textarea>`;
+        else if(!it) h += `<div class="hint">점검 항목이 없습니다. 아래 목록에 항목을 넣으세요.</div>`;
+        else if(c === 0) h += `<div class="hint">번호는 자동으로 매겨집니다. 순서를 바꾸려면 아래 점검 항목 목록에서 줄 순서를 바꾸세요.</div>
+          <div class="ldrow"><button type="button" data-mv="-1">▲ 위로</button><button type="button" data-mv="1">▼ 아래로</button><button type="button" data-rmit="1" style="color:#b91c1c">이 항목 삭제</button></div>`;
+        else if(c === 1) h += `<textarea id="ldTxt" data-clabel="1" placeholder="점검 항목 이름">${esc(it.label)}</textarea>
+          <div class="ldrow" style="margin-top:6px"><button type="button" data-mv="-1">▲ 위로</button><button type="button" data-mv="1">▼ 아래로</button><button type="button" data-addit="1">＋ 아래에 항목 추가</button><button type="button" data-rmit="1" style="color:#b91c1c">삭제</button></div>
+          <div class="hint">항목 이름은 서식에 저장됩니다.</div>`;
+        else if(c === 2) h += `<div class="ldrow">${cur.opts.map(o => `<button type="button" data-cres="${esc(o)}" class="${it.result === o ? 'on' : ''}">${esc(o)}</button>`).join('')}<button type="button" data-cres="">비우기</button></div>
+          <textarea id="ldTxt" data-cresv="1" placeholder="직접 입력" style="min-height:44px">${esc(it.result || '')}</textarea><div class="hint">결과·비고는 이번 점검 기록의 값입니다.</div>`;
+        else h += `<textarea id="ldTxt" data-cnote="1" placeholder="비고">${esc(it.note || '')}</textarea><div class="hint">결과·비고는 이번 점검 기록의 값입니다.</div>`;
+      } else h += `<div class="hint">표 안의 칸을 누르면 그 칸만 고칠 수 있습니다.</div>`;
       h += `<div class="ldrow"><span class="ldl">머리글</span><input data-k="heads" value="${esc((e.heads || ['번호','점검 항목','결과','비고']).join(','))}"></div>
         <div class="ldrow"><span class="ldl">열 너비 비율</span><input data-k="cols" value="${(e.cols || [8,46,16,30]).join(',')}"></div>
         <div class="ldrow"><span class="ldl">선 두께</span><input type="number" data-k="bw" min="0" max="6" value="${e.bw ?? 1}" style="width:60px"><input type="color" data-k="bc" value="${e.bc || '#333333'}" style="width:40px;padding:2px"><span class="ldl">머리 색</span><input type="color" data-k="hbg" value="${e.hbg || '#eef1f5'}" style="width:40px;padding:2px"></div>
@@ -1998,6 +2013,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       h += `<div class="ldrow"><span class="ldl">배경</span><input type="color" data-k="bg" value="${e.bg || '#ffffff'}" style="width:40px;padding:2px"><button type="button" data-clr="bg">없음</button>
         ${tog('border', e, '바깥 테두리')}${e.border ? `<input type="number" data-k="bw" min="1" max="10" value="${e.bw || 1}" style="width:54px"><input type="color" data-k="bc" value="${e.bc || '#333333'}" style="width:40px;padding:2px">` : ''}</div>`;
     }
+    if(['text','table','checklist'].includes(e.type)) h += `<div class="ldrow"><button type="button" data-act="fit" style="border-color:#0f766e;color:#0f766e">내용에 맞게 높이 조절</button></div>`;
     h += `<div class="ldrow" style="margin-top:6px"><button type="button" data-act="dup">복제</button><button type="button" data-act="front">맨 앞으로</button><button type="button" data-act="back">맨 뒤로</button><button type="button" data-act="del" style="color:#b91c1c">삭제</button></div>`;
     P.innerHTML = h;
   }
@@ -2137,7 +2153,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const td = ev.target.closest('td[data-r]');
     const wasSel = sel === e.id;
     sel = e.id;
-    if(!resize) cell = (td && e.type === 'table') ? {r:+td.dataset.r, c:+td.dataset.c} : (wasSel ? cell : null);
+    if(!resize) cell = (td && (e.type === 'table' || e.type === 'checklist')) ? {r:+td.dataset.r, c:+td.dataset.c} : (wasSel ? cell : null);
     draw(); props();
     const node = $('ldPage').querySelector(`[data-id="${e.id}"]`);
     const sx = ev.clientX, sy = ev.clientY, ox = e.x, oy = e.y, ow = e.w, oh = e.h;
@@ -2168,6 +2184,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   /* 속성 고치기 */
   const P = $('ldProps');
   let typing = false;
+  const syncItemsBox = () => { const ta = P.querySelector('[data-items]'); if(ta && document.activeElement !== ta) ta.value = cur.items.map(x => x.label).join('\n'); };
   P.addEventListener('focusin', ev => { if(ev.target.matches('input,textarea')){ snap(); typing = true; } });
   P.addEventListener('focusout', () => { typing = false; });
   const nums = new Set(['x','y','w','h','size','lh','bw','idx']);
@@ -2189,6 +2206,13 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(t.dataset.opts !== undefined){ const o = t.value.split(',').map(s => s.trim()).filter(Boolean); if(o.length) cur.opts = o; changed = true; return; }
     if(!e) return;
     if(t.dataset.cell !== undefined && cell){ e.cells[cell.r][cell.c] = t.value; draw(); return; }
+    if(e && e.type === 'checklist' && cell){
+      const it = cur.items[cell.r - 1];
+      if(t.dataset.chead !== undefined){ const hs = (e.heads && e.heads.length === 4 ? [...e.heads] : ['번호','점검 항목','결과','비고']); hs[+t.dataset.chead] = t.value; e.heads = hs; draw(); return; }
+      if(t.dataset.clabel !== undefined && it){ it.label = t.value; changed = true; draw(); syncItemsBox(); return; }
+      if(t.dataset.cresv !== undefined && it){ it.result = t.value; dirty = true; draw(); return; }
+      if(t.dataset.cnote !== undefined && it){ it.note = t.value; dirty = true; draw(); return; }
+    }
     if(t.dataset.k){
       if(!typing) snap();
       applyK(e, t.dataset.k, t.value);
@@ -2216,6 +2240,13 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(b.dataset.tog){ snap(); e[b.dataset.tog] = !e[b.dataset.tog]; draw(); props(); return; }
     if(b.dataset.set){ snap(); e[b.dataset.set] = b.dataset.v; draw(); props(); return; }
     if(b.dataset.clr){ snap(); e[b.dataset.clr] = ''; draw(); props(); return; }
+    if(e.type === 'checklist' && cell && cell.r > 0){
+      const i = cell.r - 1, it = cur.items[i];
+      if(b.dataset.cres !== undefined && it){ it.result = b.dataset.cres; dirty = true; draw(); props(); return; }
+      if(b.dataset.mv && it){ const j = i + (+b.dataset.mv); if(j < 0 || j >= cur.items.length) return; [cur.items[i], cur.items[j]] = [cur.items[j], cur.items[i]]; cell = {r:j + 1, c:cell.c}; changed = true; draw(); props(); return; }
+      if(b.dataset.addit){ cur.items.splice(i + 1, 0, {label:'새 점검 항목', result:'', note:''}); cell = {r:i + 2, c:1}; changed = true; draw(); props(); const ta = $('ldTxt'); if(ta){ ta.focus(); ta.select(); } return; }
+      if(b.dataset.rmit && it){ if(!confirm(`'${it.label}' 항목을 지울까요?`)) return; cur.items.splice(i, 1); cell = null; changed = true; draw(); props(); return; }
+    }
     if(b.dataset.tb){
       snap();
       const nc = Math.max(...e.cells.map(r => r.length));
@@ -2246,6 +2277,21 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       if(b.dataset.act === 'del'){ page().els = els.filter(x => x.id !== e.id); sel = null; }
       if(b.dataset.act === 'dup'){ const c = {...clone(e), id:nid(), x:clamp(e.x + 15, 0, PW - e.w), y:clamp(e.y + 15, 0, PH - e.h), z:Math.max(...els.map(x => x.z || 1)) + 1}; els.push(c); sel = c.id; }
       if(b.dataset.act === 'front') e.z = Math.max(...els.map(x => x.z || 1)) + 1;
+      if(b.dataset.act === 'fit'){
+        const node = $('ldPage').querySelector(`[data-id="${e.id}"]`);
+        if(node){
+          const inner = node.querySelector('table') || node.querySelector('.tx');
+          const oh = node.style.height; node.style.height = 'auto'; if(inner) inner.style.height = 'auto';
+          const need = Math.ceil((inner ? inner.scrollHeight : node.scrollHeight) + (e.border ? (e.bw || 1) * 2 : 0) + 2);
+          node.style.height = oh; if(inner) inner.style.height = '';
+          const oldH = e.h, bottom = e.y + oldH;
+          e.h = clamp(need, 10, PH - e.y);
+          const d = e.h - oldH;
+          let moved = 0;
+          if(d) els.forEach(x => { if(x !== e && x.y >= bottom - 4){ x.y = clamp(x.y + d, 0, PH - x.h); moved++; } });
+          toast(`높이를 ${e.h}으로 맞췄습니다` + (moved ? ` · 아래 요소 ${moved}개를 ${d > 0 ? '내림' : '올림'}` : ''));
+        }
+      }
       if(b.dataset.act === 'back'){ els.forEach(x => x.z = (x.z || 1) + 1); e.z = 1; }
       cell = null; draw(); props();
     }
