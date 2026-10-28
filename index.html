@@ -101,6 +101,9 @@
   .hwprev table{border-collapse:collapse;width:100%;margin:4px 0 8px;table-layout:fixed}
   .hwprev td{border:1px solid #555;padding:3px 5px;vertical-align:middle}
   .hwprev td.hfl{background:#fff7c2}
+  .hwprev td.hmap{background:#dbeafe;box-shadow:inset 0 0 0 2px #3b82f6}
+  .hwprev td[data-k]{cursor:pointer}
+  .hwprev td[data-k]:hover{outline:2px solid #f59e0b;outline-offset:-2px}
   .hwprev.fold{max-height:0;padding:0;border:0;overflow:hidden}
   .badge.done{background:#e5e7eb;color:#374151}
   .iw .st{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 7px;margin:4px 0 2px}
@@ -389,7 +392,7 @@
         <button type="button" id="hwpPrevBtn" class="bline" style="font-size:12px;padding:5px 9px">새로고침</button>
         <button type="button" id="hwpPrevFold" class="bline" style="font-size:12px;padding:5px 9px">접기</button></h3>
       <div id="hwpPrev" class="hwprev"></div>
-      <small style="display:block;margin-top:6px;color:var(--mut)">입력한 내용이 채워질 모습입니다 (서명·사진은 [한글 저장] 파일에 들어갑니다). 노란 칸이 앱이 채우는 곳입니다.</small>
+      <small style="display:block;margin-top:6px;color:var(--mut)">칸을 누르면 그 칸에 넣을 <b>엑셀·점검 항목</b>을 고르거나 직접 입력할 수 있습니다. 노란 칸: 자동으로 채움 · 파란 칸: 직접 연결한 칸. 서명·사진은 [한글 저장] 파일에 들어갑니다.</small>
     </div>
 
     <div class="card">
@@ -496,6 +499,11 @@
         <button type="button" data-add="photo">＋ 사진</button>
         <button type="button" data-add="sign">＋ 서명</button>
         <button type="button" data-add="line">＋ 선</button>
+      </div>
+      <div style="margin-bottom:8px;padding:8px;border:1px dashed #93c5fd;border-radius:8px;background:#f8fbff">
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px">엑셀 항목 넣기</div>
+        <div id="ldPlaceMsg" style="font-size:12px;color:var(--mut);margin-bottom:6px">항목을 누른 뒤, 쪽에서 넣을 곳을 누르세요. 표 칸·글상자 위를 누르면 그 안에 들어갑니다. (PC는 끌어다 놓기도 됨)</div>
+        <div id="ldFields" class="chips" style="max-height:150px;overflow:auto"></div>
       </div>
       <div class="ldrow ldbtns">
         <button type="button" id="ldPrevPg">◀</button>
@@ -1764,7 +1772,12 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const etc = etcOf(rec.target || {}); for(const h in etc) if(nk(h) === k) return etc[h];
     return null;
   }
-  const fill = (text, rec) => esc(String(text ?? '').replace(/\{([^{}]+)\}/g, (m, n) => { const v = fieldValue(rec, n); return v === null ? m : v; })).replace(/\n/g, '<br>');
+  const fill = (text, rec, design) => String(text ?? '').split(/(\{[^{}]+\})/g).map(part => {
+    const m = /^\{([^{}]+)\}$/.exec(part); if(!m) return esc(part);
+    const v = fieldValue(rec, m[1]);
+    if(design && (v === null || v === '')) return `<span style="color:#9ca3af">${esc(part)}</span>`;
+    return esc(v === null ? part : v);
+  }).join('').replace(/\n/g, '<br>');
   function fieldGroups(rec){
     const etc = [...new Set((rows || []).flatMap(r => Object.keys(etcOf(r))))];
     return [
@@ -1815,7 +1828,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
           if(c === 2 && BAD.test(t)) st += 'color:#c62828;font-weight:700;';
         }
         if(design && e.type === 'table' && cell && sel === e.id && cell.r === r && cell.c === c) cls = ' class="csel"';
-        h += `<td${cls}${cs > 1 ? ` colspan="${cs}"` : ''}${rs > 1 ? ` rowspan="${rs}"` : ''}${design ? ` data-r="${r}" data-c="${c}"` : ''} style="${st}">${fill(t, rec)}</td>`;
+        h += `<td${cls}${cs > 1 ? ` colspan="${cs}"` : ''}${rs > 1 ? ` rowspan="${rs}"` : ''}${design ? ` data-r="${r}" data-c="${c}"` : ''} style="${st}">${fill(t, rec, design)}</td>`;
       }
       h += '</tr>';
     }
@@ -1825,7 +1838,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const vj = {top:'flex-start', middle:'center', bottom:'flex-end'}[e.valign || 'top'];
     if(e.type === 'text'){
       const empty = design && !String(e.text || '').trim();
-      return `<div class="tx${empty ? ' empty' : ''}" style="justify-content:${vj};line-height:${e.lh || 1.4}">${fill(e.text, rec)}</div>`;
+      return `<div class="tx${empty ? ' empty' : ''}" style="justify-content:${vj};line-height:${e.lh || 1.4}">${fill(e.text, rec, design)}</div>`;
     }
     if(e.type === 'line') return `<div style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);border-top:${e.bw || 1}px ${e.dash ? 'dashed' : 'solid'} ${e.color || '#111'}"></div>`;
     if(e.type === 'table' || e.type === 'checklist') return tableHtml(e, rec, design);
@@ -2016,6 +2029,57 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     requestAnimationFrame(() => { draw(); props(); });
   }
   window.openDesigner = openDesigner;
+
+  /* 엑셀 항목: 눌러서 고르고 → 쪽 위 원하는 곳을 눌러 넣기 */
+  let placing = null;
+  function renderFieldChips(){
+    $('ldFields').innerHTML = fieldGroups(cur).map(([g, l]) => `<div style="width:100%;font-size:11px;color:var(--mut);margin-top:2px">${esc(g)}</div>` +
+      l.map(n => { const v = fieldValue(cur, n); return `<button type="button" class="chip${placing === n ? ' on' : ''}" draggable="true" data-place="${esc(n)}" title="${esc(v || '')}">${esc(n)}</button>`; }).join('')).join('');
+  }
+  function setPlacing(n){
+    placing = n; renderFieldChips();
+    $('ldPlaceMsg').innerHTML = n ? `<b style="color:#1f6feb">{${esc(n)}}</b> — 쪽에서 넣을 곳을 누르세요 <button type="button" id="ldPlaceX" style="margin-left:6px;font-size:12px">취소</button>`
+      : '항목을 누른 뒤, 쪽에서 넣을 곳을 누르세요. 표 칸·글상자 위를 누르면 그 안에 들어갑니다. (PC는 끌어다 놓기도 됨)';
+    $('ldPage').style.cursor = n ? 'crosshair' : '';
+    const x = $('ldPlaceX'); if(x) x.onclick = () => setPlacing(null);
+  }
+  function placeAt(name, clientX, clientY, target){
+    const pgEl = $('ldPage').querySelector('.pg'); if(!pgEl) return;
+    const r = pgEl.getBoundingClientRect();
+    const px = (clientX - r.left) / zoom, py = (clientY - r.top) / zoom;
+    const tag = '{' + name + '}';
+    snap();
+    const le = target && target.closest && target.closest('.le');
+    const e = le ? page().els.find(x => x.id === le.dataset.id) : null;
+    const td = target && target.closest && target.closest('td[data-r]');
+    if(e && e.type === 'table' && td){
+      const rr = +td.dataset.r, cc = +td.dataset.c, old = e.cells[rr][cc] || '';
+      e.cells[rr][cc] = old.trim() ? old + ' ' + tag : tag;
+      sel = e.id; cell = {r:rr, c:cc};
+    } else if(e && e.type === 'text'){
+      e.text = (e.text || '').trim() ? e.text + ' ' + tag : tag; sel = e.id; cell = null;
+    } else {
+      const w = Math.max(80, Math.min(320, name.length * 16 + 60)), h = 28;
+      const n = mk({type:'text', x:clamp(r5(px), 0, PW - w), y:clamp(r5(py - h / 2), 0, PH - h), w, h, text:tag});
+      n.z = Math.max(1, ...page().els.map(x => x.z || 1)) + 1;
+      page().els.push(n); sel = n.id; cell = null;
+    }
+    draw(); props();
+    toast(`{${name}} 을(를) 넣었습니다`);
+  }
+  $('ldFields').addEventListener('click', ev => { const b = ev.target.closest('[data-place]'); if(b) setPlacing(placing === b.dataset.place ? null : b.dataset.place); });
+  $('ldFields').addEventListener('dragstart', ev => { const b = ev.target.closest('[data-place]'); if(b){ ev.dataTransfer.setData('text/plain', b.dataset.place); ev.dataTransfer.effectAllowed = 'copy'; } });
+  $('ldStage').addEventListener('dragover', ev => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy'; });
+  $('ldStage').addEventListener('drop', ev => { ev.preventDefault(); const n = ev.dataTransfer.getData('text/plain'); if(n) placeAt(n, ev.clientX, ev.clientY, ev.target); });
+  $('ldPage').addEventListener('pointerdown', ev => {
+    if(!placing) return;
+    ev.stopImmediatePropagation(); ev.preventDefault();
+    const n = placing; setPlacing(null); placeAt(n, ev.clientX, ev.clientY, ev.target);
+  }, true);
+  const _od = openDesigner;
+  openDesigner = function(){ _od(); setPlacing(null); };
+  window.openDesigner = openDesigner;
+  window.LAY = {fieldValue, fieldGroups, defaultLayout};
 
   function finish(name, layout){
     cur.title = $('ldTitle').value.trim() || cur.title || '현장점검표';
@@ -2877,6 +2941,7 @@ async function makeHwpx(rec){
   if(window.syncMedia && (rec.photos.some(p => !p) || (!rec.sign && rec.signId))) await syncMedia(rec);
   const {zip, docs} = await hwpxDocs(await hwpxFile(rec.hwpx));
   const r = walkHwpx(docs.map(x => x.d), rec, false);
+  if(window.applyHwpxMap) r.filled += applyHwpxMap(docs.map(x => x.d), rec);
   r.filled += await placeImages(zip, docs, rec, r.slots);
   const ser = new XMLSerializer();
   for(const x of docs){
@@ -2958,13 +3023,16 @@ function hwpxParaHtml(p, filledSet){
   }
   return `<p>${h || '&nbsp;'}</p>`;
 }
+let _hwpKeys = new Map(), _hwpMapped = new Set();
 function hwpxTblHtml(tbl, filledSet){
   let h = '<table>';
   for(const tr of childs(tbl, 'tr')){
     h += '<tr>';
     for(const tc of childs(tr, 'tc')){
       const sp = childs(tc, 'cellSpan')[0], cs = sp ? +sp.getAttribute('colSpan') || 1 : 1, rs = sp ? +sp.getAttribute('rowSpan') || 1 : 1;
-      h += `<td${cs > 1 ? ` colspan="${cs}"` : ''}${rs > 1 ? ` rowspan="${rs}"` : ''}${filledSet.has(tc) ? ' class="hfl"' : ''}>${cellParas(tc).map(p => hwpxParaHtml(p, filledSet)).join('')}</td>`;
+      const k = _hwpKeys.get(tc), prev = tc.previousSibling && tc.previousSibling.localName === 'tc' ? cText(tc.previousSibling).replace(PUA, '').trim().slice(0, 30) : '';
+      const cls = _hwpMapped.has(k) ? 'hmap' : filledSet.has(tc) ? 'hfl' : '';
+      h += `<td${cs > 1 ? ` colspan="${cs}"` : ''}${rs > 1 ? ` rowspan="${rs}"` : ''}${cls ? ` class="${cls}"` : ''}${k ? ` data-k="${k}" data-lab="${esc(prev)}"` : ''}>${cellParas(tc).map(p => hwpxParaHtml(p, filledSet)).join('')}</td>`;
     }
     h += '</tr>';
   }
@@ -2982,6 +3050,9 @@ async function renderHwpxPreview(){
     const before = new Map();
     for(const x of docs) for(const tc of kidsNS(x.d, 'tc')) before.set(tc, cText(tc));
     walkHwpx(docs.map(x => x.d), cur, false);
+    _hwpKeys = window.hwpxCellKeys ? hwpxCellKeys(docs.map(x => x.d)) : new Map();
+    _hwpMapped = new Set([...Object.keys((cur.hwpx && cur.hwpx.map) || {}), ...Object.keys(cur.hwpxMan || {}).filter(k => cur.hwpxMan[k])]);
+    if(window.applyHwpxMap) applyHwpxMap(docs.map(x => x.d), cur);
     const filled = new Set([...before].filter(([tc, t]) => cText(tc) !== t).map(([tc]) => tc));
     if(seq !== _hwpPrevSeq) return;
     box.innerHTML = docs.map(x => childs(x.d.documentElement, 'p').map(p => hwpxParaHtml(p, filled)).join('')).join('<hr>');
@@ -3247,6 +3318,7 @@ $('iHwp').onclick = async () => {
     d.addEventListener('close', () => { d.classList.remove('wfull'); ['margin','inset','left','top','width','height','maxWidth','maxHeight'].forEach(k => d.style[k] = ''); });
   }
   document.querySelectorAll('dialog').forEach(winDialog);
+  window.DLG_WIN = (d, title) => { DLG_TITLE[d.id] = title; winDialog(d); };
 
   /* ---------- 작업창(점검·목록·미리보기·디자인) ---------- */
   const OV_DEF = {insp:{w:560, side:'right'}, ilist:{w:620, side:'right'}, pv:{full:true}, ld:{full:true}};
@@ -3448,6 +3520,379 @@ $('iHwp').onclick = async () => {
   dl('dlSize', [8,9,10,11,12,13,14,15,16,18,20,22,24,28,32,36,40,48]);
   new MutationObserver(() => { document.querySelectorAll('#ldProps input[data-k="size"]').forEach(el => el.setAttribute('list', 'dlSize')); })
     .observe($('ldProps'), {childList:true});
+})();
+</script>
+<script>
+/* =====================================================================
+   한글(hwpx) 확장
+   ① 한글 양식 미리보기에서 칸을 눌러 엑셀 항목 연결 (서식에 저장) · 이번 점검만 직접 입력
+   ② 양식 디자인·자동 배치 서식도 한글(.hwpx) 파일로 저장
+   ===================================================================== */
+(function(){
+  const LAY = window.LAY;
+  const fillPlain = (text, rec) => String(text ?? '').replace(/\{([^{}]+)\}/g, (m, n) => { const v = LAY.fieldValue(rec, n); return v === null ? m : v; });
+
+  /* ---------- ① 칸 ↔ 엑셀 항목 연결 ---------- */
+  // 문서 안 모든 표 칸에 순서 열쇠 부여: 문서번호:표번호:행:열
+  function cellKeys(docs){
+    const m = new Map();
+    docs.forEach((d, di) => kidsNS(d, 'tbl').forEach((tbl, ti) => {
+      for(const tc of kidsNS(tbl, 'tc')){
+        let p = tc.parentNode; while(p && p.localName !== 'tbl') p = p.parentNode;
+        if(p !== tbl) continue;   // 안쪽 표의 칸은 그 표에서 처리
+        const a = childs(tc, 'cellAddr')[0];
+        m.set(tc, `${di}:${ti}:${a ? a.getAttribute('rowAddr') : 0}:${a ? a.getAttribute('colAddr') : 0}`);
+      }
+    }));
+    return m;
+  }
+  window.hwpxCellKeys = cellKeys;
+  function setCell(tc, text){
+    const ps = cellParas(tc); if(!ps.length) return false;
+    setParaText(ps[0], String(text));
+    ps.slice(1).forEach(p => setParaText(p, ''));
+    return true;
+  }
+  /* 연결·직접입력 적용 (walkHwpx 채우기 뒤에 호출) */
+  window.applyHwpxMap = (docs, rec) => {
+    const map = (rec.hwpx && rec.hwpx.map) || {}, man = rec.hwpxMan || {};
+    if(!Object.keys(map).length && !Object.keys(man).length) return 0;
+    let n = 0;
+    for(const [tc, k] of cellKeys(docs)){
+      if(man[k] != null && man[k] !== ''){ if(setCell(tc, man[k])) n++; }
+      else if(map[k]){ const v = LAY.fieldValue(rec, map[k]); if(v !== null && setCell(tc, v)) n++; }
+    }
+    return n;
+  };
+
+  // 칸 선택 팝업
+  const dlg = document.createElement('dialog');
+  dlg.id = 'hwpCellDlg'; dlg.style.maxWidth = '460px';
+  dlg.innerHTML = `<form method="dialog">
+      <div id="hcInfo" style="font-size:13px;color:var(--mut);margin-bottom:8px"></div>
+      <div style="font-weight:700;font-size:14px;margin:4px 0 6px">엑셀·점검 항목 연결 <small style="font-weight:400;color:var(--mut)">(이 서식의 모든 점검에 적용)</small></div>
+      <div id="hcFields" style="max-height:36vh;overflow:auto"></div>
+      <div style="font-weight:700;font-size:14px;margin:12px 0 6px">직접 입력 <small style="font-weight:400;color:var(--mut)">(이번 점검에만)</small></div>
+      <textarea id="hcText" rows="3" style="width:100%;padding:8px;border:1px solid var(--ln);border-radius:8px;font-size:14px;font-family:inherit"></textarea>
+      <div class="row" style="flex-wrap:wrap">
+        <button type="button" id="hcClear" style="color:#b91c1c">연결·입력 지우기</button>
+        <span style="flex:1"></span>
+        <button value="cancel" type="submit">닫기</button>
+        <button type="button" id="hcApply" class="bpri">직접 입력 적용</button>
+      </div></form>`;
+  document.body.appendChild(dlg);
+  if(window.DLG_WIN) DLG_WIN(dlg, '양식 칸 편집');
+  let hcKey = null;
+  const tplOf = () => cur && tplById(cur.tplId);
+  function setMap(k, field){
+    const t = tplOf();
+    for(const h of [cur.hwpx, t && t.hwpx]) if(h){ h.map = {...(h.map || {})}; if(field) h.map[k] = field; else delete h.map[k]; }
+    if(t){ t.savedAt = Date.now(); saveTpls(); if(window.syncSoon) syncSoon(); }
+  }
+  window.openHwpCell = (k, label) => {
+    hcKey = k;
+    const cur1 = (cur.hwpx.map || {})[k], man = (cur.hwpxMan || {})[k];
+    $('hcInfo').innerHTML = `선택한 칸${label ? ` (옆 이름칸: <b>${esc(label)}</b>)` : ''} · ${cur1 ? `연결: <b style="color:#1f6feb">{${esc(cur1)}}</b>` : '연결 없음'}${man ? ' · 직접 입력 있음' : ''}`;
+    $('hcFields').innerHTML = LAY.fieldGroups(cur).map(([g, l]) => `<div style="font-size:12px;color:var(--mut);margin:6px 0 4px">${esc(g)}</div><div class="chips">${l.map(n => {
+      const v = LAY.fieldValue(cur, n);
+      return `<button type="button" class="chip${cur1 === n ? ' on' : ''}" data-f="${esc(n)}" title="${esc(v || '')}">${esc(n)}${v ? ` <small style="opacity:.7">· ${esc(String(v).slice(0, 12))}</small>` : ''}</button>`;
+    }).join('')}</div>`).join('');
+    $('hcText').value = man || '';
+    dlg.showModal();
+  };
+  $('hcFields').onclick = e => {
+    const b = e.target.closest('[data-f]'); if(!b) return;
+    setMap(hcKey, b.dataset.f);
+    if(cur.hwpxMan) delete cur.hwpxMan[hcKey];
+    dirty = true; dlg.close(); renderHwpxPreview();
+    toast(`이 칸에 {${b.dataset.f}} 을(를) 연결했습니다 — 서식에 저장됨`);
+  };
+  $('hcApply').onclick = () => {
+    cur.hwpxMan = {...(cur.hwpxMan || {})};
+    const v = $('hcText').value;
+    if(v.trim()) cur.hwpxMan[hcKey] = v; else delete cur.hwpxMan[hcKey];
+    dirty = true; dlg.close(); renderHwpxPreview();
+  };
+  $('hcClear').onclick = () => {
+    setMap(hcKey, null);
+    if(cur.hwpxMan) delete cur.hwpxMan[hcKey];
+    dirty = true; dlg.close(); renderHwpxPreview();
+  };
+  $('hwpPrev').addEventListener('click', e => {
+    const td = e.target.closest('td[data-k]'); if(!td || !cur || !cur.hwpx) return;
+    openHwpCell(td.dataset.k, td.dataset.lab || '');
+  });
+
+  /* ---------- ② 디자인·자동 배치 서식 → 한글 파일 ---------- */
+  const BASE = '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';
+  const PX = 75;                       // 1px ≈ 75 HWPUNIT (A4 794px = 59528)
+  const FONT_FACE = {'':'맑은 고딕', 'Noto Sans KR':'본고딕', 'Nanum Gothic':'나눔고딕', 'Nanum Myeongjo':'나눔명조', 'Gowun Dodum':'고운돋움',
+    'Gowun Batang':'고운바탕', 'Nanum Pen Script':'나눔손글씨 펜', 'Batang':'바탕', 'Gulim':'굴림'};
+  const xe = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const rid = () => String(Math.floor(Math.random() * 2e9) + 1);
+
+  function makeStyles(header){
+    const fonts = Object.values(FONT_FACE);
+    let H = header;
+    // 글꼴: 모든 언어 묶음에 추가
+    H = H.replace(/<hh:fontface lang="(\w+)" fontCnt="(\d+)">([\s\S]*?)<\/hh:fontface>/g, (m, lang, cnt, body) => {
+      const base = +cnt;
+      const add = fonts.map((f, i) => `<hh:font id="${base + i}" face="${xe(f)}" type="TTF" isEmbedded="0"><hh:typeInfo familyType="FCAT_GOTHIC" weight="6" proportion="4" contrast="0" strokeVariation="1" armStyle="1" letterform="1" midline="1" xHeight="1"/></hh:font>`).join('');
+      return `<hh:fontface lang="${lang}" fontCnt="${base + fonts.length}">${body}${add}</hh:fontface>`;
+    });
+    const fontBase = +((header.match(/<hh:fontface lang="HANGUL" fontCnt="(\d+)"/) || [])[1] || 2);
+    const S = {char:[], para:[], fill:[], charMap:new Map(), paraMap:new Map(), fillMap:new Map(),
+      charBase:+((header.match(/<hh:charProperties itemCnt="(\d+)"/) || [])[1] || 7),
+      paraBase:+((header.match(/<hh:paraProperties itemCnt="(\d+)"/) || [])[1] || 20),
+      fillBase:+((header.match(/<hh:borderFills itemCnt="(\d+)"/) || [])[1] || 3)};
+    S.charId = ({size = 13, bold, italic, under, color = '#111111', font = ''}) => {
+      const k = [size, !!bold, !!italic, !!under, color, font].join('|');
+      if(S.charMap.has(k)) return S.charMap.get(k);
+      const id = S.charBase + S.char.length, f = fontBase + Math.max(0, Object.keys(FONT_FACE).indexOf(font || ''));
+      const c = /^#[0-9a-f]{6}$/i.test(color) ? color.toUpperCase() : '#000000';
+      S.char.push(`<hh:charPr id="${id}" height="${Math.round(size * 75)}" textColor="${c}" shadeColor="none" useFontSpace="0" useKerning="0" symMark="NONE" borderFillIDRef="2">`
+        + `<hh:fontRef hangul="${f}" latin="${f}" hanja="${f}" japanese="${f}" other="${f}" symbol="${f}" user="${f}"/>`
+        + `<hh:ratio hangul="100" latin="100" hanja="100" japanese="100" other="100" symbol="100" user="100"/>`
+        + `<hh:spacing hangul="0" latin="0" hanja="0" japanese="0" other="0" symbol="0" user="0"/>`
+        + `<hh:relSz hangul="100" latin="100" hanja="100" japanese="100" other="100" symbol="100" user="100"/>`
+        + `<hh:offset hangul="0" latin="0" hanja="0" japanese="0" other="0" symbol="0" user="0"/>`
+        + (italic ? '<hh:italic/>' : '') + (bold ? '<hh:bold/>' : '')
+        + `<hh:underline type="${under ? 'BOTTOM' : 'NONE'}" shape="SOLID" color="${c}"/><hh:strikeout shape="NONE" color="#000000"/><hh:outline type="NONE"/>`
+        + `<hh:shadow type="NONE" color="#C0C0C0" offsetX="10" offsetY="10"/></hh:charPr>`);
+      S.charMap.set(k, id); return id;
+    };
+    S.paraId = ({align = 'left', left = 0, right = 0, lh = 130}) => {
+      const A = {left:'LEFT', center:'CENTER', right:'RIGHT'}[align] || 'LEFT';
+      left = Math.max(0, Math.round(left)); right = Math.max(0, Math.round(right));
+      const k = [A, left, right, lh].join('|');
+      if(S.paraMap.has(k)) return S.paraMap.get(k);
+      const id = S.paraBase + S.para.length;
+      const mg = `<hh:margin><hc:intent value="0" unit="HWPUNIT"/><hc:left value="${left}" unit="HWPUNIT"/><hc:right value="${right}" unit="HWPUNIT"/><hc:prev value="0" unit="HWPUNIT"/><hc:next value="0" unit="HWPUNIT"/></hh:margin><hh:lineSpacing type="PERCENT" value="${lh}" unit="HWPUNIT"/>`;
+      S.para.push(`<hh:paraPr id="${id}" tabPrIDRef="0" condense="0" fontLineHeight="0" snapToGrid="1" suppressLineNumbers="0" checked="0" textDir="LTR"><hh:align horizontal="${A}" vertical="BASELINE"/><hh:heading type="NONE" idRef="0" level="0"/><hh:breakSetting breakLatinWord="KEEP_WORD" breakNonLatinWord="BREAK_WORD" widowOrphan="0" keepWithNext="0" keepLines="0" pageBreakBefore="0" lineWrap="BREAK"/><hh:autoSpacing eAsianEng="0" eAsianNum="0"/><hp:switch><hp:case hp:required-namespace="http://www.hancom.co.kr/hwpml/2016/HwpUnitChar">${mg}</hp:case><hp:default>${mg}</hp:default></hp:switch><hh:border borderFillIDRef="2" offsetLeft="0" offsetRight="0" offsetTop="0" offsetBottom="0" connect="0" ignoreMargin="0"/></hh:paraPr>`);
+      S.paraMap.set(k, id); return id;
+    };
+    S.fillId = ({bw = 1, bc = '#333333', bg = '', sides = 'all'}) => {
+      const k = [bw, bc, bg, sides].join('|');
+      if(S.fillMap.has(k)) return S.fillMap.get(k);
+      const id = S.fillBase + 1 + S.fill.length;
+      const mm = bw <= 0 ? '0.1 mm' : (Math.max(0.12, bw * 0.12).toFixed(2) + ' mm');
+      const c = /^#[0-9a-f]{6}$/i.test(bc) ? bc.toUpperCase() : '#000000';
+      const side = s => `<hh:${s}Border type="${bw > 0 && (sides === 'all' || sides === s) ? 'SOLID' : 'NONE'}" width="${mm}" color="${c}"/>`;
+      S.fill.push(`<hh:borderFill id="${id}" threeD="0" shadow="0" centerLine="NONE" breakCellSeparateLine="0"><hh:slash type="NONE" Crooked="0" isCounter="0"/><hh:backSlash type="NONE" Crooked="0" isCounter="0"/>`
+        + side('left') + side('right') + side('top') + side('bottom') + `<hh:diagonal type="SOLID" width="0.1 mm" color="#000000"/>`
+        + (bg && /^#[0-9a-f]{6}$/i.test(bg) ? `<hc:fillBrush><hc:winBrush faceColor="${bg.toUpperCase()}" hatchColor="#999999" alpha="0"/></hc:fillBrush>` : '')
+        + `</hh:borderFill>`);
+      S.fillMap.set(k, id); return id;
+    };
+    S.finish = () => {
+      let out = H;
+      out = out.replace(/<hh:charProperties itemCnt="\d+">/, `<hh:charProperties itemCnt="${S.charBase + S.char.length}">`).replace('</hh:charProperties>', S.char.join('') + '</hh:charProperties>');
+      out = out.replace(/<hh:paraProperties itemCnt="\d+">/, `<hh:paraProperties itemCnt="${S.paraBase + S.para.length}">`).replace('</hh:paraProperties>', S.para.join('') + '</hh:paraProperties>');
+      out = out.replace(/<hh:borderFills itemCnt="\d+">/, `<hh:borderFills itemCnt="${S.fillBase + S.fill.length}">`).replace('</hh:borderFills>', S.fill.join('') + '</hh:borderFills>');
+      return out;
+    };
+    return S;
+  }
+
+  async function layoutToHwpx(rec){
+    if(!window.JSZip) throw new Error('한글 도구를 불러오지 못했습니다 (인터넷 연결 확인)');
+    if(window.syncMedia && (rec.photos.some(p => !p) || (!rec.sign && rec.signId))) await syncMedia(rec);
+    const L = rec.layout || LAY.defaultLayout(rec);
+    const zip = await JSZip.loadAsync(BASE, {base64:true});
+    const S = makeStyles(await zip.file('Contents/header.xml').async('string'));
+    const hpfName = 'Contents/content.hpf';
+    let hpf = await zip.file(hpfName).async('string');
+    const bins = [];
+    let binN = 0;
+    const addBin = dataUrl => {
+      const m = /^data:image\/(png|jpe?g|gif|bmp);base64,(.*)$/i.exec(dataUrl || ''); if(!m) return null;
+      const ext = m[1].toLowerCase().replace('jpeg', 'jpg'), id = 'img' + (++binN);
+      zip.file(`BinData/${id}.${ext}`, m[2], {base64:true});
+      bins.push(`<opf:item id="${id}" href="BinData/${id}.${ext}" media-type="image/${ext === 'jpg' ? 'jpeg' : ext}" isEmbeded="1"/>`);
+      return id;
+    };
+    const picRun = async (dataUrl, maxW, maxH, charId) => {
+      const id = addBin(dataUrl); if(!id) return '';
+      const xml = picXml(id, await imgDims(dataUrl), maxW, maxH).replace(/ xmlns:h[pc]="[^"]*"/g, '');
+      return `<hp:run charPrIDRef="${charId}">${xml}</hp:run>`;
+    };
+    const X0 = 56, CW = 682;              // 왼쪽 여백, 본문 폭(px)
+    const textRuns = (text, cid) => String(text).split('\n').map((ln, i) => (i ? '<hp:lineBreak/>' : '') + xe(ln)).join('');
+    const para = (pid, inner, pageBreak) => `<hp:p id="${rid()}" paraPrIDRef="${pid}" styleIDRef="0" pageBreak="${pageBreak ? 1 : 0}" columnBreak="0" merged="0">${inner}</hp:p>`;
+    const textPara = (text, st, pid, pb) => { const cid = S.charId(st); return para(pid, `<hp:run charPrIDRef="${cid}"><hp:t>${textRuns(text)}</hp:t></hp:run>`, pb); };
+    const st = e => ({size:e.size || 13, bold:e.bold, italic:e.italic, under:e.under, color:e.color || '#111111', font:e.font || ''});
+    const VA = v => ({top:'TOP', middle:'CENTER', bottom:'BOTTOM'}[v || 'middle'] || 'CENTER');
+
+    /* 표 하나 만들기: cells[r][c] = {text|html, span, style...} */
+    async function tableXml(e, grid, extraPics){
+      const nr = grid.length, nc = Math.max(...grid.map(r => r.length));
+      let cols = (e.cols && e.cols.length === nc ? e.cols : Array(nc).fill(1)).map(w => +w || 1);
+      const sum = cols.reduce((a, b) => a + b, 0);
+      const W = Math.min(CW, e.w) * PX;
+      const cw = cols.map(w => Math.round(W * w / sum));
+      const rh = Math.max(600, Math.round(e.h * PX / nr));
+      const bw = e.bw ?? 1, bc = e.bc || '#333333', hb = e.hbg || '#EEF1F5';
+      let rows = '';
+      for(let r = 0; r < nr; r++){
+        let cells = '';
+        for(let c = 0; c < nc; c++){
+          const g = grid[r][c]; if(!g || g.skip) continue;
+          const cs = g.cs || 1, rs = g.rs || 1;
+          const w = cw.slice(c, c + cs).reduce((a, b) => a + b, 0);
+          const fid = S.fillId({bw, bc, bg: g.shade ? hb : (e.bg || '')});
+          const align = g.shade ? 'center' : (g.align || e.align || 'left');
+          const s = {...st(e), bold: e.bold || g.shade || g.bold, color: g.color || e.color || '#111111'};
+          const pid = S.paraId({align, lh:120});
+          let inner = '';
+          const pics = (extraPics.get(r + ':' + c) || []);
+          if(pics.length) for(const pc of pics) inner += para(pid, await picRun(pc.src, Math.max(10, w - 1200), Math.max(600, pc.h * PX), S.charId(s)));
+          if(!pics.length || String(g.text || '').trim()) inner += textPara(g.text || '', s, pid);
+          cells += `<hp:tc name="" header="0" hasMargin="0" protect="0" editable="0" dirty="0" borderFillIDRef="${fid}"><hp:subList id="" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="${VA(e.valign)}" linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" hasNumRef="0">${inner}</hp:subList>`
+            + `<hp:cellAddr colAddr="${c}" rowAddr="${r}"/><hp:cellSpan colSpan="${cs}" rowSpan="${rs}"/><hp:cellSz width="${w}" height="${rh * rs}"/><hp:cellMargin left="420" right="420" top="140" bottom="140"/></hp:tc>`;
+        }
+        rows += `<hp:tr>${cells}</hp:tr>`;
+      }
+      const tw = cw.reduce((a, b) => a + b, 0);
+      return `<hp:tbl id="${rid()}" zOrder="0" numberingType="TABLE" textWrap="TOP_AND_BOTTOM" textFlow="BOTH_SIDES" lock="0" dropcapstyle="None" pageBreak="CELL" repeatHeader="0" rowCnt="${nr}" colCnt="${nc}" cellSpacing="0" borderFillIDRef="${S.fillId({bw:0, bc, bg:''})}" noAdjust="0">`
+        + `<hp:sz width="${tw}" widthRelTo="ABSOLUTE" height="${rh * nr}" heightRelTo="ABSOLUTE" protect="0"/><hp:pos treatAsChar="1" affectLSpacing="0" flowWithText="1" allowOverlap="0" holdAnchorAndSO="0" vertRelTo="PARA" horzRelTo="COLUMN" vertAlign="TOP" horzAlign="LEFT" vertOffset="0" horzOffset="0"/>`
+        + `<hp:outMargin left="0" right="0" top="0" bottom="0"/><hp:inMargin left="420" right="420" top="140" bottom="140"/>${rows}</hp:tbl>`;
+    }
+    function gridOf(e){
+      if(e.type === 'checklist'){
+        const heads = e.heads && e.heads.length === 4 ? e.heads : ['번호','점검 항목','결과','비고'];
+        const items = rec.items.length ? rec.items : [{label:'', result:'', note:''}];
+        return [heads.map(t => ({text:t, shade:true})), ...items.map((it, i) => [
+          {text:String(i + 1), align:'center'}, {text:it.label}, {text:it.result || '', align:'center', bold:BAD.test(it.result), color:BAD.test(it.result) ? '#C62828' : ''}, {text:it.note || ''}])];
+      }
+      const cells = e.cells || [['']], nr = cells.length, nc = Math.max(...cells.map(r => r.length));
+      const get = (r, c) => (cells[r] && cells[r][c] != null) ? String(cells[r][c]) : '';
+      const sr = e.shadeR || [], sc = e.shadeC || [];
+      const g = [];
+      for(let r = 0; r < nr; r++){
+        g[r] = [];
+        for(let c = 0; c < nc; c++){
+          const t = get(r, c);
+          if(t === '<' || t === '^'){ g[r][c] = {skip:true}; continue; }
+          let cs = 1, rs = 1;
+          while(c + cs < nc && get(r, c + cs) === '<') cs++;
+          while(r + rs < nr && get(r + rs, c) === '^') rs++;
+          g[r][c] = {text:fillPlain(t, rec), cs, rs, shade: sr.includes(r) || sc.includes(c)};
+        }
+      }
+      return g;
+    }
+    // 표 위에 겹친 서명·사진 → 그 칸 안에 넣기
+    function cellAt(e, grid, px, py){
+      const nr = grid.length, nc = Math.max(...grid.map(r => r.length));
+      const cols = (e.cols && e.cols.length === nc ? e.cols : Array(nc).fill(1)).map(w => +w || 1), sum = cols.reduce((a, b) => a + b, 0);
+      let x = e.x, c = 0;
+      for(; c < nc; c++){ x += e.w * cols[c] / sum; if(px < x) break; }
+      let r = Math.min(nr - 1, Math.max(0, Math.floor((py - e.y) / (e.h / nr))));
+      c = Math.min(nc - 1, c);
+      while(r > 0 && grid[r][c] && grid[r][c].skip && grid[r - 1][c] && (grid[r - 1][c].skip || (grid[r - 1][c].rs || 1) > 1)) r--;
+      while(c > 0 && grid[r][c] && grid[r][c].skip) c--;
+      return r + ':' + c;
+    }
+
+    let body = '', firstOfPage = true, pageNo = 0;
+    const photosShown = new Set();
+    const pages = L.pages.filter(p => !(p.skipNoPhoto && !p.els.some(e => e.type === 'photo' && rec.photos[(e.idx || 1) - 1])));
+    for(const p of pages){
+      firstOfPage = true;
+      const els = [...p.els].filter(e => e.type !== 'photo' || rec.photos[(e.idx || 1) - 1] || e.showEmpty).sort((a, b) => a.y - b.y || a.x - b.x);
+      const tables = els.filter(e => e.type === 'table' || e.type === 'checklist');
+      const inTable = new Map(), grids = new Map();
+      tables.forEach(t => grids.set(t, gridOf(t)));
+      for(const e of els){
+        if(e.type !== 'sign' && e.type !== 'photo') continue;
+        const cx = e.x + e.w / 2, cy = e.y + e.h / 2;
+        const t = tables.find(t => cx > t.x && cx < t.x + t.w && cy > t.y && cy < t.y + t.h);
+        if(t){ inTable.set(e, t); }
+      }
+      let lastBottom = 44;
+      for(const e of els){
+        if(inTable.has(e)) continue;
+        const gap = e.y - lastBottom;
+        const pb = firstOfPage && pageNo > 0;
+        if(gap > 18 && !firstOfPage) for(let i = 0; i < Math.min(5, Math.round(gap / 24)); i++) body += textPara('', {size:10}, S.paraId({}));
+        const left = Math.max(0, (e.x - X0)) * PX, right = Math.max(0, (X0 + CW - e.x - e.w)) * PX;
+        if(e.type === 'text'){
+          body += textPara(fillPlain(e.text, rec), st(e), S.paraId({align:e.align || 'left', left, right, lh:Math.round((e.lh || 1.4) * 95)}), pb);
+        } else if(e.type === 'table' || e.type === 'checklist'){
+          const grid = grids.get(e), pics = new Map();
+          for(const [pe, t] of inTable) if(t === e){
+            const src = pe.type === 'sign' ? rec.sign : rec.photos[(pe.idx || 1) - 1];
+            if(!src) continue;
+            const k = cellAt(e, grid, pe.x + pe.w / 2, pe.y + pe.h / 2);
+            if(!pics.has(k)) pics.set(k, []);
+            pics.get(k).push({src, h:pe.h});
+            if(pe.type === 'photo') photosShown.add((pe.idx || 1) - 1);
+          }
+          body += para(S.paraId({align:'left', left, lh:100}), `<hp:run charPrIDRef="${S.charId({size:10})}">${await tableXml(e, grid, pics)}<hp:t/></hp:run>`, pb);
+        } else if(e.type === 'sign' || e.type === 'photo'){
+          const src = e.type === 'sign' ? rec.sign : rec.photos[(e.idx || 1) - 1];
+          const pid = S.paraId({align:'left', left, lh:100});
+          if(src){
+            body += para(pid, await picRun(src, e.w * PX, (e.h - (e.cap ? 22 : 0)) * PX, S.charId({size:10})), pb);
+            if(e.type === 'photo'){ photosShown.add((e.idx || 1) - 1); if(e.cap) body += textPara(rec.capt[(e.idx || 1) - 1] || ('사진 ' + (e.idx || 1)), {size:e.size || 12}, pid); }
+          } else body += textPara(e.type === 'sign' ? (e.empty ?? '(서명)') : `사진 ${e.idx || 1}`, {size:12, color:'#888888'}, pid, pb);
+        } else if(e.type === 'line'){
+          const grid = [[{text:''}]];
+          body += para(S.paraId({left, lh:100}), `<hp:run charPrIDRef="${S.charId({size:4})}">${(await tableXml({...e, h:4, bw:0, cols:[1]}, grid, new Map())).replace(/borderFillIDRef="\d+"><hp:subList/, `borderFillIDRef="${S.fillId({bw:e.bw || 1, bc:e.color || '#111111', sides:'bottom'})}"><hp:subList`)}<hp:t/></hp:run>`, pb);
+        }
+        firstOfPage = false;
+        lastBottom = e.y + e.h;
+      }
+      if(firstOfPage) body += textPara('', {size:10}, S.paraId({}), pageNo > 0);
+      pageNo++;
+    }
+    // 남는 사진: 뒤쪽에 2장씩
+    if(L.morePhotos !== false){
+      const rest = rec.photos.map((ph, i) => i).filter(i => rec.photos[i] && !photosShown.has(i) && i >= Math.max(0, ...L.pages.flatMap(p => p.els.filter(e => e.type === 'photo').map(e => e.idx || 1))));
+      if(rest.length){
+        body += textPara(`현장 사진 — ${rec.target.name || ''}`, {size:15, bold:true}, S.paraId({}), true);
+        for(const i of rest){
+          body += para(S.paraId({align:'center', lh:100}), await picRun(rec.photos[i], CW * PX, 440 * PX, S.charId({size:10})));
+          body += textPara(rec.capt[i] || ('사진 ' + (i + 1)), {size:12}, S.paraId({align:'center'}));
+        }
+      }
+    }
+    // 섹션: 첫 문단(쪽 설정) 유지 + 여백을 디자인에 맞춤
+    let sec = await zip.file('Contents/section0.xml').async('string');
+    sec = sec.replace(/<hp:margin header="\d+" footer="\d+" gutter="\d+" left="\d+" right="\d+" top="\d+" bottom="\d+"\/>/,
+      `<hp:margin header="0" footer="0" gutter="0" left="${X0 * PX}" right="${X0 * PX}" top="${44 * PX}" bottom="${40 * PX}"/>`);
+    sec = sec.replace(/<hp:linesegarray>[\s\S]*?<\/hp:linesegarray>/g, '').replace('</hs:sec>', body + '</hs:sec>');
+    zip.file('Contents/section0.xml', sec);
+    zip.file('Contents/header.xml', S.finish());
+    if(bins.length){
+      hpf = hpf.replace('</opf:manifest>', bins.join('') + '</opf:manifest>');
+      zip.file(hpfName, hpf);
+    }
+    zip.file('Preview/PrvText.txt', (rec.title || '') + '\r\n' + (rec.target.name || ''));
+    zip.file('mimetype', 'application/hwp+zip', {compression:'STORE'});
+    Object.keys(zip.files).filter(n => zip.files[n].dir).forEach(n => delete zip.files[n]);
+    return zip.generateAsync({type:'blob', compression:'DEFLATE', mimeType:'application/hwp+zip'});
+  }
+  window.layoutToHwpx = layoutToHwpx;
+
+  // [한글 저장] 버튼: 한글 서식이 아니어도 항상 표시
+  const _rf = renderForm;
+  renderForm = function(){ _rf(); $('iHwp').style.display = ''; $('iHwp').textContent = cur && cur.hwpx ? '한글(hwpx) 저장' : '한글(hwpx)로 저장'; };
+  const old = $('iHwp').onclick;
+  $('iHwp').onclick = async e => {
+    if(cur && cur.hwpx) return old && old.call($('iHwp'), e);
+    if(!cur) return;
+    if(!(await saveCur(true))) return;
+    $('busy').textContent = '한글 파일 만드는 중…'; $('busy').hidden = false;
+    try{
+      const blob = await layoutToHwpx(cur);
+      const name = pdfName(cur).replace(/\.pdf$/, '.hwpx');
+      saveBlob(blob, name);
+      if(window.syncPdf) syncPdf(blob, name, {recId:cur.id, inspector:cur.inspector || '', tplName:(tplById(cur.tplId) || {}).name || cur.title, target:cur.target.name, title:cur.title, pages:'한글'});
+      toast('한글 파일을 저장했습니다 (다운로드 폴더)');
+    }catch(err){ alert('한글 파일을 만들지 못했습니다: ' + err.message); }
+    finally{ $('busy').hidden = true; $('busy').textContent = 'PDF 만드는 중…'; }
+  };
 })();
 </script>
 </body>
