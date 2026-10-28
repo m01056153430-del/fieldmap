@@ -96,6 +96,9 @@
   .prev button.on{background:var(--b);color:#fff;border-color:var(--b)}
   .badge{display:inline-block;font-size:11px;font-weight:600;padding:1px 6px;border-radius:6px;background:#dcfce7;color:#166534;margin-left:6px;vertical-align:middle}
   .badge.warn{background:#fee2e2;color:#991b1b}
+  .badge.done{background:#e5e7eb;color:#374151}
+  .iw .st{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 7px;margin:4px 0 2px}
+  .iw .st.ok{background:#e5e7eb;color:#374151}.iw .st.ing{background:#fef3c7;color:#92400e}.iw .st.no{background:#eff6ff;color:#1e40af}
   #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1b1f24;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}
   #toast.on{opacity:1}
   /* 미리보기 */
@@ -386,6 +389,8 @@
         <input id="iGps" class="inp" readonly placeholder="위치 미기록">
         <button id="iGpsBtn" class="bline">현재 위치</button>
       </div>
+      <label style="display:flex;gap:8px;align-items:center;margin-top:12px;padding:10px;border:1px solid var(--ln);border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">
+        <input type="checkbox" id="iDone" style="width:20px;height:20px"> 점검 완료 <small style="font-weight:400;color:var(--mut)">(저장하면 지도 마커가 회색으로 바뀝니다)</small></label>
     </div>
 
     <div class="card" id="cItems">
@@ -752,7 +757,15 @@ function buildColors(){
   [...new Set(rows.map(placeTown))].sort((a,b) => a === '기타' ? 1 : b === '기타' ? -1 : a.localeCompare(b, 'ko'))
     .forEach((t,i) => colorOf[t] = COLORS[i % COLORS.length]);
 }
+const DONE_COLOR = '#9ca3af';
+const isDone = r => !!(window.inspComplete && inspComplete.has(rowKey(r)));
+const pinColor = r => isDone(r) ? DONE_COLOR : colorOf[placeTown(r)];
+const _mkCache = {};
 function markerImage(color){
+  if(_mkCache[color]) return _mkCache[color];
+  return _mkCache[color] = _markerImage(color);
+}
+function _markerImage(color){
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38"><path d="M14 1C7 1 1 6.6 1 13.6 1 23 14 37 14 37s13-14 13-23.4C27 6.6 21 1 14 1z" fill="${color}" stroke="#fff" stroke-width="2"/><circle cx="14" cy="13.5" r="5" fill="#fff"/></svg>`;
   return new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
     new kakao.maps.Size(28,38), {offset:new kakao.maps.Point(14,37)});
@@ -775,7 +788,16 @@ function infoHtml(r, pt){
     ${r.addr?'주소 '+esc(r.addr)+'<br>':''}
     ${r.note?'비고 '+esc(r.note)+'<br>':''}
     <div style="margin-top:6px">${tel?`<a href="tel:${tel}">전화</a>`:''}<a href="${to}" target="_blank" rel="noopener">길찾기</a><a href="${view}" target="_blank" rel="noopener">카카오맵</a></div>
-    <button type="button" onclick="openInspect(${rows.indexOf(r)})" style="margin-top:8px;width:100%;background:#1f6feb;color:#fff;padding:8px">현장 점검${typeof sortedTpls === 'function' ? ' · ' + esc(sortedTpls()[0].name) : ''}</button></div>`;
+    ${(() => {
+      const k = rowKey(r), done = window.inspComplete && inspComplete.get(k), has = window.inspDone && inspDone.has(k);
+      const last = typeof allRecs !== 'undefined' ? allRecs.find(x => x.key === k) : null;
+      const when = last ? fmtDT(last.date).replace(/\s\d{1,2}:\d{2}$/, '') : '';
+      const st = done ? `<span class="st ok">✔ 점검 완료 · ${esc(when)}${last.overall ? ' · ' + esc(last.overall) : ''}</span>`
+        : has ? `<span class="st ing">점검 중 (미완료) · ${esc(when)}</span>` : '<span class="st no">미점검</span>';
+      return `<div>${st}</div>
+        <button type="button" onclick="openInspect(${rows.indexOf(r)})" style="margin-top:6px;width:100%;background:#1f6feb;color:#fff;padding:9px;font-size:15px;font-weight:700">점검하기</button>
+        ${has ? `<label style="display:flex;gap:6px;align-items:center;justify-content:center;margin-top:8px;font-size:14px;cursor:pointer"><input type="checkbox" ${done ? 'checked' : ''} onchange="toggleDone(${rows.indexOf(r)}, this.checked)" style="width:18px;height:18px"> 점검 완료</label>` : ''}`;
+    })()}</div>`;
 }
 
 function renderFilters(){
@@ -806,13 +828,17 @@ function renderList(){
     if(!visible(r)) return;
     const li = document.createElement('li');
     const ok = r._pts && r._pts.length;
-    li.innerHTML = `<div class="n"><span class="dot" style="background:${colorOf[placeTown(r)]}"></span>${esc(r.name)} <span style="font-weight:400;color:#6b7280">${esc(r.item)}${r.detail?' · '+esc(r.detail):''}</span>${window.inspDone && inspDone.has(r.name+'|'+r.place) ? `<span class="badge ${/보완|부적합/.test(inspDone.get(r.name+'|'+r.place))?'warn':''}">${esc(inspDone.get(r.name+'|'+r.place))}</span>` : ''}</div>
+    li.innerHTML = `<div class="n"><span class="dot" style="background:${pinColor(r)}"></span>${esc(r.name)}${isDone(r) ? '<span class="badge done">완료</span>' : ''} <span style="font-weight:400;color:#6b7280">${esc(r.item)}${r.detail?' · '+esc(r.detail):''}</span>${window.inspDone && inspDone.has(r.name+'|'+r.place) ? `<span class="badge ${/보완|부적합/.test(inspDone.get(r.name+'|'+r.place))?'warn':''}">${esc(inspDone.get(r.name+'|'+r.place))}</span>` : ''}</div>
       <div class="s">${esc(r.place)}</div>${ok?'':'<div class="fail">위치를 찾지 못했습니다</div>'}`;
     li.insertAdjacentHTML('afterbegin', `<button type="button" class="chip" data-insp="${i}" style="float:right;margin-left:6px">점검</button>`);
     li.onclick = e => { if(e.target.closest('[data-insp]')) return openInspect(i); focusRow(i); };
     ul.appendChild(li);
   });
-  markers.forEach(m => m.setMap(visible(rows[m._i]) ? map : null));
+  markers.forEach(m => {
+    const r = rows[m._i], d = isDone(r);
+    if(m._done !== d){ m.setImage(markerImage(pinColor(r))); m._done = d; }
+    m.setMap(visible(r) ? map : null);
+  });
   const shown = rows.filter(visible).length;
   if(rows.length && (filterTown || $('q').value.trim())) setStatus(`검색·선택 결과 ${shown}명 / 전체 ${rows.length}명`);
   if(window.inspDone && rows.length){
@@ -820,7 +846,8 @@ function renderList(){
     const ft = filterTown ? rows.filter(r => placeTown(r) === filterTown) : null;
     const fd = ft ? ft.filter(r => inspDone.has((r.name||'') + '|' + (r.place||''))).length : 0;
     $('rate').style.display = 'block';
-    $('rate').innerHTML = `전체 점검률 <b style="color:#1f6feb">${Math.round(done / rows.length * 1000) / 10}%</b> (${done}/${rows.length}명)`
+    const comp = rows.filter(isDone).length;
+    $('rate').innerHTML = `전체 점검률 <b style="color:#1f6feb">${Math.round(done / rows.length * 1000) / 10}%</b> (${done}/${rows.length}명) · 완료 <b style="color:#374151">${comp}명</b>`
       + (ft ? ` · ${esc(filterTown)} <b style="color:#1f6feb">${ft.length ? Math.round(fd / ft.length * 1000) / 10 : 0}%</b> (${fd}/${ft.length}명)` : '')
       + ` · <a href="#" onclick="openList();return false" style="color:#1f6feb">읍면별 보기</a>`;
   } else $('rate').style.display = 'none';
@@ -846,7 +873,8 @@ async function plot(){
       const pt = await geocodePlace(p);
       if(!pt) continue;
       r._pts.push(pt);
-      const m = new kakao.maps.Marker({position:new kakao.maps.LatLng(pt.lat,pt.lng), image:markerImage(colorOf[placeTown(r)]), title:r.name});
+      const m = new kakao.maps.Marker({position:new kakao.maps.LatLng(pt.lat,pt.lng), image:markerImage(pinColor(r)), title:r.name});
+      m._done = isDone(r);
       m._i = i; m._pt = pt; m.setMap(map); markers.push(m);
       kakao.maps.event.addListener(m, 'click', () => { info.setContent(infoHtml(r, pt)); info.open(map, m); });
       bounds.extend(m.getPosition());
@@ -1066,11 +1094,12 @@ let allRecs = [];
 let cur = null;
 let dirty = false;
 window.inspDone = new Map();
+window.inspComplete = new Map();   // 사업자별 최근 점검이 '완료'인 기록
 async function reloadRecs(){
   try{ allRecs = (await idb.all() || []).map(fixRec); }catch(e){ allRecs = []; }
   allRecs.sort((a,b) => (b.date||'').localeCompare(a.date||'') || b.savedAt - a.savedAt);
-  inspDone = new Map();
-  for(const r of allRecs) if(!inspDone.has(r.key)) inspDone.set(r.key, r.overall || '점검');
+  inspDone = new Map(); inspComplete = new Map();
+  for(const r of allRecs) if(!inspDone.has(r.key)){ inspDone.set(r.key, r.overall || '점검'); if(r.done) inspComplete.set(r.key, r); }
 }
 /* 이전 버전 기록 호환 */
 function fixRec(r){
@@ -1154,6 +1183,7 @@ function renderForm(){
   $('iDate').value = cur.date || '';
   $('iWho').value = cur.inspector || '';
   $('iMemo').value = cur.memo || '';
+  $('iDone').checked = !!cur.done;
   $('iGps').value = cur.gps ? `${cur.gps.lat.toFixed(6)}, ${cur.gps.lng.toFixed(6)} (±${Math.round(cur.gps.acc)}m)` : '';
   sig.load(cur.sign);
   $('iHwp').style.display = cur.hwpx ? '' : 'none';
@@ -1177,6 +1207,20 @@ window.openInspect = async function(i){
   $('insp').hidden = false;
   renderForm(); locate(true);
 };
+/* 지도 말풍선에서 '점검 완료' 바로 체크 (최근 점검 기록에 반영) */
+window.toggleDone = async function(i, on){
+  const r = rows[i]; if(!r) return;
+  await reloadRecs();
+  const rec = allRecs.find(x => x.key === rowKey(r));
+  if(!rec){ toast('점검 기록이 없습니다. [점검하기]로 먼저 점검해 주세요'); return; }
+  rec.done = !!on; rec.savedAt = Date.now(); rec._dirty = true;
+  try{ await idb.put(rec); }catch(e){ alert('저장하지 못했습니다: ' + e.message); return; }
+  await reloadRecs(); renderList();
+  if(window.syncSoon) syncSoon();
+  const m = markers.find(x => x._i === i);
+  if(m && info){ info.setContent(infoHtml(r, m._pt)); }
+  toast(on ? `${r.name} — 점검 완료로 표시했습니다` : `${r.name} — 완료 표시를 취소했습니다`);
+};
 function openRecord(rec){
   cur = fixRec(JSON.parse(JSON.stringify(rec))); dirty = false;
   $('insp').hidden = false; renderForm();
@@ -1186,6 +1230,7 @@ function collectForm(){
   cur.date = $('iDate').value;
   cur.inspector = $('iWho').value.trim();
   cur.memo = $('iMemo').value;
+  cur.done = $('iDone').checked;
   document.querySelectorAll('#iItems [data-note]').forEach(el => { const it = cur.items[+el.dataset.note]; if(it) it.note = el.value; });
   document.querySelectorAll('#iExtra [data-x]').forEach(el => { const x = cur.extra[+el.dataset.x]; if(x) x.value = el.value; });
   cur.sign = sig.data();
@@ -1436,11 +1481,12 @@ const pdfName = rec => `${safeName(rec.title)}_${safeName(rec.target.name)}_${(r
 /* 읍면별 점검률 (명단 기준, 사업자별 최근 점검의 판정) */
 let listTown = null;
 function renderStats(){
-  const by = new Map(), tot = {n:0, done:0, ok:0, fix:0, bad:0};
+  const by = new Map(), tot = {n:0, done:0, comp:0, ok:0, fix:0, bad:0};
   rows.forEach(r => {
     const t = r.town || '기타';
-    if(!by.has(t)) by.set(t, {n:0, done:0, ok:0, fix:0, bad:0});
+    if(!by.has(t)) by.set(t, {n:0, done:0, comp:0, ok:0, fix:0, bad:0});
     const s = by.get(t); s.n++;
+    if(isDone(r)) s.comp = (s.comp || 0) + 1;
     if(!inspDone.has(rowKey(r))) return;
     s.done++;
     const o = inspDone.get(rowKey(r));
@@ -1450,16 +1496,16 @@ function renderStats(){
   const pct = s => s.n ? Math.round(s.done / s.n * 1000) / 10 : 0;
   const tr = (t, s, cls) => `<tr class="${cls||''}${listTown===t?' sel':''}" ${t?`data-town="${esc(t)}"`:''}>
       <td>${t ? `<span class="dot" style="background:${colorOf[t]||'#999'}"></span>${esc(t)}` : '합계'}</td>
-      <td>${s.n}</td><td>${s.done}</td><td>${s.n - s.done}</td>
+      <td>${s.n}</td><td>${s.done}</td><td>${s.comp}</td><td>${s.n - s.done}</td>
       <td><b>${pct(s)}%</b><div class="bar"><i style="width:${pct(s)}%"></i></div></td>
       <td>${s.ok}</td><td class="${s.fix?'w':''}">${s.fix}</td><td class="${s.bad?'w':''}">${s.bad}</td></tr>`;
   $('lStats').innerHTML = rows.length ? `<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px">
       <span style="font-size:14px;color:var(--mut)">전체 점검률</span><b style="font-size:26px;color:var(--b)">${pct(tot)}%</b>
-      <span style="font-size:14px">${tot.done} / ${tot.n}명 점검 · 미점검 ${tot.n - tot.done}명${tot.fix ? ` · <span class="fail">보완 ${tot.fix}</span>` : ''}${tot.bad ? ` · <span class="fail">부적합 ${tot.bad}</span>` : ''}</span></div>
+      <span style="font-size:14px">${tot.done} / ${tot.n}명 점검 · 완료 ${tot.comp}명 · 미점검 ${tot.n - tot.done}명${tot.fix ? ` · <span class="fail">보완 ${tot.fix}</span>` : ''}${tot.bad ? ` · <span class="fail">부적합 ${tot.bad}</span>` : ''}</span></div>
     <div class="bar" style="height:10px;margin-bottom:12px"><i style="width:${pct(tot)}%"></i></div>
     <h3 style="margin:0 0 6px;font-size:14px;color:var(--mut)">읍면별 점검률 <small style="font-weight:400">(읍면을 누르면 그 읍면 기록만 보기)</small></h3>
     <div style="overflow-x:auto"><table class="st">
-      <tr><th>읍면</th><th>대상</th><th>점검</th><th>미점검</th><th>점검률</th><th>적합</th><th>보완</th><th>부적합</th></tr>
+      <tr><th>읍면</th><th>대상</th><th>점검</th><th>완료</th><th>미점검</th><th>점검률</th><th>적합</th><th>보완</th><th>부적합</th></tr>
       ${[...by].map(([t, s]) => tr(t, s)).join('')}${tr('', tot, 'tot')}
     </table></div>` : '<small style="color:var(--mut)">명단을 불러오면 읍면별 점검률이 표시됩니다</small>';
 }
@@ -1565,6 +1611,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   };
   $('iGpsBtn').onclick = () => locate(false);
   ['iDate','iWho','iMemo'].forEach(id => $(id).addEventListener('input', () => dirty = true));
+  $('iDone').addEventListener('change', () => dirty = true);
   $('iItems').addEventListener('click', e => {
     const b = e.target.closest('button[data-i]'); if(!b) return;
     const it = cur.items[+b.dataset.i];
