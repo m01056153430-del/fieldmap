@@ -560,10 +560,30 @@
         <button id="lXls" class="bline">선택 엑셀 저장</button>
         <button id="lXlsDone" class="bline" style="border-color:#0f766e!important;color:#0f766e">완료 건 전체 엑셀</button>
       </div>
+      <div class="rowf" style="flex-wrap:wrap;margin-top:8px">
+        <button id="lTplBulk" class="bline" style="border-color:#7c3aed!important;color:#7c3aed">서식 일괄 적용</button>
+        <button id="lHwpZip" class="bline">한글 묶음 저장</button>
+      </div>
     </div>
     <div class="card" id="lRecs"></div>
   </div>
 </section>
+
+<!-- ===== 서식 일괄 적용 ===== -->
+<dialog id="bulkDlg" style="max-width:480px">
+  <form method="dialog">
+    <div style="font-weight:700;font-size:14px;margin-bottom:6px">적용할 서식</div>
+    <div id="bkList" style="max-height:34vh;overflow:auto;display:flex;flex-direction:column;gap:6px"></div>
+    <div style="font-weight:700;font-size:14px;margin:12px 0 6px">적용 대상</div>
+    <label class="chk" style="margin-top:4px"><input type="radio" name="bkScope" value="checked" checked> <span>목록에서 체크한 점검 기록 <b id="bkNChecked"></b></span></label>
+    <label class="chk" style="margin-top:4px"><input type="radio" name="bkScope" value="shown"> <span>지금 목록에 보이는 기록 전체 <b id="bkNShown"></b></span></label>
+    <label class="chk" style="margin-top:4px"><input type="radio" name="bkScope" value="done"> <span>점검 완료 기록 전체 <b id="bkNDone"></b></span></label>
+    <label class="chk" style="margin-top:4px"><input type="radio" name="bkScope" value="all"> <span>모든 점검 기록 <b id="bkNAll"></b></span></label>
+    <label class="chk" style="margin-top:12px"><input type="checkbox" id="bkNew" checked> <span>앞으로 새로 시작하는 점검에도 이 서식 사용</span></label>
+    <small style="display:block;margin-top:8px;color:var(--mut);line-height:1.5">점검 결과·비고·추가 사항은 <b>이름이 같은 항목</b>끼리 그대로 옮겨집니다. 새 서식에 없는 항목의 결과는 빠집니다. 사진·서명·판정·특이사항은 그대로 유지됩니다.</small>
+    <div class="row"><button value="cancel" type="submit">닫기</button><button type="button" id="bkApply" class="bpri">일괄 적용</button></div>
+  </form>
+</dialog>
 
 <!-- ===== 서식 관리 ===== -->
 <dialog id="tplMgr" style="max-width:480px">
@@ -1774,6 +1794,78 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   $('lXls').onclick = () => {
     const recs = checkedRecs(); if(!recs.length) return toast('저장할 점검 기록을 선택해 주세요');
     exportXlsx(recs);
+  };
+  /* 서식 일괄 적용 */
+  let bkSel = null;
+  const shownRecs = () => [...document.querySelectorAll('#lRecs input[data-id]')].map(c => allRecs.find(r => r.id === c.dataset.id)).filter(Boolean);
+  const doneRecs = () => { const seen = new Set(), out = []; for(const r of allRecs){ if(seen.has(r.key)) continue; seen.add(r.key); if(r.done) out.push(r); } return out; };
+  function bkRender(){
+    const list = sortedTpls();
+    if(!bkSel || !tplById(bkSel)) bkSel = list[0].id;
+    $('bkList').innerHTML = list.map(t => `<label class="tmi${t.id === bkSel ? ' on' : ''}" style="display:flex;gap:10px;align-items:flex-start;padding:9px;border:1px solid ${t.id === bkSel ? 'var(--b)' : 'var(--ln)'};border-radius:10px;cursor:pointer;font-size:14px;margin:0;background:${t.id === bkSel ? '#eff6ff' : '#fff'}">
+      <input type="radio" name="bkT" value="${t.id}" ${t.id === bkSel ? 'checked' : ''} style="width:auto;margin-top:3px">
+      <span><b>${esc(t.name)}</b><br><small style="color:var(--mut)">${esc(t.title)} · ${t.items.length}항목 · ${t.layout ? '디자인' : t.hwpx ? '한글' : '자동 배치'}</small></span></label>`).join('');
+  }
+  $('bkList').onchange = e => { if(e.target.name === 'bkT'){ bkSel = e.target.value; bkRender(); } };
+  $('lTplBulk').onclick = () => {
+    $('bkNChecked').textContent = `(${checkedRecs().length}건)`;
+    $('bkNShown').textContent = `(${shownRecs().length}건)`;
+    $('bkNDone').textContent = `(${doneRecs().length}건)`;
+    $('bkNAll').textContent = `(${allRecs.length}건)`;
+    if(!checkedRecs().length) document.querySelector('[name=bkScope][value=shown]').checked = true;
+    bkSel = sortedTpls()[0].id; bkRender(); $('bulkDlg').showModal();
+  };
+  function applyTplToRec(rec, t){
+    const oldI = new Map(rec.items.map(x => [x.label, x])), oldX = new Map(rec.extra.map(x => [x.label, x]));
+    let kept = 0, lost = 0;
+    rec.items.forEach(x => { if((x.result || x.note) && !t.items.includes(x.label)) lost++; });
+    rec.tplId = t.id; rec.title = t.title; rec.opts = [...t.opts]; rec.sec = {...t.sec};
+    rec.hwpx = t.hwpx || null; rec.layout = t.layout ? JSON.parse(JSON.stringify(t.layout)) : null;
+    rec.items = t.items.map(label => { const o = oldI.get(label); if(o && (o.result || o.note)) kept++; return o ? {...o} : {label, result:'', note:''}; });
+    rec.extra = t.extra.map(label => oldX.get(label) ? {...oldX.get(label)} : {label, value:''});
+    rec.savedAt = Date.now(); rec._dirty = true;
+    return {kept, lost};
+  }
+  $('bkApply').onclick = async () => {
+    const t = tplById(bkSel); if(!t) return;
+    const scope = (document.querySelector('[name=bkScope]:checked') || {}).value;
+    const recs = scope === 'checked' ? checkedRecs() : scope === 'shown' ? shownRecs() : scope === 'done' ? doneRecs() : [...allRecs];
+    if(!recs.length && !$('bkNew').checked) return toast('적용할 점검 기록이 없습니다');
+    if(recs.length && !confirm(`'${t.name}' 서식을 점검 기록 ${recs.length}건에 적용할까요?\n(같은 이름의 항목 결과는 그대로 옮겨집니다)`)) return;
+    let kept = 0, lost = 0, n = 0;
+    for(const r of recs){
+      const full = (await idb.get(r.id)) || r; fixRec(full);
+      const k = applyTplToRec(full, t); kept += k.kept; lost += k.lost;
+      await idb.put(full); n++;
+    }
+    if($('bkNew').checked){ useTpl(t.id); if(window.fillMainTpl) fillMainTpl(); }
+    if(window.syncSoon) syncSoon();
+    $('bulkDlg').close();
+    await openList();
+    toast(`'${t.name}' 서식을 ${n}건에 적용했습니다` + (lost ? ` · 새 서식에 없는 항목 결과 ${lost}개는 빠짐` : '') + ($('bkNew').checked ? ' · 새 점검에도 사용' : ''));
+  };
+  /* 한글 묶음 저장 (zip) */
+  $('lHwpZip').onclick = async () => {
+    const recs = checkedRecs(); if(!recs.length) return toast('저장할 점검 기록을 체크해 주세요');
+    if(!window.JSZip) return alert('한글 도구를 불러오지 못했습니다 (인터넷 연결 확인)');
+    $('busy').textContent = '한글 파일 만드는 중… 0/' + recs.length; $('busy').hidden = false;
+    const zip = new JSZip(), used = new Set(), fails = [];
+    try{
+      for(let i = 0; i < recs.length; i++){
+        const rec = fixRec((await idb.get(recs[i].id)) || recs[i]);
+        try{
+          const blob = rec.hwpx ? (await makeHwpx(rec)).blob : await layoutToHwpx(rec);
+          let name = pdfName(rec).replace(/\.pdf$/, '.hwpx'), k = 2;
+          while(used.has(name)) name = name.replace(/(_\d+)?\.hwpx$/, `_${k++}.hwpx`);
+          used.add(name); zip.file(name, blob);
+        }catch(e){ fails.push(rec.target.name + ': ' + e.message); }
+        $('busy').textContent = `한글 파일 만드는 중… ${i + 1}/${recs.length}`;
+      }
+      const out = await zip.generateAsync({type:'blob', compression:'DEFLATE'});
+      saveBlob(out, `한글_점검결과_${recs.length}건_${localDT(new Date()).slice(0,10)}.zip`);
+      toast(`한글 파일 ${recs.length - fails.length}건을 zip으로 저장했습니다`);
+      if(fails.length) alert('만들지 못한 파일:\n' + fails.join('\n'));
+    } finally { $('busy').hidden = true; $('busy').textContent = 'PDF 만드는 중…'; }
   };
   $('lXlsDone').onclick = async () => {
     await reloadRecs();
@@ -3939,7 +4031,7 @@ $('iHwp').onclick = async () => {
   }
 
   /* ---------- 팝업(dialog) ---------- */
-  const DLG_TITLE = {pwDlg:'설정 비밀번호', dlg:'설정', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리'};
+  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', dlg:'설정', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리'};
   function winDialog(d){
     if(d._win) return; d._win = true;
     const bar = document.createElement('div');
