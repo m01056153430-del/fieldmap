@@ -103,6 +103,12 @@
   .hwprev td.hfl{background:#fff7c2}
   .hwprev td.hmap{background:#dbeafe;box-shadow:inset 0 0 0 2px #3b82f6}
   .hwprev td[data-k]{cursor:pointer}
+  .hwprev td.hsel{box-shadow:inset 0 0 0 2px #f59e0b!important;background:#fff7d6!important}
+  #hcBar{position:absolute;z-index:20;background:#111827;color:#fff;border-radius:10px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.35);font-size:12px;max-width:min(560px,calc(100% - 8px))}
+  #hcBar .hb1{margin-bottom:6px;color:#e5e7eb}
+  #hcBar .hb2{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+  #hcBar select{max-width:230px;padding:5px;border-radius:6px;border:0;font-size:13px}
+  #hcBar button{background:#fff;color:#111;border:0;border-radius:6px;padding:5px 8px;font-size:12px}
   .hwprev td[data-k]:hover{outline:2px solid #f59e0b;outline-offset:-2px}
   .hwprev.fold{max-height:0;padding:0;border:0;overflow:hidden}
   .badge.done{background:#e5e7eb;color:#374151}
@@ -413,7 +419,7 @@
         <button type="button" id="hwpPrevBtn" class="bline" style="font-size:12px;padding:5px 9px">새로고침</button>
         <button type="button" id="hwpPrevFold" class="bline" style="font-size:12px;padding:5px 9px">접기</button></h3>
       <div id="hwpPrev" class="hwprev"></div>
-      <small style="display:block;margin-top:6px;color:var(--mut)">칸을 누르면 그 칸에 넣을 <b>엑셀·점검 항목</b>을 고르거나 직접 입력할 수 있습니다. 노란 칸: 자동으로 채움 · 파란 칸: 직접 연결한 칸. 서명·사진은 [한글 저장] 파일에 들어갑니다.</small>
+      <small style="display:block;margin-top:6px;color:var(--mut)">칸을 누르면 선택되고 옆에 작은 도구줄이 뜹니다 — 거기서 <b>엑셀·점검 항목</b>을 연결하거나, 칸을 <b>두 번 누르면 바로 입력</b>합니다. 노란 칸: 자동으로 채움 · 파란 칸: 직접 연결한 칸. 서명·사진은 [한글 저장] 파일에 들어갑니다.</small>
     </div>
 
     <div class="card">
@@ -3783,6 +3789,7 @@ async function renderHwpxPreview(){
     const filled = new Set([...before].filter(([tc, t]) => cText(tc) !== t).map(([tc]) => tc));
     if(seq !== _hwpPrevSeq) return;
     box.innerHTML = docs.map(x => childs(x.d.documentElement, 'p').map(p => hwpxParaHtml(p, filled)).join('')).join('<hr>');
+    if(window.afterHwpPrev) afterHwpPrev();
   }catch(e){ if(seq === _hwpPrevSeq) box.innerHTML = `<div class="fail">미리보기를 만들지 못했습니다: ${esc(e.message)}</div>`; }
 }
 /* 예전에 올린 한글 서식은 새 분석 방식으로 한 번 다시 읽음 */
@@ -3818,7 +3825,9 @@ $('hwpPrevBtn').onclick = () => { collectForm(); renderHwpxPreview(); };
 $('hwpPrevFold').onclick = () => { const f = $('hwpPrev').classList.toggle('fold'); $('hwpPrevFold').textContent = f ? '펼치기' : '접기'; };
 (() => {   // 입력할 때마다 잠시 뒤 미리보기 갱신
   let tm = null;
-  const kick = () => { if(!cur || !cur.hwpx || $('insp').hidden) return; clearTimeout(tm); tm = setTimeout(() => { collectForm(); renderHwpxPreview(); }, 900); };
+  const kick = () => { if(!cur || !cur.hwpx || $('insp').hidden) return;
+    const ae = document.activeElement; if(ae && ae.closest && ae.closest('#hwpPrev, #hcBar')) return;   // 미리보기 칸 입력 중
+    clearTimeout(tm); tm = setTimeout(() => { collectForm(); renderHwpxPreview(); }, 900); };
   $('insp').addEventListener('input', kick); $('insp').addEventListener('click', e => { if(e.target.closest('.seg button')) kick(); });
 })();
 /* ---------- 지도 화면의 '점검 서식' 선택 ---------- */
@@ -4345,9 +4354,92 @@ $('iHwp').onclick = async () => {
     if(cur.hwpxMan) delete cur.hwpxMan[hcKey];
     dirty = true; dlg.close(); renderHwpxPreview();
   };
+  /* 칸 누르기 = 선택만 (팝업 없음). 선택한 칸 옆 작은 도구줄에서 항목 연결·직접 입력 / 두 번 누르면 바로 입력 */
+  let hSel = null, hEditing = false;
+  const hBar = document.createElement('div');
+  hBar.id = 'hcBar'; hBar.hidden = true;
+  $('cHwpPrev').style.position = 'relative';
+  $('cHwpPrev').appendChild(hBar);
+  const tdOf = k => $('hwpPrev').querySelector(`td[data-k="${k}"]`);
+  function hFieldOpts(curF){
+    return '<option value="">＋ 엑셀·점검 항목 연결…</option>' + LAY.fieldGroups(cur).map(([g, l]) => `<optgroup label="${esc(g)}">${l.map(n => {
+      const v = LAY.fieldValue(cur, n);
+      return `<option value="${esc(n)}"${curF === n ? ' selected' : ''}>${esc(n)}${v ? ' · ' + esc(String(v).slice(0, 14)) : ''}</option>`;
+    }).join('')}</optgroup>`).join('');
+  }
+  function showBar(){
+    if(!hSel || !cur || !cur.hwpx){ hBar.hidden = true; return; }
+    const td = tdOf(hSel.k); if(!td){ hBar.hidden = true; return; }
+    $('hwpPrev').querySelectorAll('td.hsel').forEach(x => x.classList.remove('hsel'));
+    td.classList.add('hsel');
+    const linked = (cur.hwpx.map || {})[hSel.k], man = (cur.hwpxMan || {})[hSel.k];
+    hBar.innerHTML = `<div class="hb1">${hSel.lab ? `<b>${esc(hSel.lab)}</b> 칸` : '선택한 칸'}${linked ? ` · 연결 <b style="color:#93c5fd">{${esc(linked)}}</b>` : ''}${man ? ' · 직접 입력' : ''}</div>
+      <div class="hb2"><select id="hcSel">${hFieldOpts(linked)}</select>
+      <button type="button" data-h="edit">✎ 직접 입력</button><button type="button" data-h="clear">지우기</button><button type="button" data-h="x">✕</button></div>`;
+    const cr = $('cHwpPrev').getBoundingClientRect(), r = td.getBoundingClientRect();
+    hBar.hidden = false;
+    const bw = hBar.offsetWidth, bh = hBar.offsetHeight;
+    let left = r.left - cr.left, top = r.top - cr.top - bh - 6;
+    if(top < 0) top = r.bottom - cr.top + 6;
+    left = Math.max(4, Math.min(cr.width - bw - 4, left));
+    hBar.style.left = left + 'px'; hBar.style.top = top + 'px';
+  }
+  window.afterHwpPrev = () => { if(!hEditing) showBar(); };
+  function selectCell(td){ hSel = {k:td.dataset.k, lab:td.dataset.lab || ''}; showBar(); }
+  function editCell(td){
+    if(!td) return;
+    hEditing = true; hBar.hidden = true;
+    const k = td.dataset.k, man = (cur.hwpxMan || {})[k];
+    td.classList.add('hsel');
+    td.contentEditable = 'true'; td.style.outline = '2px solid #f59e0b'; td.style.background = '#fffbe6';
+    if(man != null) td.innerText = man;
+    td.focus();
+    const rg = document.createRange(); rg.selectNodeContents(td); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(rg);
+    let done = false;
+    const finish = ok => {
+      if(done) return; done = true; hEditing = false;
+      td.contentEditable = 'false';
+      if(ok){
+        const v = td.innerText.replace(/\u00a0/g, ' ').replace(/\n$/, '').trim();
+        cur.hwpxMan = {...(cur.hwpxMan || {})};
+        if(v) cur.hwpxMan[k] = v; else delete cur.hwpxMan[k];
+        dirty = true;
+      }
+      renderHwpxPreview();
+    };
+    td.addEventListener('keydown', ev => {
+      if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); finish(true); }
+      else if(ev.key === 'Escape'){ ev.preventDefault(); finish(false); }
+    });
+    td.addEventListener('blur', () => setTimeout(() => finish(true), 0), {once:true});
+    toast('글자를 입력하고 Enter (줄바꿈 Shift+Enter · 취소 Esc) — 이번 점검에만 적용');
+  }
   $('hwpPrev').addEventListener('click', e => {
+    if(hEditing) return;
     const td = e.target.closest('td[data-k]'); if(!td || !cur || !cur.hwpx) return;
-    openHwpCell(td.dataset.k, td.dataset.lab || '');
+    if(hSel && hSel.k === td.dataset.k && !hBar.hidden){ editCell(td); return; }   // 선택된 칸을 한 번 더 누르면 바로 입력
+    selectCell(td);
+  });
+  $('hwpPrev').addEventListener('dblclick', e => { const td = e.target.closest('td[data-k]'); if(td && !hEditing){ hSel = {k:td.dataset.k, lab:td.dataset.lab || ''}; editCell(td); } });
+  $('hwpPrev').addEventListener('scroll', () => { if(!hBar.hidden) showBar(); });
+  hBar.addEventListener('change', e => {
+    if(e.target.id !== 'hcSel' || !hSel) return;
+    const f = e.target.value;
+    setMap(hSel.k, f || null);
+    if(f && cur.hwpxMan) delete cur.hwpxMan[hSel.k];
+    dirty = true; renderHwpxPreview();
+    if(f) toast(`이 칸에 {${f}} 연결 — 이 서식의 모든 점검에 적용`);
+  });
+  hBar.addEventListener('click', e => {
+    const b = e.target.closest('[data-h]'); if(!b || !hSel) return;
+    if(b.dataset.h === 'x'){ hSel = null; hBar.hidden = true; $('hwpPrev').querySelectorAll('td.hsel').forEach(x => x.classList.remove('hsel')); }
+    else if(b.dataset.h === 'edit') editCell(tdOf(hSel.k));
+    else if(b.dataset.h === 'clear'){ setMap(hSel.k, null); if(cur.hwpxMan) delete cur.hwpxMan[hSel.k]; dirty = true; renderHwpxPreview(); toast('연결·직접 입력을 지웠습니다'); }
+  });
+  document.addEventListener('pointerdown', e => {
+    if(hBar.hidden || hEditing) return;
+    if(e.target.closest('#hcBar') || e.target.closest('#hwpPrev td[data-k]')) return;
+    hSel = null; hBar.hidden = true; $('hwpPrev').querySelectorAll('td.hsel').forEach(x => x.classList.remove('hsel'));
   });
 
   /* ---------- ② 디자인·자동 배치 서식 → 한글 파일 ---------- */
