@@ -175,6 +175,11 @@
   .pg.lay.meas .le .tx{height:auto!important}
   #ldPage .le .cgrip{position:absolute;top:0;bottom:0;width:8px;margin-left:-4px;cursor:col-resize;z-index:7;touch-action:none}
   #ldPage .pg{overflow:visible}
+  #ldPage .le .mvh{position:absolute;left:-2px;top:-26px;background:#1f6feb;color:#fff;font-size:12px;padding:3px 8px;border-radius:6px 6px 0 0;cursor:move;z-index:8;white-space:nowrap;touch-action:none}
+  #ldPage .le .ctbar{position:absolute;z-index:9;display:flex;gap:3px;align-items:center;background:#111827;padding:4px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);white-space:nowrap}
+  #ldPage .le .ctbar span{color:#fbbf24;font-size:12px;padding:0 4px}
+  #ldPage .le .ctbar button{background:#fff;border:0;border-radius:5px;font-size:12px;padding:4px 7px;cursor:pointer}
+  #ldPage .le td.csel{box-shadow:inset 0 0 0 2px #f59e0b;background:#fff7d6!important}
   #ldPage .pgend{position:absolute;left:-10px;right:-10px;top:1123px;border-top:2px dashed #ef4444;pointer-events:none;z-index:30}
   #ldPage .pgend span{position:absolute;right:10px;top:2px;font-size:11px;color:#ef4444;background:#fff;padding:0 4px}
   #ldPage .le .rgrip{position:absolute;left:0;right:0;height:8px;margin-top:-4px;cursor:row-resize;z-index:6;touch-action:none}
@@ -1898,7 +1903,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         const ak = cellAKey(e, r, c);
         if(e.ca && e.ca[ak]) st += `text-align:${e.ca[ak]};`;
         if(e.cva && e.cva[ak]) st += `vertical-align:${e.cva[ak]};`;
-        if(design && cell && sel === e.id && cell.r === r && cell.c === c) cls = ' class="csel"';
+        if(design && sel === e.id && inRange(r, c)) cls = ' class="csel"';
         h += `<td${cls}${cs > 1 ? ` colspan="${cs}"` : ''}${rs > 1 ? ` rowspan="${rs}"` : ''}${design ? ` data-r="${r}" data-c="${c}"` : ''} style="${st}">${fill(t, rec, design)}</td>`;
       }
       h += '</tr>';
@@ -2085,10 +2090,87 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   }
   let noGrow = false;
   /* 표 선 끌기용 손잡이 */
+  /* ---------- 여러 칸 선택 (끌기 · Shift+누르기) ---------- */
+  let crange = null;      // {r1,c1,r2,c2}
+  const normR = (a, b) => ({r1:Math.min(a.r, b.r), c1:Math.min(a.c, b.c), r2:Math.max(a.r, b.r), c2:Math.max(a.c, b.c)});
+  const curRange = () => crange || (cell ? {r1:cell.r, c1:cell.c, r2:cell.r, c2:cell.c} : null);
+  function inRange(r, c){ const R = curRange(); return !!R && r >= R.r1 && r <= R.r2 && c >= R.c1 && c <= R.c2; }
+  const tblSize = e => e.type === 'checklist' ? {nr:1 + (cur.items.length || 1), nc:4} : {nr:e.cells.length, nc:Math.max(...e.cells.map(r => r.length))};
+  /* 내용이 줄면 상자도 줄이고 아래 요소를 당겨 올림 */
+  function shrinkToFit(e){
+    const need = measureNeeds({els:[e]}, cur).get(e.id);
+    if(need && need < e.h - 2){ const ob = e.y + e.h, d = need - e.h; e.h = need; pushBelow(e, ob, d); }
+  }
+  function rangeAction(e, act){
+    const R = curRange(); if(!R) return;
+    const {nr, nc} = tblSize(e);
+    const n = (R.r2 - R.r1 + 1) * (R.c2 - R.c1 + 1);
+    if(e.type === 'checklist'){
+      if(act === 'clear'){
+        snap();
+        for(let r = R.r1; r <= R.r2; r++) for(let c = R.c1; c <= R.c2; c++){
+          if(r === 0){ const hs = e.heads && e.heads.length === 4 ? [...e.heads] : ['번호','점검 항목','결과','비고']; if(c > 0) hs[c] = ''; e.heads = hs; continue; }
+          const it = cur.items[r - 1]; if(!it) continue;
+          if(c === 1) it.label = ''; if(c === 2) it.result = ''; if(c === 3) it.note = '';
+        }
+        dirty = true;
+      } else if(act === 'delrow'){
+        const from = Math.max(1, R.r1);
+        if(from > R.r2) return toast('머리글 행은 지울 수 없습니다');
+        if(!confirm(`점검 항목 ${R.r2 - from + 1}개를 지울까요?`)) return;
+        snap(); cur.items.splice(from - 1, R.r2 - from + 1); changed = true;
+        shrinkToFit(e);
+      } else return toast('점검항목표는 항목(행) 삭제와 내용 지우기만 됩니다');
+    } else {
+      const get = (r, c) => e.cells[r] ? e.cells[r][c] : '';
+      if(act === 'clear'){ snap(); for(let r = R.r1; r <= R.r2; r++) for(let c = R.c1; c <= R.c2; c++){ const t = get(r, c); if(t !== '<' && t !== '^') e.cells[r][c] = ''; } }
+      else if(act === 'delrow'){
+        const cnt = R.r2 - R.r1 + 1;
+        if(cnt >= nr){ if(!confirm('표의 모든 행을 지우면 표가 삭제됩니다. 표를 지울까요?')) return; snap(); page().els = page().els.filter(x => x.id !== e.id); sel = null; cell = null; crange = null; draw(); props(); return; }
+        if(!confirm(`${R.r1 + 1}~${R.r2 + 1}행 (${cnt}줄)을 지울까요?`)) return;
+        snap(); for(let r = R.r2; r >= R.r1; r--) tblDelRow(e, r);
+      } else if(act === 'delcol'){
+        const cnt = R.c2 - R.c1 + 1;
+        if(cnt >= nc) return toast('모든 열을 지울 수는 없습니다 — 표 전체를 지우려면 표 선택 후 [삭제]');
+        if(!confirm(`${R.c1 + 1}~${R.c2 + 1}열 (${cnt}칸)을 지울까요?`)) return;
+        snap(); for(let c = R.c2; c >= R.c1; c--) tblDelCol(e, c);
+      } else if(act === 'merge'){
+        if(n < 2) return toast('합칠 칸을 2개 이상 끌어서 선택하세요');
+        snap();
+        const texts = [];
+        for(let r = R.r1; r <= R.r2; r++) for(let c = R.c1; c <= R.c2; c++){ const t = get(r, c); if(t && t !== '<' && t !== '^') texts.push(t); }
+        for(let r = R.r1; r <= R.r2; r++) for(let c = R.c1; c <= R.c2; c++) e.cells[r][c] = (r === R.r1 && c === R.c1) ? texts.join(' ') : (c === R.c1 ? '^' : '<');
+      } else if(act === 'unmerge'){
+        snap();
+        for(let r = R.r1; r <= R.r2; r++) for(let c = R.c1; c <= R.c2; c++){ const t = get(r, c); if(t === '<' || t === '^') e.cells[r][c] = ''; }
+        // 범위 밖으로 이어진 합친 칸도 풀기
+        for(let r = R.r1; r <= R.r2; r++){ let c = R.c2 + 1; while(c < nc && get(r, c) === '<'){ e.cells[r][c] = ''; c++; } }
+        for(let c = R.c1; c <= R.c2; c++){ let r = R.r2 + 1; while(r < nr && get(r, c) === '^'){ e.cells[r][c] = ''; r++; } }
+      }
+    }
+    cell = null; crange = null; draw(); props();
+  }
   function addGrips(){
     const e = selEl(); if(!e || !(e.type === 'table' || e.type === 'checklist')) return;
     const node = $('ldPage').querySelector(`[data-id="${e.id}"]`); if(!node) return;
     const tbl = node.querySelector('table'); if(!tbl) return;
+    // 옮기기 손잡이 (선택된 표는 칸 안을 끌면 칸 선택, 이 손잡이로 표 이동)
+    node.insertAdjacentHTML('beforeend', '<div class="mvh" title="끌어서 표 옮기기">✥ 옮기기</div>');
+    // 선택한 칸 위에 작업 단추
+    const R = curRange();
+    if(R){
+      const tds = [...tbl.querySelectorAll('td[data-r]')].filter(td => inRange(+td.dataset.r, +td.dataset.c));
+      if(tds.length){
+        const nb0 = node.getBoundingClientRect();
+        const top = Math.min(...tds.map(t => t.getBoundingClientRect().top)), left = Math.min(...tds.map(t => t.getBoundingClientRect().left));
+        const n = (R.r2 - R.r1 + 1) * (R.c2 - R.c1 + 1);
+        const btn = (a, l, red) => `<button type="button" data-cb="${a}"${red ? ' style="color:#b91c1c"' : ''}>${l}</button>`;
+        const bar = e.type === 'checklist'
+          ? btn('clear', '내용 지우기') + btn('delrow', '항목 삭제', 1)
+          : btn('clear', '내용 지우기') + btn('delrow', '행 삭제', 1) + btn('delcol', '열 삭제', 1) + (n > 1 ? btn('merge', '칸 합치기') : '') + btn('unmerge', '합치기 풀기');
+        node.insertAdjacentHTML('beforeend', `<div class="ctbar" style="left:${Math.max(0, (left - nb0.left) / zoom)}px;top:${(top - nb0.top) / zoom - 34}px"><span>${n > 1 ? n + '칸' : '1칸'}</span>${bar}</div>`);
+      }
+    }
     const px = colPx(e); let x = 0;
     let h = '';
     px.slice(0, -1).forEach((w, i) => { x += w; h += `<div class="cgrip" data-ci="${i}" style="left:${x}px" title="끌어서 열 너비 조절"></div>`; });
@@ -2118,6 +2200,13 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   }
   function cellTools(e){
     if(!cell) return '';
+    const R0 = crange;
+    const rangeBox = R0 ? `<div class="pt" style="margin-top:10px;color:#b45309">선택한 칸 ${(R0.r2 - R0.r1 + 1) * (R0.c2 - R0.c1 + 1)}개 (${R0.r1 + 1}~${R0.r2 + 1}행 × ${R0.c1 + 1}~${R0.c2 + 1}열)</div>
+      <div class="ldrow"><button type="button" data-rg="clear">내용 지우기</button><button type="button" data-rg="delrow" style="color:#b91c1c">${e.type === 'checklist' ? '항목 삭제' : '행 삭제'}</button>${e.type === 'table' ? '<button type="button" data-rg="delcol" style="color:#b91c1c">열 삭제</button><button type="button" data-rg="merge">칸 합치기</button><button type="button" data-rg="unmerge">합치기 풀기</button>' : ''}</div>
+      <div class="hint">칸을 끌어서 여러 칸을 고르거나 Shift+누르기로 범위를 넓힙니다. Delete 키: 줄 전체면 행 삭제, 아니면 내용 지우기 · Esc: 선택 풀기</div>` : `<div class="hint" style="margin-top:8px">여러 칸을 고르려면 칸 위를 끌거나 Shift+누르기 하세요.</div>`;
+    return rangeBox + cellTools1(e);
+  }
+  function cellTools1(e){
     const k = cellAKey(e, cell.r, cell.c), ca = (e.ca || {})[k] || '', cva = (e.cva || {})[k] || '';
     const cb = (key, v, cur, label) => `<button type="button" data-${key}="${v}" class="${cur === v ? 'on' : ''}">${label}</button>`;
     const cw = Math.round(colPx(e)[cell.c]), rh = rowPx(e, cell.r);
@@ -2494,16 +2583,56 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       }
       return;
     }
+    const cb = ev.target.closest('.ctbar button');
+    if(cb){ ev.preventDefault(); ev.stopPropagation(); const e0 = selEl(); if(e0) rangeAction(e0, cb.dataset.cb); return; }
+    if(ev.target.closest('.ctbar')){ ev.preventDefault(); return; }
     if(ev.target.closest('[contenteditable="true"]')) return;   // 글자 바로 고치는 중
+    const mvh = ev.target.closest('.mvh');
+    if(mvh){
+      const e = selEl(); if(!e) return;
+      const node = $('ldPage').querySelector(`[data-id="${e.id}"]`);
+      const sx = ev.clientX, sy = ev.clientY, ox = e.x, oy = e.y; let moved = false;
+      const mv = m => { const dx = (m.clientX - sx) / zoom, dy = (m.clientY - sy) / zoom; if(!moved && Math.abs(dx) + Math.abs(dy) < 3) return; if(!moved){ snap(); moved = true; }
+        e.x = clamp(r5(ox + dx), 0, PW - e.w); e.y = clamp(r5(oy + dy), 0, PH - e.h); node.style.left = e.x + 'px'; node.style.top = e.y + 'px'; m.preventDefault(); };
+      const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); if(moved){ draw(); props(); } };
+      addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up); ev.preventDefault(); ev.stopPropagation(); return;
+    }
+    {
+      // 이미 선택된 표의 칸: Shift+누르기 = 범위, 끌기 = 여러 칸 선택
+      const le0 = ev.target.closest('.le'), td0 = ev.target.closest('td[data-r]');
+      const e0 = le0 && page().els.find(x => x.id === le0.dataset.id);
+      if(e0 && td0 && sel === e0.id && (e0.type === 'table' || e0.type === 'checklist') && !editing){
+        const here = {r:+td0.dataset.r, c:+td0.dataset.c};
+        if(ev.shiftKey && cell){ crange = normR(cell, here); draw(); props(); ev.preventDefault(); return; }
+        const same = cell && cell.r === here.r && cell.c === here.c && !crange;
+        cell = here; crange = null;
+        draw(); props();
+        let dragged = false;
+        const mv = m => {
+          const el = document.elementFromPoint(m.clientX, m.clientY), t = el && el.closest && el.closest(`[data-id="${e0.id}"] td[data-r]`);
+          if(!t) return;
+          const h2 = {r:+t.dataset.r, c:+t.dataset.c};
+          if(h2.r === here.r && h2.c === here.c && !dragged) return;
+          dragged = true;
+          const nr2 = normR(here, h2);
+          if(!crange || nr2.r1 !== crange.r1 || nr2.c1 !== crange.c1 || nr2.r2 !== crange.r2 || nr2.c2 !== crange.c2){ crange = nr2; noGrow = true; draw(); noGrow = false; }
+          m.preventDefault();
+        };
+        const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
+          if(dragged){ props(); draw(); } else if(same) startInline(e0, cell); };
+        addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+        ev.preventDefault(); return;
+      }
+    }
     if(editing) finishInline(true);
     const le = ev.target.closest('.le');
-    if(!le){ if(sel){ sel = null; cell = null; draw(); props(); } return; }
+    if(!le){ if(sel){ sel = null; cell = null; crange = null; draw(); props(); } return; }
     const e = page().els.find(x => x.id === le.dataset.id); if(!e) return;
     const resize = ev.target.classList.contains('rh');
     const td = ev.target.closest('td[data-r]');
     const wasSel = sel === e.id;
     const sameSpot = wasSel && (td ? (cell && cell.r === +td.dataset.r && cell.c === +td.dataset.c) : (e.type === 'text'));
-    sel = e.id;
+    sel = e.id; if(!wasSel) crange = null;
     if(!resize) cell = (td && (e.type === 'table' || e.type === 'checklist')) ? {r:+td.dataset.r, c:+td.dataset.c} : (wasSel ? cell : null);
     draw(); props();
     const node = $('ldPage').querySelector(`[data-id="${e.id}"]`);
@@ -2600,7 +2729,17 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const st = ev.shiftKey ? 10 : 1;
     const mv = {ArrowLeft:[-st,0], ArrowRight:[st,0], ArrowUp:[0,-st], ArrowDown:[0,st]}[ev.key];
     if(mv){ snap(); e.x = clamp(e.x + mv[0], 0, PW - e.w); e.y = clamp(e.y + mv[1], 0, PH - e.h); draw(); props(); ev.preventDefault(); }
-    else if(ev.key === 'Delete' || ev.key === 'Backspace'){ snap(); page().els = page().els.filter(x => x.id !== sel); sel = null; draw(); props(); ev.preventDefault(); }
+    else if(ev.key === 'Delete' || ev.key === 'Backspace'){
+      ev.preventDefault();
+      if((e.type === 'table' || e.type === 'checklist') && curRange()){
+        const R = curRange(), {nc} = tblSize(e);
+        if(ev.key === 'Delete' && R.c1 === 0 && R.c2 === nc - 1) rangeAction(e, 'delrow');   // 줄 전체를 고르면 행 삭제
+        else rangeAction(e, 'clear');
+        return;
+      }
+      snap(); page().els = page().els.filter(x => x.id !== sel); sel = null; draw(); props();
+    }
+    else if(ev.key === 'Escape' && crange){ crange = null; draw(); props(); }
   });
 
   /* 속성 고치기 */
@@ -2666,8 +2805,10 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(b.dataset.clr){ snap(); e[b.dataset.clr] = ''; draw(); props(); return; }
     if(cell && (e.type === 'table' || e.type === 'checklist')){
       const k = cellAKey(e, cell.r, cell.c);
-      if(b.dataset.ca !== undefined){ snap(); e.ca = {...(e.ca || {})}; if(b.dataset.ca) e.ca[k] = b.dataset.ca; else delete e.ca[k]; draw(); props(); return; }
-      if(b.dataset.cva !== undefined){ snap(); e.cva = {...(e.cva || {})}; if(b.dataset.cva) e.cva[k] = b.dataset.cva; else delete e.cva[k]; draw(); props(); return; }
+      if(b.dataset.rg){ rangeAction(e, b.dataset.rg); return; }
+      const keysIn = () => { const R = curRange(), ks = new Set(); for(let r = R.r1; r <= R.r2; r++) for(let c = R.c1; c <= R.c2; c++) ks.add(cellAKey(e, r, c)); return [...ks]; };
+      if(b.dataset.ca !== undefined){ snap(); e.ca = {...(e.ca || {})}; keysIn().forEach(kk => { if(b.dataset.ca) e.ca[kk] = b.dataset.ca; else delete e.ca[kk]; }); draw(); props(); return; }
+      if(b.dataset.cva !== undefined){ snap(); e.cva = {...(e.cva || {})}; keysIn().forEach(kk => { if(b.dataset.cva) e.cva[kk] = b.dataset.cva; else delete e.cva[kk]; }); draw(); props(); return; }
       if(b.dataset.cw){ snap(); setColW(e, cell.c, colPx(e)[cell.c] + (+b.dataset.cw)); draw(); props(); return; }
       if(b.dataset.rh){ snap(); setRowH(e, cell.r, rowPx(e, cell.r) + (+b.dataset.rh)); draw(); props(); return; }
       if(b.dataset.rhauto){ snap(); const o = {...e.rowH}; delete o[cell.r]; e.rowH = o; draw(); props(); return; }
@@ -2693,7 +2834,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       if(b.dataset.cres !== undefined && it){ it.result = b.dataset.cres; dirty = true; draw(); props(); return; }
       if(b.dataset.mv && it){ const j = i + (+b.dataset.mv); if(j < 0 || j >= cur.items.length) return; [cur.items[i], cur.items[j]] = [cur.items[j], cur.items[i]]; cell = {r:j + 1, c:cell.c}; changed = true; draw(); props(); return; }
       if(b.dataset.addit){ cur.items.splice(i + 1, 0, {label:'새 점검 항목', result:'', note:''}); cell = {r:i + 2, c:1}; changed = true; draw(); props(); const ta = $('ldTxt'); if(ta){ ta.focus(); ta.select(); } return; }
-      if(b.dataset.rmit && it){ if(!confirm(`'${it.label}' 항목을 지울까요?`)) return; cur.items.splice(i, 1); cell = null; changed = true; draw(); props(); return; }
+      if(b.dataset.rmit && it){ if(!confirm(`'${it.label}' 항목을 지울까요?`)) return; snap(); cur.items.splice(i, 1); cell = null; changed = true; shrinkToFit(e); draw(); props(); return; }
     }
     if(b.dataset.tb){
       snap();
