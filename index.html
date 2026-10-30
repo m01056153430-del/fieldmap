@@ -73,9 +73,13 @@
   .rchips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0 4px}
   .rchips>span{font-size:12px;color:var(--mut)}
   .rchips .chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .mlab{transform:translateY(-44px);background:rgba(255,255,255,.95);border:1px solid #94a3b8;border-radius:8px;padding:3px 8px;font-size:12px;line-height:1.35;box-shadow:0 2px 6px rgba(0,0,0,.25);text-align:center;max-width:180px;white-space:normal;cursor:pointer}
+  .mlab{transform:translateY(-44px);background:rgba(255,255,255,.96);border:1px solid #94a3b8;border-radius:8px;padding:2px 8px;font-size:12px;line-height:1.4;box-shadow:0 2px 6px rgba(0,0,0,.25);text-align:center;white-space:nowrap;cursor:pointer}
   .mlab b{display:block;font-size:13px;color:#111}
-  .mlab span{display:block;color:#374151;word-break:keep-all}
+  .mlab.open{padding:6px 12px;border-color:#1f6feb;width:max-content;max-width:260px;white-space:normal}
+  .mlab.open b{font-size:15px;margin-bottom:2px}
+  .mlab span{display:block;color:#374151;font-size:13px;word-break:keep-all}
+  .mlab span.dt{color:#1f6feb;font-weight:600}
+  .mlab i{display:block;font-style:normal;font-size:11px;color:#9ca3af;margin-top:3px}
   /* ---------- 현장 점검 ---------- */
   .ov{position:fixed;inset:0;background:#f5f7fa;z-index:50;display:flex;flex-direction:column}
   .ov[hidden]{display:none}
@@ -439,6 +443,7 @@
   <div class="ovh">
     <button id="iBack">← 닫기</button>
     <b id="iHead">현장 점검</b>
+    <button id="iNew" style="display:none" title="이 사업자를 새로 점검 (이전 기록은 그대로 남음)">＋ 새 점검</button>
     <button id="iDel" class="bdan" style="display:none">삭제</button>
     <button id="iSave">저장</button>
   </div>
@@ -913,7 +918,7 @@ function infoHtml(r, pt){
       const st = done ? `<span class="st ok">✔ 점검 완료 · ${esc(when)}${last.overall ? ' · ' + esc(last.overall) : ''}</span>`
         : has ? `<span class="st ing">점검 중 (미완료) · ${esc(when)}</span>` : '<span class="st no">미점검</span>';
       return `<div>${st}</div>
-        <button type="button" onclick="openInspect(${rows.indexOf(r)})" style="margin-top:6px;width:100%;background:#1f6feb;color:#fff;padding:9px;font-size:15px;font-weight:700">점검하기</button>
+        <button type="button" onclick="openInspect(${rows.indexOf(r)})" style="margin-top:6px;width:100%;background:#1f6feb;color:#fff;padding:9px;font-size:15px;font-weight:700">${last ? '점검 내용 보기 · 수정' : '점검하기'}</button>
         ${has ? `<label style="display:flex;gap:6px;align-items:center;justify-content:center;margin-top:8px;font-size:14px;cursor:pointer"><input type="checkbox" ${done ? 'checked' : ''} onchange="toggleDone(${rows.indexOf(r)}, this.checked)" style="width:18px;height:18px"> 점검 완료</label>` : ''}`;
     })()}</div>`;
 }
@@ -982,10 +987,19 @@ function focusRow(i){
 
 /* 지도를 가까이 확대하면(레벨 5 이하) 마커 위에 이름 · 사업명 · 세부사업 표시 */
 const LABEL_LEVEL = 5;
+function labSet(m){
+  const r = rows[m._i]; if(!r || !m._lab) return;
+  const el = document.createElement('div');
+  el.className = 'mlab' + (m._open ? ' open' : '');
+  el.innerHTML = `<b>${esc(r.name)}</b>` + (m._open ? `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}<i>한 번 더 누르면 상세 정보</i>` : '');
+  el.onclick = ev => { ev.stopPropagation(); if(!m._open){ m._open = true; labSet(m); updateLabels(); return; } info.setContent(infoHtml(r, m._pt)); info.open(map, m); };
+  m._lab.setContent(el); m._lab.setZIndex(m._open ? 10 : 3);
+}
 function updateLabels(){
   if(!map) return;
   const on = map.getLevel() <= LABEL_LEVEL;
-  markers.forEach(m => { if(m._lab) m._lab.setMap(on && m.getMap() ? map : null); });
+  // 확대하면 이름만, 누른 마커는 사업명·세부사업까지 (축소해도 누른 것은 보임)
+  markers.forEach(m => { if(m._lab) m._lab.setMap((on || m._open) && m.getMap() ? map : null); });
 }
 async function plot(){
   markers.forEach(m => { m.setMap(null); if(m._lab) m._lab.setMap(null); }); markers = []; if(info) info.close();
@@ -1002,9 +1016,13 @@ async function plot(){
       const m = new kakao.maps.Marker({position:new kakao.maps.LatLng(pt.lat,pt.lng), image:markerImage(pinColor(r)), title:r.name});
       m._done = isDone(r);
       m._i = i; m._pt = pt; m.setMap(map); markers.push(m);
-      m._lab = new kakao.maps.CustomOverlay({position:m.getPosition(), yAnchor:1, zIndex:3, clickable:true,
-        content:`<div class="mlab" onclick="focusRow(${i})"><b>${esc(r.name)}</b>${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span>${esc(r.detail)}</span>` : ''}</div>`});
-      kakao.maps.event.addListener(m, 'click', () => { info.setContent(infoHtml(r, pt)); info.open(map, m); });
+      m._lab = new kakao.maps.CustomOverlay({position:m.getPosition(), yAnchor:1, zIndex:3, clickable:true, content:''});
+      labSet(m);
+      // 마커 첫 클릭: 이름표에 사업명·세부사업 펼치기 → 한 번 더(또는 이름표 클릭): 상세 정보창
+      kakao.maps.event.addListener(m, 'click', () => {
+        if(!m._open){ markers.forEach(x => { if(x !== m && x._open){ x._open = false; labSet(x); } }); m._open = true; labSet(m); if(info) info.close(); updateLabels(); }
+        else { info.setContent(infoHtml(r, pt)); info.open(map, m); }
+      });
       bounds.extend(m.getPosition());
     }
     if(r._pts.length) okCnt++;
@@ -1138,6 +1156,7 @@ if(!window.kakao || !kakao.maps){
   kakao.maps.load(() => {
     map = new kakao.maps.Map($('map'), {center:new kakao.maps.LatLng(35.2025,127.4627), level:8}); // 구례군청 부근
     kakao.maps.event.addListener(map, 'zoom_changed', () => updateLabels());
+    kakao.maps.event.addListener(map, 'click', () => { markers.forEach(m => { if(m._open){ m._open = false; labSet(m); } }); updateLabels(); });
     map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
     map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
     geocoder = new kakao.maps.services.Geocoder();
@@ -1414,6 +1433,7 @@ function renderPrev(){
   $('iPrev').innerHTML = `<button type="button" class="bline ${cur.savedAt ? '' : 'on'}" data-new="1">+ 새 점검</button>` +
     mine.map(r => `<button type="button" class="bline ${r.id===cur.id?'on':''}" data-rec="${r.id}">${esc(fmtDT(r.date))}${r.overall?' · '+esc(r.overall):''}</button>`).join('');
   $('iDel').style.display = cur.savedAt ? 'inline-block' : 'none';
+  $('iNew').style.display = cur.savedAt ? 'inline-block' : 'none';
 }
 function renderSecs(){
   $('cItems').style.display = cur.sec.items ? '' : 'none';
@@ -1447,10 +1467,18 @@ window.openInspect = async function(i){
   const r = rows[i]; if(!r) return;
   if(info) info.close();
   await reloadRecs();
-  cur = newRecord(r); dirty = false;
+  // 이미 점검한 사업자는 가장 최근 점검 기록을 열어 바로 고칠 수 있게 (완료된 것도 포함)
+  const last = allRecs.find(x => x.key === rowKey(r));
+  if(last){
+    openRecord(last); curRow = i;
+    toast(`${last.done ? '완료된 ' : ''}점검 기록을 불러왔습니다 — 고친 뒤 [저장]하세요 (새로 점검하려면 [＋ 새 점검])`);
+    return;
+  }
+  cur = newRecord(r); dirty = false; curRow = i;
   $('insp').hidden = false;
   renderForm(); locate(true);
 };
+let curRow = -1;
 /* 지도 말풍선에서 '점검 완료' 바로 체크 (최근 점검 기록에 반영) */
 window.toggleDone = async function(i, on){
   const r = rows[i]; if(!r) return;
@@ -1465,6 +1493,13 @@ window.toggleDone = async function(i, on){
   if(m && info){ info.setContent(infoHtml(r, m._pt)); }
   toast(on ? `${r.name} — 점검 완료로 표시했습니다` : `${r.name} — 완료 표시를 취소했습니다`);
 };
+function startNewFromCur(){
+  const r = rows.find(x => rowKey(x) === cur.key) || (cur.target ? {...cur.target} : null);
+  if(!r) return toast('명단에서 이 사업자를 찾지 못했습니다');
+  if(dirty && !confirm('저장하지 않은 수정 내용이 있습니다. 버리고 새 점검을 시작할까요?')) return;
+  cur = newRecord(r); dirty = false; renderForm(); locate(true);
+  toast('새 점검을 시작합니다 (이전 기록은 점검 목록에 그대로 있습니다)');
+}
 function openRecord(rec){
   cur = fixRec(JSON.parse(JSON.stringify(rec))); dirty = false;
   $('insp').hidden = false; renderForm();
@@ -1877,6 +1912,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     $('insp').hidden = true;
   };
   $('iSave').onclick = () => saveCur();
+  $('iNew').onclick = () => startNewFromCur();
   $('iDel').onclick = async () => {
     if(!confirm('이 점검 기록을 지울까요? 되돌릴 수 없습니다.')) return;
     await idb.del(cur.id); if(window.syncDelete) syncDelete(cur.id); await reloadRecs(); if(typeof renderList === 'function') renderList();
