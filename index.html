@@ -70,6 +70,9 @@
   #side.hide{display:none}
   #toggle{display:inline-block}
   #toggle.on{background:#dbeafe}
+  .mlab{transform:translateY(-44px);background:rgba(255,255,255,.95);border:1px solid #94a3b8;border-radius:8px;padding:3px 8px;font-size:12px;line-height:1.35;box-shadow:0 2px 6px rgba(0,0,0,.25);text-align:center;max-width:180px;white-space:normal;cursor:pointer}
+  .mlab b{display:block;font-size:13px;color:#111}
+  .mlab span{display:block;color:#374151;word-break:keep-all}
   /* ---------- 현장 점검 ---------- */
   .ov{position:fixed;inset:0;background:#f5f7fa;z-index:50;display:flex;flex-direction:column}
   .ov[hidden]{display:none}
@@ -246,6 +249,7 @@
   #ldPage .le{cursor:move;touch-action:none}
   #ldPage .le:hover{outline:1px dashed #60a5fa}
   #ldPage .le.sel{outline:2px solid #1f6feb;overflow:visible}
+  #ldPage .le.sel{z-index:900!important}   /* 선택한 요소의 도구줄이 다른 요소에 가려지지 않게 */
   #ldPage .le .rh{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;background:#1f6feb;border:2px solid #fff;border-radius:50%;cursor:nwse-resize;touch-action:none;z-index:5}
   #ldPage .le td.csel{box-shadow:inset 0 0 0 2px #f59e0b;background:#fff7d6!important}
   #ldPage .le .tx.empty::after{content:'(빈 글상자)';color:#9ca3af}
@@ -950,6 +954,7 @@ function renderList(){
     if(m._done !== d){ m.setImage(markerImage(pinColor(r))); m._done = d; }
     m.setMap(visible(r) ? map : null);
   });
+  updateLabels();
   const shown = rows.filter(visible).length;
   if(rows.length && (filterTown || $('q').value.trim())) setStatus(`검색·선택 결과 ${shown}명 / 전체 ${rows.length}명`);
   if(window.inspDone && rows.length){
@@ -972,8 +977,15 @@ function focusRow(i){
   if(innerWidth <= 760) $('side').classList.add('hide');
 }
 
+/* 지도를 가까이 확대하면(레벨 5 이하) 마커 위에 이름 · 사업명 · 세부사업 표시 */
+const LABEL_LEVEL = 5;
+function updateLabels(){
+  if(!map) return;
+  const on = map.getLevel() <= LABEL_LEVEL;
+  markers.forEach(m => { if(m._lab) m._lab.setMap(on && m.getMap() ? map : null); });
+}
 async function plot(){
-  markers.forEach(m => m.setMap(null)); markers = []; if(info) info.close();
+  markers.forEach(m => { m.setMap(null); if(m._lab) m._lab.setMap(null); }); markers = []; if(info) info.close();
   buildColors(); renderFilters(); renderList();
   if(!rows.length || !map) return;
   const bounds = new kakao.maps.LatLngBounds();
@@ -987,6 +999,8 @@ async function plot(){
       const m = new kakao.maps.Marker({position:new kakao.maps.LatLng(pt.lat,pt.lng), image:markerImage(pinColor(r)), title:r.name});
       m._done = isDone(r);
       m._i = i; m._pt = pt; m.setMap(map); markers.push(m);
+      m._lab = new kakao.maps.CustomOverlay({position:m.getPosition(), yAnchor:1, zIndex:3, clickable:true,
+        content:`<div class="mlab" onclick="focusRow(${i})"><b>${esc(r.name)}</b>${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span>${esc(r.detail)}</span>` : ''}</div>`});
       kakao.maps.event.addListener(m, 'click', () => { info.setContent(infoHtml(r, pt)); info.open(map, m); });
       bounds.extend(m.getPosition());
     }
@@ -994,6 +1008,7 @@ async function plot(){
     done++; setStatus(`위치 찾는 중… ${done}/${rows.length}`);
   }
   if(markers.length) map.setBounds(bounds);
+  updateLabels();
   renderList();
   setStatus(`총 ${rows.length}명 · 지도 표시 ${okCnt}명` + (okCnt<rows.length ? ` · 못 찾음 ${rows.length-okCnt}명` : ''));
 }
@@ -1119,6 +1134,7 @@ if(!window.kakao || !kakao.maps){
 } else {
   kakao.maps.load(() => {
     map = new kakao.maps.Map($('map'), {center:new kakao.maps.LatLng(35.2025,127.4627), level:8}); // 구례군청 부근
+    kakao.maps.event.addListener(map, 'zoom_changed', () => updateLabels());
     map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
     map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
     geocoder = new kakao.maps.services.Geocoder();
@@ -1276,6 +1292,58 @@ function fixRec(r){
 }
 
 /* ---------- 점검 화면 ---------- */
+/* ---------- 위성사진 (사업장 위치 중심, 4:3) ---------- */
+const SAT = new Map();   // 'lat,lng' → {url} (이 기기 메모리에만 — 필요할 때 다시 만듦)
+async function satPoint(rec){
+  const r = (typeof rows !== 'undefined' ? rows : []).find(x => rowKey(x) === rec.key);
+  if(r && r._pts && r._pts[0]) return r._pts[0];
+  try{ if(window.kakao && kakao.maps && kakao.maps.services && rec.target && rec.target.place){ for(const p of parsePlace(rec.target.place)){ const pt = await geocodePlace(p); if(pt) return pt; } } }catch(_){}
+  if(rec.gps) return rec.gps;
+  return null;
+}
+function satTile(z, x, y){
+  return new Promise(res => {
+    const im = new Image(); im.crossOrigin = 'anonymous';
+    const to = setTimeout(() => res(null), 12000);
+    im.onload = () => { clearTimeout(to); res(im); }; im.onerror = () => { clearTimeout(to); res(null); };
+    im.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
+  });
+}
+async function buildSat(lat, lng, z = 18, W = 800, H = 600){
+  const n = 256 * 2 ** z, sn = Math.sin(lat * Math.PI / 180);
+  const px = (lng + 180) / 360 * n, py = (0.5 - Math.log((1 + sn) / (1 - sn)) / (4 * Math.PI)) * n;
+  const x0 = px - W / 2, y0 = py - H / 2;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'); g.fillStyle = '#d1d5db'; g.fillRect(0, 0, W, H);
+  const jobs = [];
+  for(let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + H - 1) / 256); ty++)
+    for(let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + W - 1) / 256); tx++)
+      jobs.push(satTile(z, tx, ty).then(im => { if(im){ g.drawImage(im, Math.round(tx * 256 - x0), Math.round(ty * 256 - y0)); return 1; } return 0; }));
+  const ok = (await Promise.all(jobs)).reduce((a, b) => a + b, 0);
+  if(!ok) return null;
+  // 사업장 위치 표시
+  const cx = W / 2, cy = H / 2;
+  g.lineWidth = 4; g.strokeStyle = '#fff'; g.fillStyle = '#ef4444';
+  g.beginPath(); g.arc(cx, cy - 26, 16, Math.PI * .85, Math.PI * .15); g.lineTo(cx, cy); g.closePath(); g.fill(); g.stroke();
+  g.beginPath(); g.arc(cx, cy - 26, 6, 0, 7); g.fillStyle = '#fff'; g.fill();
+  g.font = '12px sans-serif'; const at = '© Esri World Imagery'; const tw = g.measureText(at).width;
+  g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(W - tw - 10, H - 18, tw + 10, 18); g.fillStyle = '#111'; g.fillText(at, W - tw - 5, H - 5);
+  try{ return cv.toDataURL('image/jpeg', .85); }catch(_){ return null; }
+}
+const satKeyOf = pt => pt.lat.toFixed(5) + ',' + pt.lng.toFixed(5);
+window.satOf = rec => (rec && rec._satKey && SAT.get(rec._satKey) || {}).url || null;
+window.ensureSat = async function(rec){
+  if(!rec) return null;
+  if(window.satOf(rec)) return window.satOf(rec);
+  if(rec._satP) return rec._satP;
+  rec._satP = (async () => {
+    const pt = await satPoint(rec); if(!pt) return null;
+    const k = satKeyOf(pt); rec._satKey = k;
+    if(!SAT.has(k)) SAT.set(k, {url: await buildSat(pt.lat, pt.lng)});
+    return SAT.get(k).url;
+  })().finally(() => { setTimeout(() => { rec._satP = null; }, 0); });
+  return rec._satP;
+};
 function newRecord(r){
   const t = sortedTpls()[0];
   return {
@@ -1613,6 +1681,7 @@ async function makePdf(jobs, filename){
     let first = true;
     for(const {rec, pages} of jobs){
       if(window.syncMedia && (rec.photos.some(p => !p) || (!rec.sign && rec.signId))) await syncMedia(rec);
+      if(window.ensureSat && JSON.stringify(rec.layout || '').includes('{위성사진}')) await ensureSat(rec);
       const all = buildPages(rec, false);
       for(let i = 0; i < all.length; i++){
         if(pages && !pages.has(i)) continue;
@@ -2066,6 +2135,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   const cellAKey = (e, r, c) => e.type === 'checklist' ? (r === 0 ? 'h:' + c : 'c:' + c) : r + ':' + c;
   window.LAY_cellAKey = cellAKey;
   /* 표 칸 안의 서명·사진 자리: {서명}, {사진 1} / 사진 설명: {사진 1 설명} */
+  const SAT_RE = /^\s*\{위성사진\}\s*$/; window.LAY_SAT_RE = SAT_RE;
   const SIGN_RE = /^\s*\{서명\}\s*$/, PHOTO_RE = /^\s*\{사진\s*(\d+)\}\s*$/;
   window.LAY_SIGN_RE = SIGN_RE; window.LAY_PHOTO_RE = PHOTO_RE;
   function cellInner(e, t, rec, design, r, c){
@@ -2074,6 +2144,12 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       if(SIGN_RE.test(t)){
         if(rec.sign) return `<div style="text-align:center"><img src="${rec.sign}" style="display:inline-block;height:${H}px;max-width:100%;object-fit:contain;vertical-align:middle"></div>`;
         return design ? '<div style="text-align:center;color:#9ca3af">(서명 또는 날인)<br><small style="font-size:11px">두 번 눌러 서명</small></div>' : '<div style="text-align:center">(서명 또는 날인)</div>';
+      }
+      if(SAT_RE.test(t)){
+        const src = window.satOf(rec), fit = ((e.cst || {})[r + ':' + c] || {}).fit || 'cover';
+        if(src) return `<img src="${src}" style="display:block;width:100%;height:${H}px;object-fit:${fit}">`;
+        if(window.ensureSat && !rec._satTried){ rec._satTried = true; ensureSat(rec).then(u => { if(!u) return; if(window.LAY_redraw && !$('ld').hidden) LAY_redraw(); else if(!$('pv').hidden && typeof renderPreview === 'function') renderPreview(true); }); }
+        return `<div class="ph0" style="height:${H}px;flex-direction:column;gap:4px">🛰 위성사진<small style="font-size:11px">사업장 위치를 찾아 불러오는 중…</small></div>`;
       }
       const m = PHOTO_RE.exec(t);
       if(m){
@@ -2316,7 +2392,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
 
   function draw(){
     cur.title = $('ldTitle').value.trim() || cur.title;
-    const st = $('ldStage');
+    const st = $('ldStage'), keepTop = st.scrollTop, keepLeft = st.scrollLeft;
     zoom = Math.min(1, Math.max(.3, (st.clientWidth - 28) / PW));
     $('ldZoom').style.cssText = `width:${PW * zoom}px;height:${PH * zoom}px`;
     $('ldPage').style.cssText = `width:${PW}px;height:${PH}px;transform:scale(${zoom});transform-origin:0 0`;
@@ -2325,7 +2401,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     $('ldPgInfo').textContent = `${pg + 1} / ${L.pages.length}쪽`;
     const overflow = page().els.some(x => x.y + x.h > PH);
     if(overflow) $('ldPage').querySelector('.pg').insertAdjacentHTML('beforeend', '<div class="pgend"><span>쪽 끝 — 아래 내용은 PDF·한글에서 다음 쪽으로 넘어갑니다</span></div>');
-    $('ldZoom').style.height = (Math.max(PH, ...page().els.map(x => x.y + x.h)) + 20) * zoom + 'px';
+    $('ldZoom').style.height = (Math.max(PH, ...page().els.map(x => x.y + x.h)) + 260) * zoom + 'px';   // 아래 여유: 도구줄이 아래에 떠도 화면이 튀지 않게
+    st.scrollTop = keepTop; st.scrollLeft = keepLeft;   // 다시 그려도 보던 위치 유지
     addGrips();
   }
   let noGrow = false;
@@ -2533,9 +2610,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         snap();
         if(act === 'splitc') own.sort((a, b) => b.c - a.c || b.r - a.r).forEach(({r, c}) => splitCol(e, r, c));
         else own.sort((a, b) => b.r - a.r || b.c - a.c).forEach(({r, c}) => splitRow(e, r, c));
-        const sp = spillPage(pg, 0);
-        if(sp && !page().els.includes(e)){ const k = allPages().findIndex(P => P.els.includes(e)); if(k >= 0){ pg = k; toast('표가 길어져 ' + (pg + 1) + '쪽으로 옮겼습니다'); } }
-        toast((act === 'splitc' ? '칸을 좌우로 나눴습니다' : '칸을 위아래로 나눴습니다') + (sp ? ' — 넘친 아래 내용은 ' + (pg + 2) + '쪽으로' : ''));
+        toast(act === 'splitc' ? '칸을 좌우로 나눴습니다' : '칸을 위아래로 나눴습니다');
       } else if(act === 'unmerge'){
         snap();
         for(const {r, c} of L){
@@ -2574,11 +2649,13 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
           if(pm){
             const curN = +pm[1], fit = ((e.cst || {})[L1[0].r + ':' + L1[0].c] || {}).fit || 'contain';
             extra = `<div class="cst"><span class="g">사진</span>${cur.photos.map((src, i) => src ? `<button type="button" data-ph="${i}" draggable="true" class="phb${i + 1 === curN ? ' on' : ''}" title="사진 ${i + 1} · 눌러서 넣기, 끌어서 다른 칸에 놓기"><img src="${src}"><i>${i + 1}</i></button>` : '').join('')}
-              <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 추가</button><button type="button" data-phfit="1">${fit === 'cover' ? '전체 보이기' : '꽉 채우기'}</button></div>`;
+              <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 추가</button><button type="button" data-sat="1" title="사업장 위치 위성사진을 4:3 비율로 넣고, 아래 사진설명 칸에는 사업장 위치를 넣습니다">🛰 위성사진 넣기</button><button type="button" data-phfit="1">${fit === 'cover' ? '전체 보이기' : '꽉 채우기'}</button></div>`;
+          } else if(SAT_RE.test(t1)){
+            extra = `<div class="cst"><span class="g">위성</span><button type="button" data-sat="1">🛰 다시 불러오기</button><button type="button" data-phadd="1">＋ 사진으로 바꾸기</button></div>`;
           } else if(!SIGN_RE.test(t1) && !CAP_RE.test(t1)){
             // 일반 칸에도 사진 넣기
             extra = `<div class="cst"><span class="g">사진</span>${cur.photos.map((src, i) => src ? `<button type="button" data-ph="${i}" draggable="true" class="phb" title="사진 ${i + 1}을 이 칸에 넣기"><img src="${src}"><i>${i + 1}</i></button>` : '').join('')}
-              <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 넣기</button></div>`;
+              <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 넣기</button><button type="button" data-sat="1" title="사업장 위치 위성사진을 4:3 비율로 넣습니다">🛰 위성사진 넣기</button></div>`;
           } else if(SIGN_RE.test(t1)) extra = `<div class="cst"><span class="g">서명</span><button type="button" data-sg="pad">✍ 서명하기</button>${cur.sign ? '<button type="button" data-sg="clr" style="color:#b91c1c">서명 지우기</button>' : ''}</div>`;
         }
         node.insertAdjacentHTML('beforeend', `<div class="ctbar" style="left:${Math.max(0, (left - nb0.left) / zoom)}px;top:0"><div class="cr1"><b class="ctgrip" title="끌어서 도구줄 옮기기">⠿</b><span>${n > 1 ? n + '칸' : '1칸'}</span>${bar}</div>${extra}${cellStyleCtl(e)}</div>`);
@@ -2861,21 +2938,15 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     else y = els.length ? Math.max(...els.map(x => x.y + x.h)) : FLOW_TOP;
     if(!els.length){ y = FLOW_TOP; gap = 0; }
     for(let k = 0; k < 50 && straddled(y); k++){ y = Math.max(...els.filter(x => x.y < y - 1 && x.y + x.h > y + 1).map(x => x.y + x.h)); gap = 8; }
-    let top = y + gap;
-    if(top + e.h > FLOW_LIM){
-      // 이 쪽 안에 들어가도록 위쪽 경계(어떤 요소의 윗변)로 올림 → 그 아래 내용은 밀려서 다음 쪽으로
-      // 제목(짧은 글자) 바로 아래는 제목과 떨어지지 않게 피함
-      const headAbove = v => els.some(x => x.type === 'text' && x.h <= 40 && x.y + x.h <= v + 1 && x.y + x.h >= v - 14);
-      const cand = els.map(x => x.y).filter(v => v + e.h + 8 <= FLOW_LIM && !straddled(v) && !headAbove(v)).sort((a, b) => b - a);
-      y = cand.length ? cand[0] : FLOW_TOP; top = y;
-    }
+    const top = y + gap;
     const below = els.filter(x => x.y >= y - 1);
     if(below.length){
       const sh = Math.max(0, top + e.h + 8 - Math.min(...below.map(x => x.y)));
       below.forEach(x => x.y += sh);
     }
     e.y = Math.round(top); els.push(e);
-    if(spillPage(pg, 0)) toast('넣은 자리 아래 내용 일부를 ' + (pg + 2) + '쪽으로 넘겼습니다 (▶로 확인)');
+    // 기존 내용은 어느 것도 다른 쪽으로 옮기지 않음 — 쪽 끝을 넘는 부분은 화면에 빨간 점선 아래로 보이고, PDF·한글에서 자동으로 다음 쪽으로 넘어감
+    if(els.some(x => x.y + x.h > PH)) toast('쪽 끝(빨간 점선)을 넘는 내용은 PDF·한글에서 자동으로 다음 쪽에 이어집니다');
   }
   function addEl(type){
     snap();
@@ -2891,6 +2962,12 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         cells:[[`{사진 ${n}}`], [`{사진 ${n} 설명}`]], rowH:{0:292, 1:36},
         ca:{'0:0':'center', '1:0':'center'}, cst:{'1:0':{italic:true, color:'#888888', size:16}}});
     }
+    if(type === 'sat'){
+      // 위성사진(사업장 위치, 4:3) + 아래 칸은 사업장 위치
+      e = mk({type:'table', ...base, w:520, h:432, cols:[1], shadeR:[], shadeC:[], bw:1, bc:'#111111',
+        cells:[['{위성사진}'], ['{사업장 장소}']], rowH:{0:396, 1:36},
+        ca:{'0:0':'center', '1:0':'center'}, cst:{'1:0':{size:14}}});
+    }
     if(type === 'sign'){
       // 농가명 | (입력) | (서명 또는 날인)
       e = mk({type:'table', ...base, w:494, h:48, cols:[120,180,194], shadeR:[], shadeC:[], bw:1, bc:'#111111', size:15,
@@ -2903,6 +2980,14 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
 
   function openDesigner(){
     L = cur.layout ? clone(cur.layout) : defaultLayout(cur);
+    // 예전에 자동으로 다음 쪽으로 넘겼던 내용(이어지는 쪽)을 원래 쪽 아래로 되돌림
+    for(let i = L.pages.length - 1; i > 0; i--){
+      const P = L.pages[i]; if(!P.cont) continue;
+      const prev = L.pages[i - 1], bot = prev.els.length ? Math.max(...prev.els.map(x => x.y + x.h)) : FLOW_TOP;
+      const top0 = P.els.length ? Math.min(...P.els.map(x => x.y)) : FLOW_TOP, sh = bot + 12 - top0;
+      P.els.forEach(x => { x.y += sh; prev.els.push(x); });
+      L.pages.splice(i, 1);
+    }
     pg = 0; sel = null; cell = null; hist = []; changed = !cur.layout;
     $('ldTitle').value = cur.title || '';
     $('ldMore').checked = L.morePhotos !== false;
@@ -3021,6 +3106,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   openDesigner = function(){ _od(); setPlacing(null); };
   window.openDesigner = openDesigner;
   window.LAY = {fieldValue, fieldGroups, defaultLayout};
+  window.LAY_redraw = () => { if(L && !$('ld').hidden){ draw(); } };
 
   /* ---------- 도구 창 (이동 · 크기 조절 · 최소화) ---------- */
   (function toolWin(){
@@ -3028,7 +3114,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const body = document.createElement('div'); body.id = 'ldToolBody';
     while(T.firstChild) body.appendChild(T.firstChild);
     const bar = document.createElement('div'); bar.id = 'ldToolBar';
-    bar.innerHTML = '<b>🛠 디자인 도구</b><button type="button" id="ldTMin" title="최소화 / 펼치기">—</button><button type="button" id="ldTReset" title="처음 위치로">⟲</button>';
+    bar.innerHTML = '<b>🛠 디자인 도구</b><button type="button" id="ldTUndo" title="되돌리기 (Ctrl+Z)">↶ 되돌리기</button><button type="button" id="ldTMin" title="최소화 / 펼치기">—</button><button type="button" id="ldTReset" title="처음 위치로">⟲</button>';
     const rh = document.createElement('div'); rh.className = 'wrh';
     T.append(bar, body, rh);
     const KEY = 'ldToolPos';
@@ -3049,6 +3135,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     }
     const save = () => LS.set(KEY, pos);
     $('ldTMin').onclick = () => { pos.min = !pos.min; apply(); save(); };
+    $('ldTUndo').onclick = () => $('ldUndo').click();
+    $('ldUndo').style.display = 'none';
     $('ldTReset').onclick = () => { pos = def(); apply(); save(); };
     bar.addEventListener('dblclick', e => { if(!e.target.closest('button')){ pos.min = !pos.min; apply(); save(); } });
     bar.addEventListener('pointerdown', ev => {
@@ -3157,6 +3245,12 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     }
     const cb = ev.target.closest('.ctbar [data-cb]');
     if(cb){ ev.preventDefault(); ev.stopPropagation(); const e0 = selEl(); if(e0) rangeAction(e0, cb.dataset.cb); return; }
+    const stb = ev.target.closest('.ctbar [data-sat]');
+    if(stb){
+      ev.preventDefault(); ev.stopPropagation();
+      const e0 = selEl(), L1 = selCells(); if(!e0 || L1.length !== 1) return;
+      putSatCell(e0, L1[0].r, L1[0].c); return;
+    }
     const sgb = ev.target.closest('.ctbar [data-sg]');
     if(sgb){
       ev.preventDefault(); ev.stopPropagation();
@@ -3260,6 +3354,22 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   const phIn = document.createElement('input');
   phIn.type = 'file'; phIn.accept = 'image/*'; phIn.id = 'ldPhotoIn'; phIn.hidden = true;
   document.body.appendChild(phIn);
+  /* 칸에 위성사진(사업장 위치, 4:3) 넣기 — 바로 아래가 사진설명 칸이면 사업장 위치로 */
+  function putSatCell(e, r, c){
+    const t = String(e.cells[r][c] || '');
+    if(!SAT_RE.test(t) && !PHOTO_RE.test(t) && t.trim() && !confirm('이 칸의 글자를 지우고 위성사진 칸으로 바꿀까요?')) return;
+    snap();
+    e.cells[r][c] = '{위성사진}';
+    const below = e.cells[r + 1] && e.cells[r + 1][c];
+    if(below != null && (CAP_RE.test(String(below)) || !String(below).trim())) e.cells[r + 1][c] = '{사업장 장소}';
+    // 칸 너비에 맞춰 4:3 높이로
+    const px = colPx(e), sp = spanAt(e, r, c); let w = 0; for(let j = c; j < c + sp.cs; j++) w += px[j] || 0;
+    const want = Math.round(w * .75) + 8, h0 = rowPx(e, r);
+    if(sp.rs === 1 && Math.abs(want - h0) > 4){ const ob = e.y + e.h, oh = e.h; e.rowH = {...(e.rowH || {}), [r]: want}; e.h = Math.max(10, Math.round(e.h + want - h0)); pushBelow(e, ob, e.h - oh, true); }
+    cur._satTried = false; cur._satKey = null;
+    toast('🛰 사업장 위치 위성사진을 불러옵니다');
+    draw(); props();
+  }
   /* 아무 칸이나 사진 칸으로: 글자가 있으면 물어보고, 칸이 낮으면 사진이 보이게 높임 */
   function putPhotoCell(e, r, c, n){
     const t = String(e.cells[r][c] || '');
@@ -3267,7 +3377,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     setPhotoCell(e, r, c, n);
     const h0 = (e.rowH && e.rowH[r]) || rowPx(e, r);
     if(h0 < 120){ const ob = e.y + e.h, oh = e.h, nh = 160; e.rowH = {...(e.rowH || {}), [r]: nh}; e.h = Math.round(e.h + nh - h0); pushBelow(e, ob, e.h - oh, true);
-      if(spillPage(pg, 0) && !page().els.includes(e)){ const k = allPages().findIndex(P => P.els.includes(e)); if(k >= 0) pg = k; } }
+    }
     return true;
   }
   function setPhotoCell(e, r, c, n){
@@ -3362,6 +3472,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const raw = srcText(e, c);
     if(e.type === 'table' && raw != null && PHOTO_RE.test(raw)){ photoTarget = {e, r:c.r, c:c.c}; $('ldPhotoIn').click(); return; }
     if(e.type === 'table' && raw != null && SIGN_RE.test(raw)){ openSignPad(); return; }
+    if(e.type === 'table' && raw != null && SAT_RE.test(raw)){ cur._satTried = false; cur._satKey = null; toast('위성사진은 사업장 위치(명단의 사업장 장소)로 자동으로 만들어집니다'); draw(); return; }
     if(raw === null || raw === '<' || raw === '^') return;
     draw();
     const node = $('ldPage').querySelector(`[data-id="${e.id}"]`); if(!node) return;
@@ -3393,6 +3504,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     draw(); props();
   }
   addEventListener('keydown', ev => {
+    if(!$('ld').hidden && (ev.ctrlKey || ev.metaKey) && !ev.shiftKey && ev.key.toLowerCase() === 'z' && !editing
+       && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement && document.activeElement.tagName)){ ev.preventDefault(); $('ldUndo').click(); return; }
     if($('ld').hidden || !sel) return;
     if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement && document.activeElement.tagName)) return;
     if(editing || (document.activeElement && document.activeElement.isContentEditable)) return;
@@ -4252,6 +4365,7 @@ async function hwpxFile(h){
 }
 async function makeHwpx(rec){
   if(window.syncMedia && (rec.photos.some(p => !p) || (!rec.sign && rec.signId))) await syncMedia(rec);
+      if(window.ensureSat && JSON.stringify(rec.layout || '').includes('{위성사진}')) await ensureSat(rec);
   const {zip, docs} = await hwpxDocs(await hwpxFile(rec.hwpx));
   const r = walkHwpx(docs.map(x => x.d), rec, false);
   if(window.applyHwpxMap) r.filled += applyHwpxMap(docs.map(x => x.d), rec);
@@ -5114,6 +5228,7 @@ $('iHwp').onclick = async () => {
   async function layoutToHwpx(rec){
     if(!window.JSZip) throw new Error('한글 도구를 불러오지 못했습니다 (인터넷 연결 확인)');
     if(window.syncMedia && (rec.photos.some(p => !p) || (!rec.sign && rec.signId))) await syncMedia(rec);
+      if(window.ensureSat && JSON.stringify(rec.layout || '').includes('{위성사진}')) await ensureSat(rec);
     const L = rec.layout || LAY.defaultLayout(rec);
     const zip = await JSZip.loadAsync(BASE, {base64:true});
     const S = makeStyles(await zip.file('Contents/header.xml').async('string'));
@@ -5200,6 +5315,7 @@ $('iHwp').onclick = async () => {
           while(r + rs < nr && get(r + rs, c) === '^') rs++;
           g[r][c] = {text:fillPlain(t, rec), cs, rs, shade: sr.includes(r) || sc.includes(c), align:(e.ca || {})[r + ':' + c], va:(e.cva || {})[r + ':' + c], cst:(e.cst || {})[r + ':' + c]};
           const rh0 = ((e.rowH && e.rowH[r]) || 40) - 8;
+          if(window.LAY_SAT_RE.test(t)){ g[r][c].text = ''; const su = window.satOf(rec); if(su) g[r][c].pic = {src:su, h:rh0}; }
           if(window.LAY_SIGN_RE.test(t)){ g[r][c].align = 'center'; g[r][c].text = rec.sign ? '' : '(서명 또는 날인)'; if(rec.sign) g[r][c].pic = {src:rec.sign, h:rh0}; }
           const pm = window.LAY_PHOTO_RE.exec(t);
           if(pm){ g[r][c].text = ''; const src = rec.photos[+pm[1] - 1]; if(src){ g[r][c].pic = {src, h:rh0}; photosShown.add(+pm[1] - 1); } }
