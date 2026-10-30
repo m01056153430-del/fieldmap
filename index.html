@@ -237,6 +237,7 @@
   #ldToolBar{display:flex;align-items:center;gap:4px;padding:6px 6px 6px 12px;background:#0f766e;color:#fff;cursor:move;touch-action:none;user-select:none;flex:none}
   #ldToolBar b{flex:1;font-size:14px}
   #ldToolBar button{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:6px;padding:4px 9px;font-size:15px;line-height:1.2}
+  .ldhelp>summary{cursor:pointer;font-size:13px;color:var(--b);font-weight:600;padding:4px 0}
   #ldToolBody{flex:1;overflow:auto;padding:10px;min-height:0}
   #ldTool.min{height:auto!important}
   #ldTool.min #ldToolBody,#ldTool.min .wrh{display:none}
@@ -322,7 +323,7 @@
     <button id="install" style="display:none">앱 설치</button>
     <button id="syncBtn" title="구글 동기화">☁ 동기화</button>
     <button id="toggle">목록</button>
-    <button id="inspAll">점검목록</button>
+    <button id="inspAll">점검</button>
     <button id="gear" title="설정">설정</button>
     <button id="fsBtn" title="전체화면">⛶ <span class="fst">전체화면</span></button>
   </header>
@@ -441,7 +442,7 @@
       <h3>서식</h3>
       <div class="rowf">
         <select id="tplSel"></select>
-        <button id="tplEditBtn" class="bline">서식 편집</button>
+        <button id="tplEditBtn" class="bline" style="display:none">서식 편집</button>
         <button id="tplDesignBtn" class="bline" style="color:#0f766e!important;border-color:#0f766e!important">양식 디자인</button>
       </div>
       <div class="rowf" style="margin-top:8px">
@@ -1319,7 +1320,7 @@ function renderItems(){
       <input class="inp" data-note="${i}" placeholder="비고 (선택)" value="${esc(it.note)}">
     </div>`).join('');
   $('iExtra').innerHTML = cur.extra.length ? cur.extra.map((x, i) => `<label class="fl">${esc(x.label)}</label>
-      <input class="inp" data-x="${i}" value="${esc(x.value)}">`).join('') : '<small style="color:var(--mut)">서식 편집에서 항목을 추가하세요</small>';
+      <input class="inp" data-x="${i}" value="${esc(x.value)}">`).join('') : '<small style="color:var(--mut)">양식 디자인에서 점검 항목을 추가하세요</small>';
   $('iOverall').innerHTML = segHtml(OVERALL, cur.overall, 'data-o="1"');
 }
 function renderThumbs(){
@@ -2721,12 +2722,12 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       const p = page();
       P.innerHTML = `<div class="pt">${pg + 1}쪽 설정</div>
         <label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" data-pg="skipNoPhoto" ${p.skipNoPhoto ? 'checked' : ''}> 사진이 하나도 없으면 PDF에서 이 쪽 빼기</label>
-        <div class="hint" style="margin-top:10px">· 요소를 눌러 선택 → 끌어서 이동, 오른쪽 아래 <b style="color:#1f6feb">●</b>를 끌어 크기 조절<br>
+        <details class="ldhelp" style="margin-top:10px"><summary>사용 방법 · 쓸 수 있는 항목 보기</summary><div class="hint">· 요소를 눌러 선택 → 끌어서 이동, 오른쪽 아래 <b style="color:#1f6feb">●</b>를 끌어 크기 조절<br>
         · <b>글자·표 칸을 두 번 누르면 화면에서 바로 고칩니다</b> — Enter 완료 · Esc 취소 · Tab 다음 칸<br>
         · 표를 선택하면 <b>칸 사이 선을 끌어</b> 열 너비·행 높이를 바꿉니다<br>
         · 방향키로 1칸씩 이동(Shift: 10칸), Delete 키로 삭제<br>
         · 글자·표 칸에 <b>{보조사업자 성명}</b>처럼 쓰면 엑셀(명단) 값이 들어갑니다<br>
-        · 쓸 수 있는 항목: ${fieldGroups(cur).map(([g, l]) => `<br><b>${esc(g)}</b> ${l.map(n => '{' + esc(n) + '}').join(' ')}`).join('')}</div>`;
+        · 쓸 수 있는 항목: ${fieldGroups(cur).map(([g, l]) => `<br><b>${esc(g)}</b> ${l.map(n => '{' + esc(n) + '}').join(' ')}`).join('')}</div></details>`;
       return;
     }
     let h = `<div class="pt">선택: ${TYPE_NAME[e.type]}</div>
