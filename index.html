@@ -182,7 +182,17 @@
   #ldPage .le .cgrip{position:absolute;top:0;bottom:0;width:8px;margin-left:-4px;cursor:col-resize;z-index:7;touch-action:none}
   #ldPage .pg{overflow:visible}
   #ldPage .le .mvh{position:absolute;left:-2px;top:-26px;background:#1f6feb;color:#fff;font-size:12px;padding:3px 8px;border-radius:6px 6px 0 0;cursor:move;z-index:8;white-space:nowrap;touch-action:none}
-  #ldPage .le .ctbar{position:absolute;z-index:9;display:flex;gap:3px;align-items:center;background:#111827;padding:4px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);white-space:nowrap}
+  #ldPage .le .ctbar{position:absolute;z-index:9;display:flex;flex-direction:column;gap:4px;background:#111827;padding:5px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);white-space:nowrap;font-size:12px;color:#e5e7eb;font-weight:400;font-style:normal;text-decoration:none;text-align:left}
+  #ldPage .le .ctbar .cr1{display:flex;gap:3px;align-items:center}
+  .cst{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .cst .g{display:inline-flex;gap:2px;align-items:center;font-size:12px}
+  .cst button{background:#fff;color:#111;border:1px solid #d1d5db;border-radius:5px;font-size:12px;padding:3px 7px;cursor:pointer;line-height:1.2}
+  .cst button.on{background:#f59e0b;border-color:#f59e0b;color:#111}
+  .cst select{font-size:12px;padding:2px 3px;border-radius:5px;border:1px solid #d1d5db;max-width:120px}
+  .cst input[type=color]{width:26px;height:22px;padding:0;border:1px solid #d1d5db;border-radius:4px;background:#fff}
+  .cst .sz{min-width:22px;text-align:center}
+  #ldProps .cst{margin-bottom:8px}
+  #ldProps .cst button{padding:5px 9px}
   #ldPage .le .ctbar span{color:#fbbf24;font-size:12px;padding:0 4px}
   #ldPage .le .ctbar button{background:#fff;border:0;border-radius:5px;font-size:12px;padding:4px 7px;cursor:pointer}
   #ldPage .le td.csel{box-shadow:inset 0 0 0 2px #f59e0b;background:#fff7d6!important}
@@ -2001,6 +2011,17 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         const ak = cellAKey(e, r, c);
         if(e.ca && e.ca[ak]) st += `text-align:${e.ca[ak]};`;
         if(e.cva && e.cva[ak]) st += `vertical-align:${e.cva[ak]};`;
+        const cs0 = e.cst && e.cst[ak];
+        if(cs0){
+          if(cs0.bg) st += `background:${cs0.bg};`;
+          if(cs0.font != null) st += `font-family:${fontCss(cs0.font)};`;
+          if(cs0.size) st += `font-size:${cs0.size}px;`;
+          if(cs0.color) st += `color:${cs0.color};`;
+          if(cs0.bold != null) st += `font-weight:${cs0.bold ? 700 : 400};`;
+          if(cs0.italic != null) st += `font-style:${cs0.italic ? 'italic' : 'normal'};`;
+          if(cs0.under != null) st += `text-decoration:${cs0.under ? 'underline' : 'none'};`;
+          if(cs0.b) for(const [sd, nm] of [['t','top'],['r','right'],['b','bottom'],['l','left']]){ const v = cs0.b[sd]; if(v) st += v.s === 'none' ? `border-${nm}:0 none transparent;` : `border-${nm}:${v.w}px ${v.s} ${v.c};`; }
+        }
         if(design && sel === e.id && inRange(r, c)) cls = ' class="csel"';
         h += `<td${cls}${cs > 1 ? ` colspan="${cs}"` : ''}${rs > 1 ? ` rowspan="${rs}"` : ''}${design ? ` data-r="${r}" data-c="${c}"` : ''} style="${st}">${fill(t, rec, design)}</td>`;
       }
@@ -2213,6 +2234,66 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const need = measureNeeds({els:[e]}, cur).get(e.id);
     if(need && need < e.h - 2){ const ob = e.y + e.h, d = need - e.h; e.h = need; pushBelow(e, ob, d); }
   }
+  /* ---------- 선택한 칸의 글씨·선 스타일 ---------- */
+  let bdr = {w:1, s:'solid', c:'#333333'};
+  function cellStyleCtl(e){
+    const L = selCells(); if(!L.length) return '';
+    const k0 = cellAKey(e, L[0].r, L[0].c), c0 = (e.cst || {})[k0] || {};
+    const on = v => v ? ' class="on"' : '';
+    const sz = c0.size || e.size || 13;
+    return `<div class="cst">
+      <span class="g"><button type="button" data-cs="bold"${on(c0.bold ?? (e.bold || false))} title="굵게"><b>가</b></button><button type="button" data-cs="italic"${on(c0.italic)} title="기울임"><i>가</i></button><button type="button" data-cs="under"${on(c0.under)} title="밑줄"><u>가</u></button></span>
+      <span class="g"><button type="button" data-cs="size-" title="글자 작게">A−</button><b class="sz">${sz}</b><button type="button" data-cs="size+" title="글자 크게">A＋</button></span>
+      <span class="g"><select data-csv="font" title="글꼴">${FONTS.map(([v, l]) => `<option value="${esc(v)}"${(c0.font ?? e.font ?? '') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></span>
+      <span class="g" title="글자 색">글자<input type="color" data-csv="color" value="${c0.color || e.color || '#111111'}"></span>
+      <span class="g" title="칸 배경색">배경<input type="color" data-csv="bg" value="${c0.bg || '#ffffff'}"><button type="button" data-cs="bgnone" title="배경 없음">✕</button></span>
+    </div>
+    <div class="cst">
+      <span class="g">선<select data-bv="s" title="선 모양"><option value="solid"${bdr.s === 'solid' ? ' selected' : ''}>━ 실선</option><option value="dashed"${bdr.s === 'dashed' ? ' selected' : ''}>╍ 파선</option><option value="dotted"${bdr.s === 'dotted' ? ' selected' : ''}>┈ 점선</option><option value="double"${bdr.s === 'double' ? ' selected' : ''}>═ 이중</option></select>
+        <select data-bv="w" title="선 굵기">${[0.5, 1, 1.5, 2, 3, 4].map(w => `<option value="${w}"${bdr.w == w ? ' selected' : ''}>${w}px</option>`).join('')}</select>
+        <input type="color" data-bv="c" value="${bdr.c}" title="선 색"></span>
+      <span class="g"><button type="button" data-bd="all" title="모든 선">▦</button><button type="button" data-bd="out" title="바깥 선">▢</button><button type="button" data-bd="t" title="위 선">▔</button><button type="button" data-bd="b" title="아래 선">▁</button><button type="button" data-bd="l" title="왼쪽 선">▏</button><button type="button" data-bd="r" title="오른쪽 선">▕</button><button type="button" data-bd="none" title="선 없애기">✕선</button><button type="button" data-bd="reset" title="원래 선으로">↺</button></span>
+    </div>`;
+  }
+  function applyCellStyle(e, op, val){
+    const L = selCells(); if(!L.length) return;
+    snap();
+    e.cst = {...(e.cst || {})};
+    const keys = [...new Set(L.map(x => cellAKey(e, x.r, x.c)))];
+    const first = e.cst[keys[0]] || {};
+    const set = (k, f) => { const o = {...(e.cst[k] || {})}; f(o); e.cst[k] = o; };
+    if(op === 'bold' || op === 'italic' || op === 'under'){ const nv = !(first[op] ?? (op === 'bold' ? !!e.bold : false)); keys.forEach(k => set(k, o => o[op] = nv)); }
+    else if(op === 'size+' || op === 'size-'){ keys.forEach(k => set(k, o => o.size = clamp((o.size || e.size || 13) + (op === 'size+' ? 1 : -1), 6, 72))); }
+    else if(op === 'bgnone') keys.forEach(k => set(k, o => delete o.bg));
+    else if(op === 'font' || op === 'color' || op === 'bg') keys.forEach(k => set(k, o => o[op] = val));
+  }
+  function applyBorder(e, mode){
+    const L = selCells(); if(!L.length) return;
+    snap();
+    e.cst = {...(e.cst || {})};
+    const has = new Set(L.map(x => x.r + ':' + x.c));
+    const {nr, nc} = tblSize(e);
+    const val = mode === 'none' ? {w:0, s:'none', c:'transparent'} : {...bdr};
+    const setSide = (r, c, sd, v) => {
+      const k = cellAKey(e, r, c), o = {...(e.cst[k] || {})};
+      o.b = {...(o.b || {})};
+      if(v === null) delete o.b[sd]; else o.b[sd] = v;
+      e.cst[k] = o;
+      if(e.type !== 'table') return;
+      // 붙어 있는 이웃 칸의 맞닿은 선도 같게 (겹친 선이 남지 않도록)
+      const nb = {t:[r - 1, c, 'b'], b:[r + 1, c, 't'], l:[r, c - 1, 'r'], r:[r, c + 1, 'l']}[sd];
+      if(nb[0] < 0 || nb[1] < 0 || nb[0] >= nr || nb[1] >= nc) return;
+      const k2 = cellAKey(e, nb[0], nb[1]), o2 = {...(e.cst[k2] || {})}; o2.b = {...(o2.b || {})};
+      if(v === null) delete o2.b[nb[2]]; else o2.b[nb[2]] = v;
+      e.cst[k2] = o2;
+    };
+    for(const {r, c} of L){
+      const sides = mode === 'all' || mode === 'none' || mode === 'reset' ? ['t','b','l','r']
+        : mode === 'out' ? ['t','b','l','r'].filter(sd => { const n = {t:[r - 1, c], b:[r + 1, c], l:[r, c - 1], r:[r, c + 1]}[sd]; return !has.has(n[0] + ':' + n[1]); })
+        : [mode];
+      sides.forEach(sd => setSide(r, c, sd, mode === 'reset' ? null : val));
+    }
+  }
   function rangeAction(e, act){
     const L = selCells(); if(!L.length) return;
     const R = curRange();
@@ -2282,7 +2363,12 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         const bar = e.type === 'checklist'
           ? btn('clear', '내용 지우기') + btn('delrow', '항목 삭제', 1)
           : btn('clear', '내용 지우기') + btn('delrow', '행 삭제', 1) + btn('delcol', '열 삭제', 1) + (n > 1 && isRect() ? btn('merge', '칸 합치기') : '') + btn('unmerge', '합치기 풀기');
-        node.insertAdjacentHTML('beforeend', `<div class="ctbar" style="left:${Math.max(0, (left - nb0.left) / zoom)}px;top:${(top - nb0.top) / zoom - 34}px"><span>${n > 1 ? n + '칸' : '1칸'}</span>${bar}</div>`);
+        node.insertAdjacentHTML('beforeend', `<div class="ctbar" style="left:${Math.max(0, (left - nb0.left) / zoom)}px;top:0"><div class="cr1"><span>${n > 1 ? n + '칸' : '1칸'}</span>${bar}</div>${cellStyleCtl(e)}</div>`);
+        const cb0 = node.querySelector('.ctbar');
+        let ty = (top - nb0.top) / zoom - cb0.offsetHeight - 6;
+        if(e.y + ty < 0) ty = (Math.max(...tds.map(t => t.getBoundingClientRect().bottom)) - nb0.top) / zoom + 6;
+        cb0.style.top = ty + 'px';
+        const maxL = PW - e.x - cb0.offsetWidth - 4; if(parseFloat(cb0.style.left) > maxL) cb0.style.left = Math.max(-e.x, maxL) + 'px';
       }
     }
     const px = colPx(e); let x = 0;
@@ -2318,7 +2404,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const rangeBox = R0 ? `<div class="pt" style="margin-top:10px;color:#b45309">선택한 칸 ${selCells().length}개${cmulti ? ' (Ctrl로 고름)' : ` (${R0.r1 + 1}~${R0.r2 + 1}행 × ${R0.c1 + 1}~${R0.c2 + 1}열)`}</div>
       <div class="ldrow"><button type="button" data-rg="clear">내용 지우기</button><button type="button" data-rg="delrow" style="color:#b91c1c">${e.type === 'checklist' ? '항목 삭제' : '행 삭제'}</button>${e.type === 'table' ? '<button type="button" data-rg="delcol" style="color:#b91c1c">열 삭제</button><button type="button" data-rg="merge">칸 합치기</button><button type="button" data-rg="unmerge">합치기 풀기</button>' : ''}</div>
       <div class="hint">칸을 끌어서 여러 칸을 고르거나, Shift+누르기로 범위를 넓히거나, <b>Ctrl+누르기로 떨어진 칸을 하나씩</b> 더하고 뺍니다. Delete 키: 줄 전체면 행 삭제, 아니면 내용 지우기 · Esc: 선택 풀기</div>` : `<div class="hint" style="margin-top:8px">여러 칸을 고르려면 칸 위를 끌거나, Shift+누르기(범위), Ctrl+누르기(하나씩) 하세요.</div>`;
-    return rangeBox + cellTools1(e);
+    return rangeBox + `<div class="pt" style="margin-top:10px">칸 글씨·선</div>` + cellStyleCtl(e) + cellTools1(e);
   }
   function cellTools1(e){
     const k = cellAKey(e, cell.r, cell.c), ca = (e.ca || {})[k] || '', cva = (e.cva || {})[k] || '';
@@ -2697,8 +2783,11 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       }
       return;
     }
-    const cb = ev.target.closest('.ctbar button');
+    const cb = ev.target.closest('.ctbar [data-cb]');
     if(cb){ ev.preventDefault(); ev.stopPropagation(); const e0 = selEl(); if(e0) rangeAction(e0, cb.dataset.cb); return; }
+    const cs = ev.target.closest('.ctbar [data-cs], .ctbar [data-bd]');
+    if(cs){ ev.preventDefault(); ev.stopPropagation(); const e0 = selEl(); if(e0){ if(cs.dataset.cs) applyCellStyle(e0, cs.dataset.cs); else applyBorder(e0, cs.dataset.bd); draw(); props(); } return; }
+    if(ev.target.closest('.ctbar select, .ctbar input')){ ev.stopPropagation(); return; }   // 고르기·색상 칸은 그대로 동작
     if(ev.target.closest('.ctbar')){ ev.preventDefault(); return; }
     if(ev.target.closest('[contenteditable="true"]')) return;   // 글자 바로 고치는 중
     const mvh = ev.target.closest('.mvh');
@@ -2777,6 +2866,14 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up); addEventListener('pointercancel', up);
     ev.preventDefault();
   });
+  /* 도구줄·속성창의 글꼴·색·선 고르기 */
+  function styleInput(t){
+    const e0 = selEl(); if(!e0) return false;
+    if(t.dataset.csv){ applyCellStyle(e0, t.dataset.csv, t.value); draw(); props(); return true; }
+    if(t.dataset.bv){ bdr = {...bdr, [t.dataset.bv]: t.dataset.bv === 'w' ? +t.value : t.value}; return true; }
+    return false;
+  }
+  $('ldPage').addEventListener('change', ev => { if(ev.target.closest('.ctbar')) styleInput(ev.target); });
   $('ldPage').addEventListener('dblclick', ev => {
     if(editing) return;
     const le = ev.target.closest('.le'); if(!le) return;
@@ -2917,6 +3014,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       return;
     }
     if(e && t.tagName === 'SELECT' && t.dataset.k){ snap(); applyK(e, t.dataset.k, t.value); draw(); }
+    if(e && (t.dataset.csv || t.dataset.bv)){ styleInput(t); return; }
     if(e && cell && t.dataset.cwv !== undefined){ snap(); setColW(e, cell.c, +t.value || 0); draw(); props(); }
     if(e && cell && t.dataset.rhv !== undefined){ snap(); setRowH(e, cell.r, +t.value || 0); draw(); props(); }
   });
@@ -2926,6 +3024,10 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(b.dataset.tog){ snap(); e[b.dataset.tog] = !e[b.dataset.tog]; draw(); props(); return; }
     if(b.dataset.set){ snap(); e[b.dataset.set] = b.dataset.v; draw(); props(); return; }
     if(b.dataset.clr){ snap(); e[b.dataset.clr] = ''; draw(); props(); return; }
+    if(cell && (e.type === 'table' || e.type === 'checklist') && (b.dataset.cs || b.dataset.bd)){
+      if(b.dataset.cs) applyCellStyle(e, b.dataset.cs); else applyBorder(e, b.dataset.bd);
+      draw(); props(); return;
+    }
     if(cell && (e.type === 'table' || e.type === 'checklist')){
       const k = cellAKey(e, cell.r, cell.c);
       if(b.dataset.rg){ rangeAction(e, b.dataset.rg); return; }
@@ -4528,6 +4630,24 @@ $('iHwp').onclick = async () => {
         + `</hh:borderFill>`);
       S.fillMap.set(k, id); return id;
     };
+    /* 칸마다 선 모양이 다를 때: sides = {t,b,l,r: {w,s,c}} (없으면 기본선) */
+    S.fillSides = ({bw = 1, bc = '#333333', bg = '', sides = {}}) => {
+      const k = 'S|' + JSON.stringify([bw, bc, bg, sides]);
+      if(S.fillMap.has(k)) return S.fillMap.get(k);
+      const id = S.fillBase + 1 + S.fill.length;
+      const T = {solid:'SOLID', dashed:'DASH', dotted:'DOT', double:'DOUBLE_SLIM', none:'NONE'};
+      const one = (nm, v) => {
+        const w = v ? v.w : bw, st = v ? v.s : (bw > 0 ? 'solid' : 'none'), col = v ? v.c : bc;
+        const mm = (st === 'none' || w <= 0) ? '0.1 mm' : (Math.max(0.12, w * 0.12).toFixed(2) + ' mm');
+        const c = /^#[0-9a-f]{6}$/i.test(col) ? col.toUpperCase() : '#000000';
+        return `<hh:${nm}Border type="${(st === 'none' || w <= 0) ? 'NONE' : (T[st] || 'SOLID')}" width="${mm}" color="${c}"/>`;
+      };
+      S.fill.push(`<hh:borderFill id="${id}" threeD="0" shadow="0" centerLine="NONE" breakCellSeparateLine="0"><hh:slash type="NONE" Crooked="0" isCounter="0"/><hh:backSlash type="NONE" Crooked="0" isCounter="0"/>`
+        + one('left', sides.l) + one('right', sides.r) + one('top', sides.t) + one('bottom', sides.b) + `<hh:diagonal type="SOLID" width="0.1 mm" color="#000000"/>`
+        + (bg && /^#[0-9a-f]{6}$/i.test(bg) ? `<hc:fillBrush><hc:winBrush faceColor="${bg.toUpperCase()}" hatchColor="#999999" alpha="0"/></hc:fillBrush>` : '')
+        + `</hh:borderFill>`);
+      S.fillMap.set(k, id); return id;
+    };
     S.finish = () => {
       let out = H;
       out = out.replace(/<hh:charProperties itemCnt="\d+">/, `<hh:charProperties itemCnt="${S.charBase + S.char.length}">`).replace('</hh:charProperties>', S.char.join('') + '</hh:charProperties>');
@@ -4583,9 +4703,13 @@ $('iHwp').onclick = async () => {
           const g = grid[r][c]; if(!g || g.skip) continue;
           const cs = g.cs || 1, rs = g.rs || 1;
           const w = cw.slice(c, c + cs).reduce((a, b) => a + b, 0);
-          const fid = S.fillId({bw, bc, bg: g.shade ? hb : (e.bg || '')});
+          const cx = g.cst || {};
+          const bgc = cx.bg || (g.shade ? hb : (e.bg || ''));
+          const fid = cx.b && Object.keys(cx.b).length ? S.fillSides({bw, bc, bg:bgc, sides:cx.b}) : S.fillId({bw, bc, bg:bgc});
           const align = g.align || (g.shade ? 'center' : (e.align || 'left'));
           const s = {...st(e), bold: e.bold || g.shade || g.bold, color: g.color || e.color || '#111111'};
+          if(cx.size) s.size = cx.size; if(cx.font != null) s.font = cx.font; if(cx.color) s.color = cx.color;
+          if(cx.bold != null) s.bold = cx.bold; if(cx.italic != null) s.italic = cx.italic; if(cx.under != null) s.under = cx.under;
           const pid = S.paraId({align, lh:120});
           let inner = '';
           const pics = (extraPics.get(r + ':' + c) || []);
@@ -4607,7 +4731,7 @@ $('iHwp').onclick = async () => {
         const items = rec.items.length ? rec.items : [{label:'', result:'', note:''}];
         return [heads.map(t => ({text:t, shade:true})), ...items.map((it, i) => [
           {text:String(i + 1), align:'center'}, {text:it.label}, {text:it.result || '', align:'center', bold:BAD.test(it.result), color:BAD.test(it.result) ? '#C62828' : ''}, {text:it.note || ''}])]
-          .map((row, r) => row.map((g, c) => { const k = window.LAY_cellAKey(e, r, c); return {...g, align:(e.ca || {})[k] || g.align, va:(e.cva || {})[k]}; }));
+          .map((row, r) => row.map((g, c) => { const k = window.LAY_cellAKey(e, r, c); return {...g, align:(e.ca || {})[k] || g.align, va:(e.cva || {})[k], cst:(e.cst || {})[k]}; }));
       }
       const cells = e.cells || [['']], nr = cells.length, nc = Math.max(...cells.map(r => r.length));
       const get = (r, c) => (cells[r] && cells[r][c] != null) ? String(cells[r][c]) : '';
@@ -4621,7 +4745,7 @@ $('iHwp').onclick = async () => {
           let cs = 1, rs = 1;
           while(c + cs < nc && get(r, c + cs) === '<') cs++;
           while(r + rs < nr && get(r + rs, c) === '^') rs++;
-          g[r][c] = {text:fillPlain(t, rec), cs, rs, shade: sr.includes(r) || sc.includes(c), align:(e.ca || {})[r + ':' + c], va:(e.cva || {})[r + ':' + c]};
+          g[r][c] = {text:fillPlain(t, rec), cs, rs, shade: sr.includes(r) || sc.includes(c), align:(e.ca || {})[r + ':' + c], va:(e.cva || {})[r + ':' + c], cst:(e.cst || {})[r + ':' + c]};
         }
       }
       return g;
