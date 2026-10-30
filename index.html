@@ -1309,7 +1309,7 @@ function satTile(z, x, y){
     im.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
   });
 }
-async function buildSat(lat, lng, z = 18, W = 800, H = 600){
+async function buildSat(lat, lng, z = 18, W = 800, H = 600, label = ''){
   const n = 256 * 2 ** z, sn = Math.sin(lat * Math.PI / 180);
   const px = (lng + 180) / 360 * n, py = (0.5 - Math.log((1 + sn) / (1 - sn)) / (4 * Math.PI)) * n;
   const x0 = px - W / 2, y0 = py - H / 2;
@@ -1326,6 +1326,16 @@ async function buildSat(lat, lng, z = 18, W = 800, H = 600){
   g.lineWidth = 4; g.strokeStyle = '#fff'; g.fillStyle = '#ef4444';
   g.beginPath(); g.arc(cx, cy - 26, 16, Math.PI * .85, Math.PI * .15); g.lineTo(cx, cy); g.closePath(); g.fill(); g.stroke();
   g.beginPath(); g.arc(cx, cy - 26, 6, 0, 7); g.fillStyle = '#fff'; g.fill();
+  // 핀 위에 사업장 소재지
+  if(label){
+    g.font = 'bold 22px "Malgun Gothic", "Apple SD Gothic Neo", sans-serif';
+    let txt = label; while(g.measureText(txt).width > W - 40 && txt.length > 4) txt = txt.slice(0, -2) + '…';
+    const tw = g.measureText(txt).width, bw = tw + 24, bh = 36, bx = Math.max(6, Math.min(W - bw - 6, cx - bw / 2)), by = cy - 50 - bh - 6;
+    g.fillStyle = 'rgba(255,255,255,.95)'; g.strokeStyle = '#ef4444'; g.lineWidth = 2;
+    g.beginPath(); if(g.roundRect) g.roundRect(bx, by, bw, bh, 8); else g.rect(bx, by, bw, bh); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(cx - 7, by + bh); g.lineTo(cx + 7, by + bh); g.lineTo(cx, by + bh + 7); g.closePath(); g.fillStyle = '#ef4444'; g.fill();
+    g.fillStyle = '#111'; g.textBaseline = 'middle'; g.fillText(txt, bx + 12, by + bh / 2 + 1); g.textBaseline = 'alphabetic';
+  }
   g.font = '12px sans-serif'; const at = '© Esri World Imagery'; const tw = g.measureText(at).width;
   g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(W - tw - 10, H - 18, tw + 10, 18); g.fillStyle = '#111'; g.fillText(at, W - tw - 5, H - 5);
   try{ return cv.toDataURL('image/jpeg', .85); }catch(_){ return null; }
@@ -1338,8 +1348,9 @@ window.ensureSat = async function(rec){
   if(rec._satP) return rec._satP;
   rec._satP = (async () => {
     const pt = await satPoint(rec); if(!pt) return null;
-    const k = satKeyOf(pt); rec._satKey = k;
-    if(!SAT.has(k)) SAT.set(k, {url: await buildSat(pt.lat, pt.lng)});
+    const lab = String((rec.target && rec.target.place) || '').trim();
+    const k = satKeyOf(pt) + '|' + lab; rec._satKey = k;
+    if(!SAT.has(k)) SAT.set(k, {url: await buildSat(pt.lat, pt.lng, 18, 800, 600, lab)});
     return SAT.get(k).url;
   })().finally(() => { setTimeout(() => { rec._satP = null; }, 0); });
   return rec._satP;
@@ -2387,7 +2398,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   let L = null, pg = 0, sel = null, cell = null, hist = [], zoom = 1, changed = false;
   const page = () => L.pages[pg];
   const selEl = () => sel ? page().els.find(e => e.id === sel) : null;
-  const snap = () => { hist.push(JSON.stringify({L, pg})); if(hist.length > 80) hist.shift(); changed = true; };
+  const snap = () => { hist.push(JSON.stringify({L, pg, items: cur && cur.items, sign: cur ? cur.sign : null})); if(hist.length > 80) hist.shift(); changed = true; };
   const r5 = v => Math.round(v / 5) * 5;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -3182,7 +3193,11 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   };
   $('ldUndo').onclick = () => {
     const s = hist.pop(); if(!s) return toast('되돌릴 내용이 없습니다');
-    const o = JSON.parse(s); L = o.L; pg = Math.min(o.pg, L.pages.length - 1); sel = null; cell = null; draw(); props();
+    const o = JSON.parse(s); L = o.L; pg = Math.min(o.pg, L.pages.length - 1); sel = null; cell = null;
+    // 점검 항목(점검항목표 칸)과 서명도 함께 되돌림
+    if(o.items && cur){ cur.items = o.items; dirty = true; }
+    if(cur && 'sign' in o && o.sign !== cur.sign){ cur.sign = o.sign; cur._signCleared = !o.sign; dirty = true; try{ sig.load(cur.sign); }catch(_){} }
+    draw(); props();
   };
   $('ldDefault').onclick = () => {
     if(!confirm('지금 배치를 지우고 기본 양식으로 다시 시작할까요? (되돌리기 가능)')) return;
@@ -3257,7 +3272,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(sgb){
       ev.preventDefault(); ev.stopPropagation();
       if(sgb.dataset.sg === 'pad') openSignPad();
-      else if(confirm('서명을 지울까요?')){ cur.sign = null; cur._signCleared = true; dirty = true; try{ sig.clear(); }catch(_){} draw(); props(); }
+      else if(confirm('서명을 지울까요?')){ snap(); cur.sign = null; cur._signCleared = true; dirty = true; try{ sig.clear(); }catch(_){} draw(); props(); }
       return;
     }
     const ph = ev.target.closest('.ctbar [data-ph], .ctbar [data-phadd], .ctbar [data-phfit]');
@@ -3471,7 +3486,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         // 점검 화면 서명란과 같은 비율(가로 × 160)로 저장
         const out = document.createElement('canvas'); out.width = cv.width; out.height = cv.height;
         out.getContext('2d').drawImage(cv, 0, 0);
-        cur.sign = out.toDataURL('image/png'); cur._signCleared = false; dirty = true;
+        snap(); cur.sign = out.toDataURL('image/png'); cur._signCleared = false; dirty = true;
         try{ sig.load(cur.sign); }catch(_){}
         toast('서명을 넣었습니다 — 점검 화면에서 [저장]하면 기록에도 저장됩니다');
         draw(); props();
