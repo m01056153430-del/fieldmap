@@ -192,6 +192,13 @@
   .cst input[type=color]{width:26px;height:22px;padding:0;border:1px solid #d1d5db;border-radius:4px;background:#fff}
   .cst .sz{min-width:22px;text-align:center}
   #ldProps .cst{margin-bottom:8px}
+  .cst .phb{position:relative;padding:0!important;width:40px;height:32px;overflow:hidden}
+  .cst .phb img{width:100%;height:100%;object-fit:cover;display:block}
+  .cst .phb i{position:absolute;right:2px;bottom:1px;font-size:10px;font-style:normal;background:#111;color:#fff;border-radius:3px;padding:0 3px}
+  .cst .phb.on{outline:3px solid #f59e0b}
+  #ldPage.dropzone .pg{outline:3px dashed #10b981;outline-offset:4px}
+  #ldPage td.dropok{box-shadow:inset 0 0 0 3px #10b981!important;background:#d1fae5!important}
+  #cPhotos.dropzone{outline:3px dashed #10b981;outline-offset:2px;background:#ecfdf5}
   #ldProps .cst button{padding:5px 9px}
   #ldPage .le .ctbar span{color:#fbbf24;font-size:12px;padding:0 4px}
   #ldPage .le .ctbar button{background:#fff;border:0;border-radius:5px;font-size:12px;padding:4px 7px;cursor:pointer}
@@ -1752,6 +1759,15 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const i = +b.dataset.rm; cur.photos.splice(i, 1); cur.photoIds.splice(i, 1); cur.capt.splice(i, 1); dirty = true; renderThumbs();
   };
   $('signClr').onclick = () => { sig.clear(); dirty = true; };
+  // 점검 화면: 사진 파일을 끌어다 놓아 추가
+  const cp = $('cPhotos');
+  cp.addEventListener('dragover', ev => { if([...(ev.dataTransfer.types || [])].includes('Files')){ ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy'; cp.classList.add('dropzone'); } });
+  cp.addEventListener('dragleave', ev => { if(!cp.contains(ev.relatedTarget)) cp.classList.remove('dropzone'); });
+  cp.addEventListener('drop', async ev => {
+    ev.preventDefault(); cp.classList.remove('dropzone');
+    const files = [...(ev.dataTransfer.files || [])].filter(f => /^image\//.test(f.type));
+    if(files.length){ await addPhotos(files); toast(`사진 ${files.length}장을 추가했습니다`); }
+  });
   $('iPreview').onclick = openPreview;
   $('iPdf').onclick = async () => { if(await saveCur(true)) makePdf([{rec:cur}], pdfName(cur)); };
 
@@ -1943,6 +1959,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   function fieldValue(rec, name){
     const k = nk(name);
     for(const [n, alts, fn] of [...ROSTER_F, ...INSP_F]) if(nk(n) === k || alts.some(a => nk(a) === k)) return String(fn(rec) ?? '');
+    const pm = /^사진(\d+)설명$/.exec(k); if(pm) return (rec.capt && rec.capt[+pm[1] - 1]) || '';
     const x = (rec.extra || []).find(e => nk(e.label) === k); if(x) return x.value || '';
     const it = (rec.items || []).find(e => nk(e.label) === k); if(it) return it.result || '';
     const etc = etcOf(rec.target || {}); for(const h in etc) if(nk(h) === k) return etc[h];
@@ -1951,7 +1968,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   const fill = (text, rec, design) => String(text ?? '').split(/(\{[^{}]+\})/g).map(part => {
     const m = /^\{([^{}]+)\}$/.exec(part); if(!m) return esc(part);
     const v = fieldValue(rec, m[1]);
-    if(design && (v === null || v === '')) return `<span style="color:#9ca3af">${esc(part)}</span>`;
+    if(design && (v === null || v === '')) return `<span style="color:#9ca3af">${/^사진\d+설명$/.test(nk(m[1])) ? '사진설명' : esc(part)}</span>`;
     return esc(v === null ? part : v);
   }).join('').replace(/\n/g, '<br>');
   function fieldGroups(rec){
@@ -1973,6 +1990,35 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   /* 칸 정렬 열쇠: 표는 칸마다, 점검항목표는 열마다(머리글 따로) */
   const cellAKey = (e, r, c) => e.type === 'checklist' ? (r === 0 ? 'h:' + c : 'c:' + c) : r + ':' + c;
   window.LAY_cellAKey = cellAKey;
+  /* 표 칸 안의 서명·사진 자리: {서명}, {사진 1} / 사진 설명: {사진 1 설명} */
+  const SIGN_RE = /^\s*\{서명\}\s*$/, PHOTO_RE = /^\s*\{사진\s*(\d+)\}\s*$/;
+  window.LAY_SIGN_RE = SIGN_RE; window.LAY_PHOTO_RE = PHOTO_RE;
+  function cellInner(e, t, rec, design, r, c){
+    if(e.type === 'table'){
+      const H = Math.max(20, ((e.rowH && e.rowH[r]) || 40) - 8);
+      if(SIGN_RE.test(t)){
+        if(rec.sign) return `<img src="${rec.sign}" style="height:${H}px;max-width:100%;object-fit:contain;vertical-align:middle">`;
+        return design ? '<span style="color:#9ca3af">(서명 또는 날인)</span>' : '(서명 또는 날인)';
+      }
+      const m = PHOTO_RE.exec(t);
+      if(m){
+        const n = +m[1], src = rec.photos && rec.photos[n - 1], fit = ((e.cst || {})[r + ':' + c] || {}).fit || 'contain';
+        if(src) return `<img src="${src}" style="display:block;width:100%;height:${H}px;object-fit:${fit}">`;
+        return design ? `<div class="ph0" style="height:${H}px;flex-direction:column;gap:4px">사진 ${n}<small style="font-size:11px">칸을 고른 뒤 위 도구줄에서 사진 넣기</small></div>` : `<div style="height:${H}px"></div>`;
+      }
+    }
+    return fill(t, rec, design);
+  }
+  /* 쓰인 사진 번호 중 가장 큰 값 (사진 요소 + 표 안 사진 칸) */
+  function usedPhotoMax(L){
+    let mx = 0;
+    for(const p of L.pages) for(const x of p.els){
+      if(x.type === 'photo') mx = Math.max(mx, x.idx || 1);
+      if(x.type === 'table') for(const row of x.cells) for(const t of row){ const m = PHOTO_RE.exec(String(t || '')); if(m) mx = Math.max(mx, +m[1]); }
+    }
+    return mx;
+  }
+  window.LAY_usedPhotoMax = usedPhotoMax;
   function tableHtml(e, rec, design){
     const bw = e.bw ?? 1, bc = e.bc || '#333', hb = e.hbg || '#eef1f5';
     let cells, cols, shadeR, shadeC;
@@ -2023,7 +2069,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
           if(cs0.b) for(const [sd, nm] of [['t','top'],['r','right'],['b','bottom'],['l','left']]){ const v = cs0.b[sd]; if(v) st += v.s === 'none' ? `border-${nm}:0 none transparent;` : `border-${nm}:${v.w}px ${v.s} ${v.c};`; }
         }
         if(design && sel === e.id && inRange(r, c)) cls = ' class="csel"';
-        h += `<td${cls}${cs > 1 ? ` colspan="${cs}"` : ''}${rs > 1 ? ` rowspan="${rs}"` : ''}${design ? ` data-r="${r}" data-c="${c}"` : ''} style="${st}">${fill(t, rec, design)}</td>`;
+        h += `<td${cls}${cs > 1 ? ` colspan="${cs}"` : ''}${rs > 1 ? ` rowspan="${rs}"` : ''}${design ? ` data-r="${r}" data-c="${c}"` : ''} style="${st}">${cellInner(e, t, rec, design, r, c)}</td>`;
       }
       h += '</tr>';
     }
@@ -2139,7 +2185,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const L = rec.layout; if(!L || !L.pages) return [];
     const out = reflow(L.pages.filter(p => !(p.skipNoPhoto && !hasPhoto(p, rec))), rec).map(p => pageHtml(p, rec, false));
     if(L.morePhotos !== false && rec.photos && rec.photos.length){
-      const used = Math.max(0, ...L.pages.flatMap(p => p.els.filter(e => e.type === 'photo').map(e => e.idx || 1)));
+      const used = usedPhotoMax(L);
       const rest = rec.photos.map((_, i) => i).filter(i => i >= used);
       const tot = Math.ceil(rest.length / 4);
       for(let k = 0; k < rest.length; k += 4){
@@ -2294,6 +2340,39 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       sides.forEach(sd => setSide(r, c, sd, mode === 'reset' ? null : val));
     }
   }
+  /* 칸 나누기: 합쳐진 칸이면 반으로 풀고, 아니면 열/행을 하나 끼워 그 칸만 둘로 */
+  function spanAt(e, r, c){
+    const g = (rr, cc) => e.cells[rr] ? e.cells[rr][cc] : undefined;
+    const nr = e.cells.length, nc = Math.max(...e.cells.map(x => x.length));
+    let cs = 1, rs = 1;
+    while(c + cs < nc && g(r, c + cs) === '<') cs++;
+    while(r + rs < nr && g(r + rs, c) === '^') rs++;
+    return {cs, rs};
+  }
+  function splitCol(e, r, c){
+    const {cs, rs} = spanAt(e, r, c);
+    if(cs > 1){ const k = Math.ceil(cs / 2); for(let i = r; i < r + rs; i++) e.cells[i][c + k] = i === r ? '' : '^'; return; }
+    const px = colPx(e), half = px[c] / 2;
+    e.cells.forEach((row, i) => { while(row.length <= c) row.push(''); row.splice(c + 1, 0, (i >= r && i < r + rs) ? (i === r ? '' : '^') : '<'); });
+    shiftMeta(e, 'c', c + 1, 1);
+    px.splice(c, 1, half, half); e.cols = px.map(v => Math.round(v)); e.w = Math.max(20, e.cols.reduce((a, b) => a + b, 0));
+  }
+  function splitRow(e, r, c){
+    const {cs, rs} = spanAt(e, r, c);
+    if(rs > 1){ const k = Math.ceil(rs / 2); e.cells[r + k][c] = ''; return; }
+    const nc = Math.max(...e.cells.map(x => x.length)), h0 = rowPx(e, r);
+    const nrow = [];
+    for(let j = 0; j < nc; j++){
+      const t = e.cells[r][j];
+      nrow.push(j >= c && j < c + cs ? (j === c ? '' : '<') : (t === '<' ? '<' : '^'));
+    }
+    e.cells.splice(r + 1, 0, nrow);
+    shiftMeta(e, 'r', r + 1, 1);
+    const half = Math.max(16, Math.round(h0 / 2));
+    e.rowH = {...(e.rowH || {}), [r]: half, [r + 1]: half};
+    const grow = half * 2 - h0;
+    if(grow > 0){ const ob = e.y + e.h, oh = e.h; e.h = clamp(e.h + grow, 10, PH - e.y); pushBelow(e, ob, e.h - oh); }
+  }
   function rangeAction(e, act){
     const L = selCells(); if(!L.length) return;
     const R = curRange();
@@ -2334,6 +2413,13 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         const texts = [];
         for(let r = R.r1; r <= R.r2; r++) for(let c = R.c1; c <= R.c2; c++){ const t = get(r, c); if(t && t !== '<' && t !== '^') texts.push(t); }
         for(let r = R.r1; r <= R.r2; r++) for(let c = R.c1; c <= R.c2; c++) e.cells[r][c] = (r === R.r1 && c === R.c1) ? texts.join(' ') : (c === R.c1 ? '^' : '<');
+      } else if(act === 'splitc' || act === 'splitr'){
+        const own = L.filter(({r, c}) => { const t = get(r, c); return t !== '<' && t !== '^'; });
+        if(!own.length) return toast('나눌 칸을 고르세요');
+        snap();
+        if(act === 'splitc') own.sort((a, b) => b.c - a.c || b.r - a.r).forEach(({r, c}) => splitCol(e, r, c));
+        else own.sort((a, b) => b.r - a.r || b.c - a.c).forEach(({r, c}) => splitRow(e, r, c));
+        toast(act === 'splitc' ? '칸을 좌우로 나눴습니다' : '칸을 위아래로 나눴습니다');
       } else if(act === 'unmerge'){
         snap();
         for(const {r, c} of L){
@@ -2362,11 +2448,22 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         const btn = (a, l, red) => `<button type="button" data-cb="${a}"${red ? ' style="color:#b91c1c"' : ''}>${l}</button>`;
         const bar = e.type === 'checklist'
           ? btn('clear', '내용 지우기') + btn('delrow', '항목 삭제', 1)
-          : btn('clear', '내용 지우기') + btn('delrow', '행 삭제', 1) + btn('delcol', '열 삭제', 1) + (n > 1 && isRect() ? btn('merge', '칸 합치기') : '') + btn('unmerge', '합치기 풀기');
-        node.insertAdjacentHTML('beforeend', `<div class="ctbar" style="left:${Math.max(0, (left - nb0.left) / zoom)}px;top:0"><div class="cr1"><span>${n > 1 ? n + '칸' : '1칸'}</span>${bar}</div>${cellStyleCtl(e)}</div>`);
+          : btn('clear', '내용 지우기') + btn('delrow', '행 삭제', 1) + btn('delcol', '열 삭제', 1) + (n > 1 && isRect() ? btn('merge', '칸 합치기') : '') + btn('unmerge', '합치기 풀기') + btn('splitc', '열 나누기') + btn('splitr', '행 나누기');
+        let extra = '';
+        const L1 = selCells();
+        if(e.type === 'table' && L1.length === 1){
+          const t1 = String((e.cells[L1[0].r] || [])[L1[0].c] || '');
+          const pm = PHOTO_RE.exec(t1);
+          if(pm){
+            const curN = +pm[1], fit = ((e.cst || {})[L1[0].r + ':' + L1[0].c] || {}).fit || 'contain';
+            extra = `<div class="cst"><span class="g">사진</span>${cur.photos.map((src, i) => src ? `<button type="button" data-ph="${i}" draggable="true" class="phb${i + 1 === curN ? ' on' : ''}" title="사진 ${i + 1} · 눌러서 넣기, 끌어서 다른 칸에 놓기"><img src="${src}"><i>${i + 1}</i></button>` : '').join('')}
+              <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 추가</button><button type="button" data-phfit="1">${fit === 'cover' ? '전체 보이기' : '꽉 채우기'}</button></div>`;
+          } else if(SIGN_RE.test(t1)) extra = '<div class="cst"><span class="g" style="color:#fbbf24">서명은 점검 화면 아래 서명란에서 하면 이 칸에 들어갑니다</span></div>';
+        }
+        node.insertAdjacentHTML('beforeend', `<div class="ctbar" style="left:${Math.max(0, (left - nb0.left) / zoom)}px;top:0"><div class="cr1"><span>${n > 1 ? n + '칸' : '1칸'}</span>${bar}</div>${extra}${cellStyleCtl(e)}</div>`);
         const cb0 = node.querySelector('.ctbar');
         let ty = (top - nb0.top) / zoom - cb0.offsetHeight - 6;
-        if(e.y + ty < 0) ty = (Math.max(...tds.map(t => t.getBoundingClientRect().bottom)) - nb0.top) / zoom + 6;
+        if(e.y + ty < 0) ty = Math.max(0 - e.y, e.h + 8);   // 위에 자리가 없으면 표 아래쪽에 (칸을 가리지 않게)
         cb0.style.top = ty + 'px';
         const maxL = PW - e.x - cb0.offsetWidth - 4; if(parseFloat(cb0.style.left) > maxL) cb0.style.left = Math.max(-e.x, maxL) + 'px';
       }
@@ -2402,7 +2499,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(!cell) return '';
     const R0 = (cmulti && cmulti.size > 1) || crange ? curRange() : null;
     const rangeBox = R0 ? `<div class="pt" style="margin-top:10px;color:#b45309">선택한 칸 ${selCells().length}개${cmulti ? ' (Ctrl로 고름)' : ` (${R0.r1 + 1}~${R0.r2 + 1}행 × ${R0.c1 + 1}~${R0.c2 + 1}열)`}</div>
-      <div class="ldrow"><button type="button" data-rg="clear">내용 지우기</button><button type="button" data-rg="delrow" style="color:#b91c1c">${e.type === 'checklist' ? '항목 삭제' : '행 삭제'}</button>${e.type === 'table' ? '<button type="button" data-rg="delcol" style="color:#b91c1c">열 삭제</button><button type="button" data-rg="merge">칸 합치기</button><button type="button" data-rg="unmerge">합치기 풀기</button>' : ''}</div>
+      <div class="ldrow"><button type="button" data-rg="clear">내용 지우기</button><button type="button" data-rg="delrow" style="color:#b91c1c">${e.type === 'checklist' ? '항목 삭제' : '행 삭제'}</button>${e.type === 'table' ? '<button type="button" data-rg="delcol" style="color:#b91c1c">열 삭제</button><button type="button" data-rg="merge">칸 합치기</button><button type="button" data-rg="unmerge">합치기 풀기</button><button type="button" data-rg="splitc">열 나누기</button><button type="button" data-rg="splitr">행 나누기</button>' : ''}</div>
       <div class="hint">칸을 끌어서 여러 칸을 고르거나, Shift+누르기로 범위를 넓히거나, <b>Ctrl+누르기로 떨어진 칸을 하나씩</b> 더하고 뺍니다. Delete 키: 줄 전체면 행 삭제, 아니면 내용 지우기 · Esc: 선택 풀기</div>` : `<div class="hint" style="margin-top:8px">여러 칸을 고르려면 칸 위를 끌거나, Shift+누르기(범위), Ctrl+누르기(하나씩) 하세요.</div>`;
     return rangeBox + `<div class="pt" style="margin-top:10px">칸 글씨·선</div>` + cellStyleCtl(e) + cellTools1(e);
   }
@@ -2460,7 +2557,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       e.shadeR = (e.shadeR || []).map(mv).filter(i => i !== null);
       if(e.rowH){ const o = {}; for(const k in e.rowH){ const n = mv(+k); if(n !== null) o[n] = e.rowH[k]; } e.rowH = o; }
     } else e.shadeC = (e.shadeC || []).map(mv).filter(i => i !== null);
-    for(const key of ['ca', 'cva']) if(e[key]){
+    for(const key of ['ca', 'cva', 'cst']) if(e[key]){
       const o = {};
       for(const k in e[key]){ const [r, c] = k.split(':').map(Number); const nr = axis === 'r' ? mv(r) : r, ncc = axis === 'c' ? mv(c) : c; if(nr !== null && ncc !== null) o[nr + ':' + ncc] = e[key][k]; }
       e[key] = o;
@@ -2572,6 +2669,39 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   }
 
   /* 새 요소 */
+  /* 새 요소를 기존 내용과 같은 층에, 겹치지 않게 끼워 넣기
+     - atY 없으면: 선택된 요소 바로 아래(없으면 맨 아래 내용 다음)
+     - 그 아래 요소들은 새 요소 높이만큼 아래로 밀림
+     - 이 쪽에 자리가 없으면 다음 쪽 맨 위로 */
+  function placeFlow(e, atY, atX){
+    const GAP = 12, LIM = PH - 36;
+    const z0 = page().els.length ? Math.min(...page().els.map(x => x.z || 1)) : 1;
+    e.z = z0;
+    const fit = (els, y) => {
+      // 이 높이를 가로지르는 요소가 있으면 그 아래로 내려서 자리 잡기
+      for(let k = 0; k < 50; k++){ const st = els.filter(x => x.y < y - 1 && x.y + x.h > y + 1); if(!st.length) break; y = Math.max(...st.map(x => x.y + x.h)); }
+      const below = els.filter(x => x.y >= y - 1);
+      const top = y + (below.length || els.length ? 8 : 0), need = e.h + 8 + (below.length ? 8 : 0);
+      const bottom = Math.max(top + e.h, ...below.map(x => x.y + x.h + need));
+      if(bottom > LIM && !(y <= 60 && !below.length)) return false;
+      below.forEach(x => x.y += need);
+      e.y = Math.round(top); els.push(e); return true;
+    };
+    let els = page().els, y;
+    if(atY != null) y = atY;
+    else { const s = selEl(); y = s ? s.y + s.h : (els.length ? Math.max(...els.map(x => x.y + x.h)) : 48); }
+    const lefts = els.filter(x => x.type !== 'line').map(x => x.x);
+    const x0 = atX != null ? atX : (lefts.length ? Math.min(...lefts) : 56);
+    e.x = clamp(Math.round(x0), 0, Math.max(0, PW - e.w));
+    if(fit(els, y)) return;
+    // 다음 쪽으로
+    let np = L.pages[pg + 1];
+    if(!np || !fit(np.els, 36)){
+      np = {els: []}; L.pages.splice(pg + 1, 0, np); e.y = 56; np.els.push(e);
+    }
+    pg = L.pages.indexOf(np);
+    toast('이 쪽에 자리가 없어 ' + (pg + 1) + '쪽에 넣었습니다');
+  }
   function addEl(type){
     snap();
     const base = {x:100, y:100 + (page().els.length % 10) * 20};
@@ -2580,13 +2710,20 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(type === 'table') e = mk({type, ...base, w:500, h:96, cols:[25,75], shadeR:[], shadeC:[0], cells:[['항목','{보조사업자 성명}'],['항목',''],['항목','']]});
     if(type === 'checklist') e = mk({type, ...base, w:600, h:Math.min(400, 31 * (cur.items.length + 1)), cols:[8,46,16,30]});
     if(type === 'photo'){
-      const used = Math.max(0, ...L.pages.flatMap(p => p.els.filter(x => x.type === 'photo').map(x => x.idx || 1)));
-      e = mk({type, ...base, w:330, h:260, idx:used + 1, cap:true, size:12, fit:'contain', border:true, bc:'#999999'});
+      // 사진 칸 + 사진설명 칸으로 된 표
+      const n = usedPhotoMax(L) + 1;
+      e = mk({type:'table', ...base, w:568, h:330, cols:[1], shadeR:[], shadeC:[], bw:1, bc:'#111111',
+        cells:[[`{사진 ${n}}`], [`{사진 ${n} 설명}`]], rowH:{0:292, 1:36},
+        ca:{'0:0':'center', '1:0':'center'}, cst:{'1:0':{italic:true, color:'#888888', size:16}}});
     }
-    if(type === 'sign') e = mk({type, ...base, w:200, h:70});
+    if(type === 'sign'){
+      // 농가명 | (입력) | (서명 또는 날인)
+      e = mk({type:'table', ...base, w:494, h:48, cols:[120,180,194], shadeR:[], shadeC:[], bw:1, bc:'#111111', size:15,
+        cells:[['농가명', '', '{서명}']], rowH:{0:48}, ca:{'0:0':'center', '0:2':'right'}});
+    }
     if(type === 'line') e = mk({type, ...base, w:400, h:12, bw:1});
-    e.z = Math.max(1, ...page().els.map(x => x.z || 1)) + 1;
-    page().els.push(e); sel = e.id; cell = null; draw(); props();
+    placeFlow(e);
+    sel = e.id; cell = null; draw(); props();
   }
 
   function openDesigner(){
@@ -2638,8 +2775,68 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   }
   $('ldFields').addEventListener('click', ev => { const b = ev.target.closest('[data-place]'); if(b) setPlacing(placing === b.dataset.place ? null : b.dataset.place); });
   $('ldFields').addEventListener('dragstart', ev => { const b = ev.target.closest('[data-place]'); if(b){ ev.dataTransfer.setData('text/plain', b.dataset.place); ev.dataTransfer.effectAllowed = 'copy'; } });
-  $('ldStage').addEventListener('dragover', ev => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy'; });
-  $('ldStage').addEventListener('drop', ev => { ev.preventDefault(); const n = ev.dataTransfer.getData('text/plain'); if(n) placeAt(n, ev.clientX, ev.clientY, ev.target); });
+  /* ---------- 끌어다 놓기: 엑셀 항목 · 사진 파일 · 사진 썸네일 ---------- */
+  const isImgDrag = dt => dt && ([...(dt.types || [])].includes('Files') || [...(dt.types || [])].includes('application/x-fm-photo'));
+  let dropHi = null;
+  const clearHi = () => { if(dropHi){ dropHi.classList.remove('dropok'); dropHi = null; } $('ldPage').classList.remove('dropzone'); };
+  function dropTarget(x, y){
+    const el = document.elementFromPoint(x, y);
+    const td = el && el.closest && el.closest('#ldPage td[data-r]');
+    const le = el && el.closest && el.closest('#ldPage .le');
+    const e = le ? page().els.find(z => z.id === le.dataset.id) : null;
+    return {td, e};
+  }
+  $('ldStage').addEventListener('dragover', ev => {
+    ev.preventDefault(); ev.dataTransfer.dropEffect = 'copy';
+    if(isImgDrag(ev.dataTransfer)){
+      $('ldPage').classList.add('dropzone');
+      const {td, e} = dropTarget(ev.clientX, ev.clientY);
+      const t = td && e && e.type === 'table' ? td : null;
+      if(t !== dropHi){ if(dropHi) dropHi.classList.remove('dropok'); dropHi = t; if(t) t.classList.add('dropok'); }
+    }
+  });
+  $('ldStage').addEventListener('dragleave', ev => { if(!$('ldStage').contains(ev.relatedTarget)) clearHi(); });
+  async function dropPhoto(n, x, y){
+    const {td, e} = dropTarget(x, y);
+    snap();
+    if(td && e && e.type === 'table'){
+      const r = +td.dataset.r, c = +td.dataset.c, t = String(e.cells[r][c] || '');
+      if(!PHOTO_RE.test(t) && t.trim() && !confirm('이 칸의 글자를 지우고 사진 칸으로 바꿀까요?')) return;
+      setPhotoCell(e, r, c, n);
+      if(!e.rowH || !e.rowH[r] || e.rowH[r] < 120){ const ob = e.y + e.h, oh = e.h; e.rowH = {...(e.rowH || {}), [r]: Math.max(160, (e.rowH && e.rowH[r]) || 0)}; e.h = clamp(e.h + 120, 10, PH - e.y); pushBelow(e, ob, e.h - oh); }
+      sel = e.id; cell = {r, c}; crange = null; cmulti = null;
+    } else {
+      // 빈 곳: 그 자리에 사진 칸 + 사진설명 칸 표 만들기
+      const pgEl = $('ldPage').querySelector('.pg'), rc = pgEl.getBoundingClientRect();
+      const px = (x - rc.left) / zoom, py = (y - rc.top) / zoom, w = 420, h = 290;
+      const ne = mk({type:'table', x:0, y:0, w, h, cols:[1], shadeR:[], shadeC:[], bw:1, bc:'#111111',
+        cells:[[`{사진 ${n}}`], [`{사진 ${n} 설명}`]], rowH:{0:252, 1:34}, ca:{'0:0':'center', '1:0':'center'}, cst:{'1:0':{italic:true, color:'#888888', size:15}}});
+      placeFlow(ne, Math.max(0, r5(py - 20)), r5(px - w / 2));
+      sel = ne.id; cell = {r:0, c:0}; crange = null; cmulti = null;
+    }
+    draw(); props();
+  }
+  $('ldStage').addEventListener('drop', async ev => {
+    ev.preventDefault();
+    const dt = ev.dataTransfer, x = ev.clientX, y = ev.clientY;
+    clearHi();
+    const thumb = dt.getData('application/x-fm-photo');
+    if(thumb !== ''){ await dropPhoto(+thumb + 1, x, y); toast(`사진 ${+thumb + 1}을(를) 넣었습니다`); return; }
+    const files = [...(dt.files || [])].filter(f => /^image\//.test(f.type));
+    if(files.length){
+      const before = cur.photos.length;
+      await addPhotos(files);
+      const added = cur.photos.length - before;
+      if(added){ await dropPhoto(before + 1, x, y); toast(`사진 ${added}장을 넣었습니다 (이번 점검 사진에도 추가됨)`); }
+      return;
+    }
+    const n = dt.getData('text/plain'); if(n) placeAt(n, x, y, ev.target);
+  });
+  // 도구줄의 사진 썸네일을 끌어서 다른 칸에 놓기
+  $('ldPage').addEventListener('dragstart', ev => {
+    const b = ev.target.closest('.ctbar [data-ph]'); if(!b) return;
+    ev.dataTransfer.setData('application/x-fm-photo', b.dataset.ph); ev.dataTransfer.effectAllowed = 'copy';
+  });
   $('ldPage').addEventListener('pointerdown', ev => {
     if(!placing) return;
     ev.stopImmediatePropagation(); ev.preventDefault();
@@ -2785,6 +2982,16 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     }
     const cb = ev.target.closest('.ctbar [data-cb]');
     if(cb){ ev.preventDefault(); ev.stopPropagation(); const e0 = selEl(); if(e0) rangeAction(e0, cb.dataset.cb); return; }
+    const ph = ev.target.closest('.ctbar [data-ph], .ctbar [data-phadd], .ctbar [data-phfit]');
+    if(ph){
+      ev.preventDefault(); ev.stopPropagation();
+      const e0 = selEl(), L1 = selCells(); if(!e0 || L1.length !== 1) return;
+      const {r, c} = L1[0];
+      if(ph.dataset.ph !== undefined){ snap(); setPhotoCell(e0, r, c, +ph.dataset.ph + 1); draw(); props(); }
+      else if(ph.dataset.phfit){ snap(); e0.cst = {...(e0.cst || {})}; const k = r + ':' + c, o = {...(e0.cst[k] || {})}; o.fit = o.fit === 'cover' ? 'contain' : 'cover'; e0.cst[k] = o; draw(); props(); }
+      else { photoTarget = {e:e0, r, c}; $('ldPhotoIn').click(); }
+      return;
+    }
     const cs = ev.target.closest('.ctbar [data-cs], .ctbar [data-bd]');
     if(cs){ ev.preventDefault(); ev.stopPropagation(); const e0 = selEl(); if(e0){ if(cs.dataset.cs) applyCellStyle(e0, cs.dataset.cs); else applyBorder(e0, cs.dataset.bd); draw(); props(); } return; }
     if(ev.target.closest('.ctbar select, .ctbar input')){ ev.stopPropagation(); return; }   // 고르기·색상 칸은 그대로 동작
@@ -2866,6 +3073,24 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up); addEventListener('pointercancel', up);
     ev.preventDefault();
   });
+  /* 사진 칸에 사진 넣기 · 바꾸기 */
+  let photoTarget = null;
+  const phIn = document.createElement('input');
+  phIn.type = 'file'; phIn.accept = 'image/*'; phIn.id = 'ldPhotoIn'; phIn.hidden = true;
+  document.body.appendChild(phIn);
+  function setPhotoCell(e, r, c, n){
+    const old = PHOTO_RE.exec(String(e.cells[r][c] || ''));
+    e.cells[r][c] = `{사진 ${n}}`;
+    const below = e.cells[r + 1] && e.cells[r + 1][c];
+    if(old && below && new RegExp('\\{사진\\s*' + old[1] + '\\s*설명\\}').test(below)) e.cells[r + 1][c] = `{사진 ${n} 설명}`;
+  }
+  phIn.onchange = async () => {
+    const f = phIn.files[0]; phIn.value = ''; if(!f || !photoTarget) return;
+    const before = cur.photos.length;
+    await addPhotos([f]);
+    if(cur.photos.length > before){ snap(); setPhotoCell(photoTarget.e, photoTarget.r, photoTarget.c, cur.photos.length); draw(); props(); toast(`사진 ${cur.photos.length}로 넣었습니다 (이번 점검 사진에도 추가됨)`); }
+    photoTarget = null;
+  };
   /* 도구줄·속성창의 글꼴·색·선 고르기 */
   function styleInput(t){
     const e0 = selEl(); if(!e0) return false;
@@ -2909,6 +3134,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   }
   function startInline(e, c){
     const raw = srcText(e, c);
+    if(e.type === 'table' && raw != null && PHOTO_RE.test(raw)){ photoTarget = {e, r:c.r, c:c.c}; $('ldPhotoIn').click(); return; }
+    if(e.type === 'table' && raw != null && SIGN_RE.test(raw)){ toast('서명은 점검 화면 아래 서명란에서 하면 이 칸에 들어갑니다'); return; }
     if(raw === null || raw === '<' || raw === '^') return;
     draw();
     const node = $('ldPage').querySelector(`[data-id="${e.id}"]`); if(!node) return;
@@ -2924,9 +3151,9 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     target.focus();
     const rg = document.createRange(); rg.selectNodeContents(target); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(rg);
     target.addEventListener('keydown', ev => {
-      if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); finishInline(true); }
-      else if(ev.key === 'Escape'){ ev.preventDefault(); finishInline(false); }
-      else if(ev.key === 'Tab' && editing && editing.c){ ev.preventDefault(); const nx = {...editing.c}; const ee = editing.e; finishInline(true); nx.c += ev.shiftKey ? -1 : 1; cell = nx; if(srcText(ee, nx) !== null) startInline(ee, nx); }
+      if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); ev.stopPropagation(); finishInline(true); }
+      else if(ev.key === 'Escape'){ ev.preventDefault(); ev.stopPropagation(); finishInline(false); }
+      else if(ev.key === 'Tab' && editing && editing.c){ ev.preventDefault(); ev.stopPropagation(); const nx = {...editing.c}; const ee = editing.e; finishInline(true); nx.c += ev.shiftKey ? -1 : 1; cell = nx; if(srcText(ee, nx) !== null) startInline(ee, nx); }
     });
     target.addEventListener('blur', () => setTimeout(() => { if(editing && editing.target === target) finishInline(true); }, 0));
     toast('글자를 고친 뒤 Enter(줄바꿈은 Shift+Enter) · 취소는 Esc');
@@ -4712,7 +4939,7 @@ $('iHwp').onclick = async () => {
           if(cx.bold != null) s.bold = cx.bold; if(cx.italic != null) s.italic = cx.italic; if(cx.under != null) s.under = cx.under;
           const pid = S.paraId({align, lh:120});
           let inner = '';
-          const pics = (extraPics.get(r + ':' + c) || []);
+          const pics = [...(extraPics.get(r + ':' + c) || []), ...(g.pic ? [g.pic] : [])];
           if(pics.length) for(const pc of pics) inner += para(pid, await picRun(pc.src, Math.max(10, w - 1200), Math.max(600, pc.h * PX), S.charId(s)));
           if(!pics.length || String(g.text || '').trim()) inner += textPara(g.text || '', s, pid);
           cells += `<hp:tc name="" header="0" hasMargin="0" protect="0" editable="0" dirty="0" borderFillIDRef="${fid}"><hp:subList id="" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="${VA(g.va || e.valign)}" linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" hasNumRef="0">${inner}</hp:subList>`
@@ -4746,6 +4973,10 @@ $('iHwp').onclick = async () => {
           while(c + cs < nc && get(r, c + cs) === '<') cs++;
           while(r + rs < nr && get(r + rs, c) === '^') rs++;
           g[r][c] = {text:fillPlain(t, rec), cs, rs, shade: sr.includes(r) || sc.includes(c), align:(e.ca || {})[r + ':' + c], va:(e.cva || {})[r + ':' + c], cst:(e.cst || {})[r + ':' + c]};
+          const rh0 = ((e.rowH && e.rowH[r]) || 40) - 8;
+          if(window.LAY_SIGN_RE.test(t)){ g[r][c].text = rec.sign ? '' : '(서명 또는 날인)'; if(rec.sign) g[r][c].pic = {src:rec.sign, h:rh0}; }
+          const pm = window.LAY_PHOTO_RE.exec(t);
+          if(pm){ g[r][c].text = ''; const src = rec.photos[+pm[1] - 1]; if(src){ g[r][c].pic = {src, h:rh0}; photosShown.add(+pm[1] - 1); } }
         }
       }
       return g;
@@ -4817,7 +5048,7 @@ $('iHwp').onclick = async () => {
     }
     // 남는 사진: 뒤쪽에 2장씩
     if(L.morePhotos !== false){
-      const rest = rec.photos.map((ph, i) => i).filter(i => rec.photos[i] && !photosShown.has(i) && i >= Math.max(0, ...L.pages.flatMap(p => p.els.filter(e => e.type === 'photo').map(e => e.idx || 1))));
+      const rest = rec.photos.map((ph, i) => i).filter(i => rec.photos[i] && !photosShown.has(i) && i >= window.LAY_usedPhotoMax(L));
       if(rest.length){
         body += textPara(`현장 사진 — ${rec.target.name || ''}`, {size:15, bold:true}, S.paraId({}), true);
         for(const i of rest){
