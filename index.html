@@ -70,6 +70,9 @@
   #side.hide{display:none}
   #toggle{display:inline-block}
   #toggle.on{background:#dbeafe}
+  .rchips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0 4px}
+  .rchips>span{font-size:12px;color:var(--mut)}
+  .rchips .chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .mlab{transform:translateY(-44px);background:rgba(255,255,255,.95);border:1px solid #94a3b8;border-radius:8px;padding:3px 8px;font-size:12px;line-height:1.35;box-shadow:0 2px 6px rgba(0,0,0,.25);text-align:center;max-width:180px;white-space:normal;cursor:pointer}
   .mlab b{display:block;font-size:13px;color:#111}
   .mlab span{display:block;color:#374151;word-break:keep-all}
@@ -4924,9 +4927,20 @@ $('iHwp').onclick = async () => {
       const tv = (() => { for(const [n, k] of [['보조금','subsidy'],['자부담','self'],['총사업비','total'],['사업비','total'],['국비','national'],['도비','province'],['군비','county']]) if(x.label.includes(n)) return cur.target[k]; return ''; })();
       dl(id, [tv !== '' && tv != null ? (isNaN(tv) ? tv : Number(tv).toLocaleString() + '원') : '', ...hist('x_' + x.label), ...(/일$|일자|날짜/.test(x.label) ? [new Date().toISOString().slice(0, 10)] : [])]);
       el.setAttribute('list', id);
+      // 최근에 입력한 값: 눌러서 바로 넣기
+      const nx = el.nextElementSibling; if(nx && nx.classList.contains('rchips')) nx.remove();
+      const rec = hist('x_' + x.label).slice(0, 8);
+      if(rec.length) el.insertAdjacentHTML('afterend', `<div class="rchips"><span>최근</span>${rec.map(v => `<button type="button" class="chip" data-rx="${el.dataset.x}" data-v="${esc(v)}" title="${esc(v)}">${esc(v.length > 22 ? v.slice(0, 22) + '…' : v)}</button>`).join('')}</div>`);
+      if(!el._rh){ el._rh = true; el.addEventListener('change', () => { addHist('x_' + x.label, el.value); }); }
     });
     $('iMemoChips').innerHTML = [...new Set([...MEMO_PRESET, ...hist('memo').slice(0, 6)])].map(m => `<button type="button" class="chip" data-memo="${esc(m)}">${esc(m.length > 24 ? m.slice(0, 24) + '…' : m)}</button>`).join('');
   }
+  $('iExtra').addEventListener('click', e => {
+    const b = e.target.closest('[data-rx]'); if(!b) return;
+    const el = $('iExtra').querySelector(`[data-x="${b.dataset.rx}"]`); if(!el) return;
+    el.value = b.dataset.v; const x = cur.extra[+b.dataset.rx]; if(x) x.value = el.value; dirty = true;
+    b.parentElement.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b));
+  });
   $('iMemoChips').onclick = e => {
     const b = e.target.closest('[data-memo]'); if(!b) return;
     const t = $('iMemo'); t.value = (t.value.trim() ? t.value.trim() + '\n' : '') + b.dataset.memo; dirty = true;
