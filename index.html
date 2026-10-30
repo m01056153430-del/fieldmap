@@ -70,6 +70,45 @@
   #side.hide{display:none}
   #toggle{display:inline-block}
   #toggle.on{background:#dbeafe}
+  /* 내 위치 · 동선 */
+  #rtBar{display:flex;gap:6px;padding:0 10px 8px;flex-wrap:wrap}
+  #rtBar button{flex:1;border:1px solid var(--b);color:var(--b);background:#fff;border-radius:8px;padding:7px 8px;font-size:13px;white-space:nowrap}
+  #rtBar #rtGo{background:var(--b);color:#fff}
+  #rtBar .rtTown{display:flex;align-items:center;gap:6px;width:100%;font-size:13px;color:var(--mut);white-space:nowrap}
+  #rtBar .rtTown select{flex:1;padding:6px 8px;border:1px solid var(--ln);border-radius:8px;font-size:14px;background:#fff;color:var(--fg)}
+  .medot{width:18px;height:18px;border-radius:50%;background:#1f6feb;border:3px solid #fff;box-shadow:0 0 0 2px rgba(31,111,235,.4),0 2px 6px rgba(0,0,0,.35);position:relative}
+  .medot i{position:absolute;inset:-12px;border-radius:50%;background:rgba(31,111,235,.25);animation:mepulse 2s infinite}
+  @keyframes mepulse{0%{transform:scale(.4);opacity:1}100%{transform:scale(1.4);opacity:0}}
+  .rtnum{width:26px;height:26px;border-radius:50%;background:#dc2626;color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer}
+  #rtPanel{position:absolute;right:10px;bottom:10px;z-index:14;width:min(340px,calc(100% - 20px));max-height:55%;display:flex;flex-direction:column;background:#fff;border:1px solid #cbd5e1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);overflow:hidden}
+  #rtPanel[hidden]{display:none}
+  #rtPanel .rth{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#1f6feb;color:#fff;flex-wrap:wrap}
+  #rtPanel .rth b{font-size:14px}#rtPanel .rth span{font-size:12px;opacity:.9;flex:1}
+  #rtPanel .rth button{background:rgba(255,255,255,.2);color:#fff;border:0;padding:3px 8px}
+  #rtPanel .rtb{overflow:auto;padding:4px 10px;flex:1}
+  #rtPanel .rti{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--ln);font-size:13px;line-height:1.45}
+  #rtPanel .rti i{flex:none;width:22px;height:22px;border-radius:50%;background:#dc2626;color:#fff;font-style:normal;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:12px}
+  #rtPanel .rti a{color:var(--b);text-decoration:none}
+  #rtPanel .rti small{color:var(--mut)}
+  #rtPanel .rtf{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--ln)}
+  #rtPanel .rtf button{flex:1;border:1px solid var(--b);color:var(--b)}
+  #rtPanel .rtf button:last-child{background:var(--b);color:#fff}
+  .rpP{width:794px;min-height:1123px;padding:34px 30px;box-sizing:border-box;background:#fff;color:#111;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
+  .rpH{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;border-bottom:2px solid #1f6feb;padding-bottom:8px}
+  .rpH b{font-size:22px}.rpH span{font-size:13px;color:#4b5563}
+  .rpM{display:block;width:100%;border:1px solid #cbd5e1;border-radius:6px}
+  .rpM0{height:300px;display:flex;align-items:center;justify-content:center;background:#f3f4f6;color:#6b7280}
+  .rpN{font-size:12px;color:#4b5563;margin-top:10px;line-height:1.6}
+  .rpT{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:fixed}
+  .rpT th{background:#eef1f5;border:1px solid #9ca3af;padding:5px 3px;font-size:11px}
+  .rpT td{border:1px solid #9ca3af;padding:5px 4px;vertical-align:middle;word-break:break-all;line-height:1.4}
+  .rpT td.c{text-align:center}.rpT td.r{text-align:right}
+  .rpT td i{display:inline-flex;width:22px;height:22px;border-radius:50%;background:#dc2626;color:#fff;font-style:normal;font-weight:700;align-items:center;justify-content:center}
+  .rpT a{color:#1d4ed8;text-decoration:underline}
+  .rpT a[data-link^="tel"]{white-space:nowrap;font-size:11px;letter-spacing:-.2px}
+  .rpT small{color:#6b7280;font-size:10px}
+  .rpT th:nth-child(1){width:34px}.rpT th:nth-child(2){width:62px}.rpT th:nth-child(3){width:100px}.rpT th:nth-child(4){width:140px}.rpT th:nth-child(7){width:56px}.rpT th:nth-child(8){width:92px}.rpT th:nth-child(9){width:44px}
+
   .rchips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:6px 0 4px}
   .rchips>span{font-size:12px;color:var(--mut)}
   .rchips .chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -5516,6 +5555,225 @@ $('iHwp').onclick = async () => {
     }catch(err){ alert('한글 파일을 만들지 못했습니다: ' + err.message); }
     finally{ $('busy').hidden = true; $('busy').textContent = 'PDF 만드는 중…'; }
   };
+})();
+</script>
+<script>
+/* ===================== 내 위치 · 미완료 최적 동선 · 동선 PDF/공유 ===================== */
+(function routeMod(){
+  const $ = id => document.getElementById(id);
+  const getMap = () => (typeof map !== 'undefined' && map) ? map : null;
+  let me = null, meOv = null, watchId = null, route = null, line = null, nums = [];
+
+  /* ---- 목록 창 위 버튼 ---- */
+  const bar = document.createElement('div'); bar.id = 'rtBar';
+  bar.innerHTML = '<label class="rtTown">담당 읍면 <select id="rtTown"><option value="">전체</option></select></label><button type="button" id="rtMe">📍 내 위치</button><button type="button" id="rtGo">🚗 미완료 최적 동선</button>';
+  $('filters').after(bar);
+  const pn = document.createElement('div'); pn.id = 'rtPanel'; pn.hidden = true; $('mapwrap').appendChild(pn);
+
+  /* ---- 내 위치 ---- */
+  function drawMe(){
+    const m = getMap(); if(!m || !me) return;
+    const pos = new kakao.maps.LatLng(me.lat, me.lng);
+    if(!meOv){ meOv = new kakao.maps.CustomOverlay({position:pos, content:'<div class="medot" title="내 위치"><i></i></div>', zIndex:20}); meOv.setMap(m); }
+    else meOv.setPosition(pos);
+  }
+  function watchMe(center){
+    if(!navigator.geolocation){ toast('이 기기에서는 위치를 확인할 수 없습니다'); return Promise.resolve(null); }
+    return new Promise(res => {
+      let done = false;
+      const ok = p => { me = {lat:p.coords.latitude, lng:p.coords.longitude, acc:p.coords.accuracy}; drawMe(); if(!done){ done = true; if(center && getMap()) getMap().panTo(new kakao.maps.LatLng(me.lat, me.lng)); res(me); } };
+      const bad = e => { if(!done){ done = true; toast('현재 위치를 가져오지 못했습니다' + (e && e.code === 1 ? ' (위치 권한을 허용해 주세요)' : '')); res(me); } };
+      if(watchId == null) watchId = navigator.geolocation.watchPosition(ok, bad, {enableHighAccuracy:true, maximumAge:15000, timeout:20000});
+      else if(me){ done = true; if(center && getMap()) getMap().panTo(new kakao.maps.LatLng(me.lat, me.lng)); res(me); }
+      setTimeout(() => { if(!done){ done = true; res(me); } }, 20000);
+    });
+  }
+  $('rtMe').onclick = () => watchMe(true);
+
+  /* ---- 담당 읍면: 사업장 장소 기준으로 그 읍면 포인터만 (이 기기에 기억) ---- */
+  let townApplied = false;
+  function syncTownSel(){
+    const sel = $('rtTown'), towns = Object.keys(colorOf || {}), mine = LS.get('myTown', '');
+    sel.innerHTML = '<option value="">전체</option>' + towns.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+    if(!townApplied && mine && towns.includes(mine) && !filterTown){ townApplied = true; filterTown = mine; setTimeout(() => { _rf(); renderList(); fitVisible(); }, 0); }
+    sel.value = filterTown && towns.includes(filterTown) ? filterTown : '';
+  }
+  const _rf = renderFilters;
+  window.renderFilters = function(){ _rf(); syncTownSel(); };
+  $('rtTown').onchange = e => {
+    const v = e.target.value; LS.set('myTown', v); townApplied = true;
+    filterTown = v || null; _rf(); renderList(); fitVisible(); clearRoute();
+    toast(v ? `${v} 사업장만 지도에 표시합니다 (이 기기에 담당 읍면으로 기억)` : '전체 읍면을 표시합니다');
+  };
+  if(typeof rows !== 'undefined' && rows.length) syncTownSel();
+  // 지도가 준비되면 내 위치 표시 시작 (권한을 이미 허용한 경우 바로)
+  const t0 = setInterval(() => {
+    if(!getMap() || !window.kakao) return; clearInterval(t0);
+    try{ if(navigator.permissions) navigator.permissions.query({name:'geolocation'}).then(s => { if(s.state !== 'denied') watchMe(false); }).catch(() => watchMe(false)); else watchMe(false); }catch(_){ watchMe(false); }
+  }, 800);
+
+  /* ---- 동선 계산 (직선거리 기준, 도로 우회 계수 1.3) ---- */
+  const R = 6371;
+  const hav = (a, b) => { const d2r = Math.PI / 180, dl = (b.lat - a.lat) * d2r, dg = (b.lng - a.lng) * d2r;
+    const x = Math.sin(dl / 2) ** 2 + Math.cos(a.lat * d2r) * Math.cos(b.lat * d2r) * Math.sin(dg / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); };
+  function optimize(start, pts){
+    const n = pts.length; if(!n) return [];
+    const D = (i, j) => hav(i < 0 ? start : pts[i], j < 0 ? start : pts[j]);
+    // 가까운 곳부터
+    const left = new Set(pts.map((_, i) => i)), ord = []; let cur = -1;
+    while(left.size){ let best = null, bd = 1e9; for(const j of left){ const d = D(cur, j); if(d < bd){ bd = d; best = j; } } ord.push(best); left.delete(best); cur = best; }
+    // 2-opt (출발점 고정, 끝은 자유)
+    const len = o => { let s = D(-1, o[0]); for(let k = 1; k < o.length; k++) s += D(o[k - 1], o[k]); return s; };
+    let improved = true, guard = 0;
+    while(improved && guard++ < 60){
+      improved = false;
+      for(let a = 0; a < n - 1; a++) for(let b = a + 1; b < n; b++){
+        const prev = a === 0 ? -1 : ord[a - 1], next = b === n - 1 ? null : ord[b + 1];
+        const before = D(prev, ord[a]) + (next == null ? 0 : D(ord[b], next));
+        const after = D(prev, ord[b]) + (next == null ? 0 : D(ord[a], next));
+        if(after + 1e-9 < before){ ord.splice(a, b - a + 1, ...ord.slice(a, b + 1).reverse()); improved = true; }
+      }
+    }
+    return ord;
+  }
+  function clearRoute(){
+    if(line) line.setMap(null); line = null;
+    nums.forEach(o => o.setMap(null)); nums = []; route = null; pn.hidden = true;
+  }
+  async function makeRoute(){
+    const m = getMap(); if(!m){ toast('지도가 준비되지 않았습니다 (https 주소로 접속해 주세요)'); return; }
+    const cand = rows.map((r, i) => ({r, i})).filter(({r}) => !isDone(r) && visible(r) && r._pts && r._pts.length);
+    if(!cand.length){ toast('동선을 만들 미완료 대상이 없습니다 (지도에 위치가 표시된 대상만 포함)'); return; }
+    toast('현재 위치 확인 중…');
+    const st = await watchMe(false);
+    let start = st, startName = '내 위치';
+    if(!start){ const c = m.getCenter(); start = {lat:c.getLat(), lng:c.getLng()}; startName = '지도 가운데'; }
+    const pts = cand.map(x => x.r._pts[0]);
+    const ord = optimize(start, pts);
+    const stops = ord.map(k => ({...cand[k], pt:pts[k]}));
+    let km = 0, prev = start; stops.forEach(s => { s.leg = hav(prev, s.pt) * 1.3; km += s.leg; prev = s.pt; });
+    clearRoute();
+    route = {start, startName, stops, km, at:new Date(), town:filterTown || ''};
+    // 지도에 그리기
+    const path = [start, ...stops.map(s => s.pt)].map(p => new kakao.maps.LatLng(p.lat, p.lng));
+    line = new kakao.maps.Polyline({path, strokeWeight:5, strokeColor:'#1f6feb', strokeOpacity:.85, strokeStyle:'solid'}); line.setMap(m);
+    stops.forEach((s, k) => {
+      const el = document.createElement('div'); el.className = 'rtnum'; el.textContent = k + 1; el.title = s.r.name;
+      el.onclick = () => { const mk = markers.find(x => x._i === s.i); if(mk && info){ info.setContent(infoHtml(s.r, s.pt)); info.open(m, mk); } };
+      const ov = new kakao.maps.CustomOverlay({position:new kakao.maps.LatLng(s.pt.lat, s.pt.lng), content:el, yAnchor:2.3, zIndex:15}); ov.setMap(m); nums.push(ov);
+    });
+    const b = new kakao.maps.LatLngBounds(); path.forEach(p => b.extend(p)); m.setBounds(b, 40, 40, 40, 40);
+    renderPanel();
+  }
+  $('rtGo').onclick = makeRoute;
+  const won = v => { const n = Number(String(v ?? '').replace(/,/g, '')); return v === '' || v == null ? '' : isNaN(n) ? String(v) : n.toLocaleString() + '원'; };
+  const navUrl = s => `https://map.kakao.com/link/to/${encodeURIComponent(s.r.name + ' ' + (s.r.place || ''))},${s.pt.lat},${s.pt.lng}`;
+  const telUrl = t => 'tel:' + String(t || '').replace(/[^0-9+]/g, '');
+  function renderPanel(){
+    const r = route; if(!r) return;
+    pn.innerHTML = `<div class="rth"><b>🚗 ${r.town ? esc(r.town) + ' ' : ''}미완료 ${r.stops.length}곳 동선</b><span>약 ${r.km.toFixed(1)}km (직선거리×1.3 추정)</span><button type="button" data-rt="x" title="동선 지우기">✕</button></div>
+      <div class="rtb">${r.stops.map((s, k) => `<div class="rti"><i>${k + 1}</i><div><b>${esc(s.r.name)}</b> <small>${s.leg.toFixed(1)}km</small><br>
+        <a href="${navUrl(s)}" target="_blank" rel="noopener">🧭 ${esc(s.r.place || '길찾기')}</a>${s.r.tel ? ` · <a href="${telUrl(s.r.tel)}">📞 ${esc(s.r.tel)}</a>` : ''}</div></div>`).join('')}</div>
+      <div class="rtf"><button type="button" data-rt="pdf">PDF 저장</button><button type="button" data-rt="share">팀원과 공유</button></div>`;
+    pn.hidden = false;
+  }
+  pn.addEventListener('click', e => {
+    const b = e.target.closest('[data-rt]'); if(!b) return;
+    if(b.dataset.rt === 'x') clearRoute();
+    if(b.dataset.rt === 'pdf') routePdf(false);
+    if(b.dataset.rt === 'share') routePdf(true);
+  });
+
+  /* ---- PDF용 동선 지도 그림 (Esri 지도 타일) ---- */
+  const tile = (z, x, y) => new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous'; const to = setTimeout(() => res(null), 12000);
+    im.onload = () => { clearTimeout(to); res(im); }; im.onerror = () => { clearTimeout(to); res(null); };
+    im.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}`; });
+  const proj = (p, z) => { const n = 256 * 2 ** z, s = Math.sin(p.lat * Math.PI / 180); return {x:(p.lng + 180) / 360 * n, y:(0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n}; };
+  async function routeImage(r, W = 1400, H = 1000){
+    const all = [r.start, ...r.stops.map(s => s.pt)], pad = 70;
+    let z = 17;
+    for(; z > 5; z--){ const ps = all.map(p => proj(p, z)); const w = Math.max(...ps.map(p => p.x)) - Math.min(...ps.map(p => p.x)), h = Math.max(...ps.map(p => p.y)) - Math.min(...ps.map(p => p.y)); if(w <= W - pad * 2 && h <= H - pad * 2) break; }
+    const ps = all.map(p => proj(p, z));
+    const cx = (Math.max(...ps.map(p => p.x)) + Math.min(...ps.map(p => p.x))) / 2, cy = (Math.max(...ps.map(p => p.y)) + Math.min(...ps.map(p => p.y))) / 2;
+    const x0 = cx - W / 2, y0 = cy - H / 2;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+    g.fillStyle = '#eef0f3'; g.fillRect(0, 0, W, H);
+    const jobs = [];
+    for(let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + H - 1) / 256); ty++) for(let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + W - 1) / 256); tx++)
+      jobs.push(tile(z, tx, ty).then(im => { if(im) g.drawImage(im, Math.round(tx * 256 - x0), Math.round(ty * 256 - y0)); }));
+    await Promise.all(jobs);
+    const P = ps.map(p => ({x:p.x - x0, y:p.y - y0}));
+    g.lineJoin = 'round'; g.lineCap = 'round';
+    g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 10; g.beginPath(); P.forEach((p, k) => k ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)); g.stroke();
+    g.strokeStyle = '#1f6feb'; g.lineWidth = 6; g.beginPath(); P.forEach((p, k) => k ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)); g.stroke();
+    // 방향 화살표
+    for(let k = 1; k < P.length; k++){ const a = P[k - 1], b = P[k], mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, an = Math.atan2(b.y - a.y, b.x - a.x);
+      if(Math.hypot(b.x - a.x, b.y - a.y) < 40) continue;
+      g.save(); g.translate(mx, my); g.rotate(an); g.fillStyle = '#1f6feb'; g.beginPath(); g.moveTo(9, 0); g.lineTo(-7, -7); g.lineTo(-7, 7); g.closePath(); g.fill(); g.restore(); }
+    // 출발
+    g.fillStyle = '#16a34a'; g.strokeStyle = '#fff'; g.lineWidth = 4; g.beginPath(); g.arc(P[0].x, P[0].y, 18, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = '#fff'; g.font = 'bold 16px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('출발', P[0].x, P[0].y + 1);
+    // 번호
+    for(let k = P.length - 1; k >= 1; k--){ const p = P[k];
+      g.fillStyle = '#dc2626'; g.strokeStyle = '#fff'; g.lineWidth = 4; g.beginPath(); g.arc(p.x, p.y, 17, 0, 7); g.fill(); g.stroke();
+      g.fillStyle = '#fff'; g.font = 'bold 18px sans-serif'; g.fillText(String(k), p.x, p.y + 1);
+      g.font = 'bold 15px "Malgun Gothic", sans-serif'; const nm = r.stops[k - 1].r.name, tw = g.measureText(nm).width;
+      g.fillStyle = 'rgba(255,255,255,.9)'; g.fillRect(p.x + 20, p.y - 11, tw + 10, 22); g.fillStyle = '#111'; g.textAlign = 'left'; g.fillText(nm, p.x + 25, p.y + 1); g.textAlign = 'center'; }
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.font = '13px sans-serif'; g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(W - 170, H - 20, 170, 20); g.fillStyle = '#333'; g.fillText('지도 © Esri, OpenStreetMap', W - 164, H - 6);
+    try{ return cv.toDataURL('image/jpeg', .88); }catch(_){ return null; }
+  }
+
+  /* ---- 동선 PDF (전화·길찾기 누르면 바로 연결) ---- */
+  async function routePdf(share){
+    const r = route; if(!r) return;
+    if(!window.html2canvas || !window.jspdf){ alert('PDF 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.'); return; }
+    $('busy').hidden = false;
+    const box = document.createElement('div'); box.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px'; document.body.appendChild(box);
+    try{
+      const img = await routeImage(r);
+      const when = `${r.at.getFullYear()}. ${r.at.getMonth() + 1}. ${r.at.getDate()}. ${String(r.at.getHours()).padStart(2, '0')}:${String(r.at.getMinutes()).padStart(2, '0')}`;
+      const head = `<div class="rpH"><b>보조사업 현장점검 이동 동선</b><span>${when} 작성 · ${r.town ? esc(r.town) + ' · ' : ''}미완료 ${r.stops.length}곳 · 약 ${r.km.toFixed(1)}km · 출발: ${esc(r.startName)}</span></div>`;
+      const row = (s, k) => `<tr><td class="c"><i>${k + 1}</i></td><td><b>${esc(s.r.name)}</b>${s.r.town ? `<br><small>${esc(s.r.town)}</small>` : ''}</td>
+        <td>${s.r.tel ? `<a data-link="${esc(telUrl(s.r.tel))}">📞 ${esc(s.r.tel)}</a>` : ''}</td>
+        <td><a data-link="${esc(navUrl(s))}">🧭 ${esc(s.r.place || '')}</a>${s.r.addr ? `<br><small>주소 ${esc(s.r.addr)}</small>` : ''}</td>
+        <td>${esc(s.r.biz || '')}</td><td>${esc(s.r.detail || '')}${s.r.item ? `<br><small>${esc(s.r.item)}</small>` : ''}</td>
+        <td class="r">${s.r.area ? esc(Number(String(s.r.area).replace(/,/g, '')) ? Number(String(s.r.area).replace(/,/g, '')).toLocaleString() + '㎡' : s.r.area) : ''}</td>
+        <td class="r">${won(s.r.total)}${s.r.subsidy ? `<br><small>보조 ${won(s.r.subsidy)}</small>` : ''}${s.r.self ? `<br><small>자부담 ${won(s.r.self)}</small>` : ''}</td>
+        <td class="r">${s.leg.toFixed(1)}km</td></tr>`;
+      const thead = '<thead><tr><th>순번</th><th>농가명</th><th>연락처</th><th>사업장 주소 (누르면 길찾기)</th><th>사업명</th><th>세부사업</th><th>사업량</th><th>사업비</th><th>이동</th></tr></thead>';
+      const pages = [];
+      pages.push(`${head}${img ? `<img class="rpM" src="${img}">` : '<div class="rpM0">지도 그림을 불러오지 못했습니다</div>'}<div class="rpN">· <b>연락처</b>를 누르면 전화 연결, <b>사업장 주소</b>를 누르면 카카오맵에서 현재 위치 → 사업장 길찾기가 열립니다.<br>· 거리는 직선거리에 도로 우회 계수(1.3)를 곱한 추정치이며, 순서는 출발 위치에서 가까운 곳부터 이어지도록 최적화했습니다.</div>`);
+      const FIRST = 4, PER = 10;
+      pages[0] += `<table class="rpT" style="margin-top:10px">${thead}<tbody>${r.stops.slice(0, FIRST).map((s, j) => row(s, j)).join('')}</tbody></table>`;
+      for(let k = FIRST; k < r.stops.length; k += PER) pages.push(`${head}<table class="rpT">${thead}<tbody>${r.stops.slice(k, k + PER).map((s, j) => row(s, k + j)).join('')}</tbody></table>`);
+      const pdf = new jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait', compress:true});
+      for(let p = 0; p < pages.length; p++){
+        box.innerHTML = `<div class="rpP">${pages[p]}</div>`;
+        const pg = box.firstElementChild;
+        await new Promise(res => setTimeout(res, 60));
+        const cv = await html2canvas(pg, {scale:2, backgroundColor:'#ffffff', logging:false});
+        if(p) pdf.addPage();
+        const k = 210 / pg.offsetWidth, h = pg.offsetHeight * k;
+        pdf.addImage(cv.toDataURL('image/jpeg', .9), 'JPEG', 0, 0, 210, Math.min(297, h));
+        const r0 = pg.getBoundingClientRect();
+        pg.querySelectorAll('a[data-link]').forEach(a => { const q = a.getBoundingClientRect(); pdf.link((q.left - r0.left) * k, (q.top - r0.top) * k, q.width * k, q.height * k, {url:a.dataset.link}); });
+      }
+      const name = `점검동선_${r.town ? r.town + '_' : ''}${r.at.getFullYear()}${String(r.at.getMonth() + 1).padStart(2, '0')}${String(r.at.getDate()).padStart(2, '0')}_${r.stops.length}곳.pdf`;
+      const blob = pdf.output('blob');
+      if(share){
+        const file = new File([blob], name, {type:'application/pdf'});
+        if(navigator.canShare && navigator.canShare({files:[file]})){
+          try{ await navigator.share({files:[file], title:'점검 이동 동선', text:`미완료 ${r.stops.length}곳 점검 동선입니다. 주소를 누르면 길찾기, 연락처를 누르면 전화가 연결됩니다.`}); }
+          catch(e){ if(e && e.name !== 'AbortError') toast('공유하지 못했습니다: ' + e.message); }
+          return;
+        }
+        toast('이 기기는 바로 공유를 지원하지 않아 PDF로 저장합니다 — 카카오톡·메일로 팀원에게 보내 주세요');
+      }
+      saveBlob(blob, name);
+    }catch(e){ alert('동선 PDF를 만들지 못했습니다: ' + e.message); }
+    finally{ box.remove(); $('busy').hidden = true; }
+  }
+  window.ROUTE = {optimize, makeRoute, routePdf, get route(){ return route; }, set route(v){ route = v; }, renderPanel, routeImage};
 })();
 </script>
 </body>
