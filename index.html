@@ -2826,6 +2826,27 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     L.pages.splice(i + 1, 0, {els: moved, cont: true});
     return 1;
   }
+  /* 끌어서 옮긴 요소가 다른 내용과 겹치면: 그 사이에 끼워 넣고 위아래 내용을 자동으로 다시 배치 */
+  function settleMove(e, ox, oy){
+    const els = page().els, others = els.filter(x => x !== e);
+    const ovl = (a, b) => a.x < b.x + b.w - 2 && b.x < a.x + a.w - 2 && a.y < b.y + b.h - 2 && b.y < a.y + a.h - 2;
+    const before = {x:ox, y:oy, w:e.w, h:e.h};
+    const hit = others.filter(x => ovl(e, x) && !ovl(before, x)).sort((a, b) => a.y - b.y);   // 원래부터 겹쳐 있던 것(칸 위 서명 등)은 제외
+    if(!hit.length) return false;
+    const cy = e.y + e.h / 2;
+    const k = hit.filter(x => x.y + x.h / 2 < cy).length;
+    const ref = k === 0 ? hit[0] : hit[k - 1], after = k > 0;
+    // 1) 원래 자리 메우기 (그 줄에 혼자 있었을 때만 아래 내용을 끌어올림)
+    els.splice(els.indexOf(e), 1);
+    const band = others.filter(x => x.y < oy + e.h - 1 && x.y + x.h > oy + 1);
+    if(!band.length){
+      const below = others.filter(x => x.y >= oy + e.h - 4);
+      if(below.length){ const d = Math.min(...below.map(x => x.y)) - oy; if(d > 0) below.forEach(x => x.y -= d); }
+    }
+    // 2) 기준 요소 앞/뒤에 끼워 넣기
+    placeFlow(e, after ? ref.y + ref.h + 8 : ref.y, e.x);
+    return true;
+  }
   function placeFlow(e, atY, atX){
     const els = page().els;
     e.z = els.length ? Math.min(...els.map(x => x.z || 1)) : 1;
@@ -3165,7 +3186,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       const sx = ev.clientX, sy = ev.clientY, ox = e.x, oy = e.y; let moved = false;
       const mv = m => { const dx = (m.clientX - sx) / zoom, dy = (m.clientY - sy) / zoom; if(!moved && Math.abs(dx) + Math.abs(dy) < 3) return; if(!moved){ snap(); moved = true; }
         e.x = clamp(r5(ox + dx), 0, PW - e.w); e.y = clamp(r5(oy + dy), 0, PH - e.h); node.style.left = e.x + 'px'; node.style.top = e.y + 'px'; m.preventDefault(); };
-      const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); if(moved){ draw(); props(); } };
+      const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); if(moved){ if(settleMove(e, ox, oy)) toast('그 자리에 끼워 넣고 위아래 내용을 다시 배치했습니다'); draw(); props(); } };
       addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up); ev.preventDefault(); ev.stopPropagation(); return;
     }
     {
@@ -3228,7 +3249,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     };
     const up = () => {
       removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up);
-      if(moved) props();
+      if(moved){ if(!resize && settleMove(e, ox, oy)){ draw(); toast('그 자리에 끼워 넣고 위아래 내용을 다시 배치했습니다'); } props(); }
       else if(sameSpot && !resize) startInline(e, cell);    // 선택된 곳을 한 번 더 누르면 그 자리에서 글자 고치기
     };
     addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up); addEventListener('pointercancel', up);
