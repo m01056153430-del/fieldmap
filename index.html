@@ -5685,13 +5685,13 @@ $('iHwp').onclick = async () => {
   });
 
   /* ---- PDF용 동선 지도 그림 (Esri 지도 타일) ---- */
-  const tile = (z, x, y) => new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous'; const to = setTimeout(() => res(null), 12000);
+  const tile = (z, x, y, svc = 'World_Imagery') => new Promise(res => { const im = new Image(); im.crossOrigin = 'anonymous'; const to = setTimeout(() => res(null), 12000);
     im.onload = () => { clearTimeout(to); res(im); }; im.onerror = () => { clearTimeout(to); res(null); };
-    im.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${z}/${y}/${x}`; });
+    im.src = `https://server.arcgisonline.com/ArcGIS/rest/services/${svc}/MapServer/tile/${z}/${y}/${x}`; });
   const proj = (p, z) => { const n = 256 * 2 ** z, s = Math.sin(p.lat * Math.PI / 180); return {x:(p.lng + 180) / 360 * n, y:(0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n}; };
   async function routeImage(r, W = 1400, H = 1000){
     const all = [r.start, ...r.stops.map(s => s.pt)], pad = 70;
-    let z = 17;
+    let z = 18;
     for(; z > 5; z--){ const ps = all.map(p => proj(p, z)); const w = Math.max(...ps.map(p => p.x)) - Math.min(...ps.map(p => p.x)), h = Math.max(...ps.map(p => p.y)) - Math.min(...ps.map(p => p.y)); if(w <= W - pad * 2 && h <= H - pad * 2) break; }
     const ps = all.map(p => proj(p, z));
     const cx = (Math.max(...ps.map(p => p.x)) + Math.min(...ps.map(p => p.x))) / 2, cy = (Math.max(...ps.map(p => p.y)) + Math.min(...ps.map(p => p.y))) / 2;
@@ -5700,8 +5700,11 @@ $('iHwp').onclick = async () => {
     g.fillStyle = '#eef0f3'; g.fillRect(0, 0, W, H);
     const jobs = [];
     for(let ty = Math.floor(y0 / 256); ty <= Math.floor((y0 + H - 1) / 256); ty++) for(let tx = Math.floor(x0 / 256); tx <= Math.floor((x0 + W - 1) / 256); tx++)
-      jobs.push(tile(z, tx, ty).then(im => { if(im) g.drawImage(im, Math.round(tx * 256 - x0), Math.round(ty * 256 - y0)); }));
-    await Promise.all(jobs);
+      jobs.push(Promise.all([tile(z, tx, ty), tile(z, tx, ty, 'Reference/World_Transportation')]).then(([im, rd]) => ({tx, ty, im, rd})));
+    const got = await Promise.all(jobs);
+    // 위성사진 → 그 위에 도로 표시
+    got.forEach(({tx, ty, im}) => { if(im) g.drawImage(im, Math.round(tx * 256 - x0), Math.round(ty * 256 - y0)); });
+    got.forEach(({tx, ty, rd}) => { if(rd) g.drawImage(rd, Math.round(tx * 256 - x0), Math.round(ty * 256 - y0)); });
     const P = ps.map(p => ({x:p.x - x0, y:p.y - y0}));
     g.lineJoin = 'round'; g.lineCap = 'round';
     g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 10; g.beginPath(); P.forEach((p, k) => k ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y)); g.stroke();
@@ -5719,7 +5722,7 @@ $('iHwp').onclick = async () => {
       g.fillStyle = '#fff'; g.font = 'bold 18px sans-serif'; g.fillText(String(k), p.x, p.y + 1);
       g.font = 'bold 15px "Malgun Gothic", sans-serif'; const nm = r.stops[k - 1].r.name, tw = g.measureText(nm).width;
       g.fillStyle = 'rgba(255,255,255,.9)'; g.fillRect(p.x + 20, p.y - 11, tw + 10, 22); g.fillStyle = '#111'; g.textAlign = 'left'; g.fillText(nm, p.x + 25, p.y + 1); g.textAlign = 'center'; }
-    g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.font = '13px sans-serif'; g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(W - 170, H - 20, 170, 20); g.fillStyle = '#333'; g.fillText('지도 © Esri, OpenStreetMap', W - 164, H - 6);
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.font = '13px sans-serif'; g.fillStyle = 'rgba(255,255,255,.8)'; g.fillRect(W - 202, H - 20, 202, 20); g.fillStyle = '#333'; g.fillText('위성사진 © Esri World Imagery', W - 196, H - 6);
     try{ return cv.toDataURL('image/jpeg', .88); }catch(_){ return null; }
   }
 
