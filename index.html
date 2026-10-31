@@ -85,9 +85,15 @@
   #rtBar #rtGo{background:var(--b);color:#fff}
   #rtBar .rtTown{display:flex;align-items:center;gap:6px;width:100%;font-size:13px;color:var(--mut);white-space:nowrap}
   #rtBar .rtTown select{flex:1;padding:6px 8px;border:1px solid var(--ln);border-radius:8px;font-size:14px;background:#fff;color:var(--fg)}
-  .medot{width:18px;height:18px;border-radius:50%;background:#1f6feb;border:3px solid #fff;box-shadow:0 0 0 2px rgba(31,111,235,.4),0 2px 6px rgba(0,0,0,.35);position:relative}
-  .medot i{position:absolute;inset:-12px;border-radius:50%;background:rgba(31,111,235,.25);animation:mepulse 2s infinite}
-  @keyframes mepulse{0%{transform:scale(.4);opacity:1}100%{transform:scale(1.4);opacity:0}}
+  .mewrap{position:relative;width:30px;height:30px;pointer-events:none}
+  .mewrap .medot{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 35% 35%,#60a5fa,#1d4ed8 70%);border:4px solid #fff;box-shadow:0 0 0 3px #1d4ed8,0 3px 10px rgba(0,0,0,.5);animation:mebeat 1.4s ease-in-out infinite;z-index:2}
+  .mewrap i{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:3px solid #2563eb;background:rgba(37,99,235,.22);animation:mering 2.4s ease-out infinite;opacity:0}
+  .mewrap i.r2{animation-delay:.8s}.mewrap i.r3{animation-delay:1.6s}
+  .mewrap .melab{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);background:#1d4ed8;color:#fff;font-size:12px;font-weight:800;padding:3px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.35);animation:mefloat 1.4s ease-in-out infinite;z-index:3}
+  .mewrap .melab::after{content:'';position:absolute;left:50%;top:100%;margin-left:-5px;border:5px solid transparent;border-top-color:#1d4ed8}
+  @keyframes mering{0%{transform:scale(.6);opacity:.9}100%{transform:scale(3.4);opacity:0}}
+  @keyframes mebeat{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+  @keyframes mefloat{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-4px)}}
   .rtnum{width:26px;height:26px;border-radius:50%;background:#dc2626;color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer}
   #rtPanel{position:absolute;right:10px;bottom:10px;z-index:14;width:min(340px,calc(100% - 20px));max-height:55%;display:flex;flex-direction:column;background:#fff;border:1px solid #cbd5e1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);overflow:hidden}
   #rtPanel[hidden]{display:none}
@@ -5632,7 +5638,7 @@ $('iHwp').onclick = async () => {
   function drawMe(){
     const m = getMap(); if(!m || !me) return;
     const pos = new kakao.maps.LatLng(me.lat, me.lng);
-    if(!meOv){ meOv = new kakao.maps.CustomOverlay({position:pos, content:'<div class="medot" title="내 위치"><i></i></div>', zIndex:20}); meOv.setMap(m); }
+    if(!meOv){ meOv = new kakao.maps.CustomOverlay({position:pos, content:'<div class="mewrap" title="내 위치"><i class="r1"></i><i class="r2"></i><i class="r3"></i><div class="medot"></div><span class="melab">내 위치</span></div>', zIndex:20}); meOv.setMap(m); }
     else meOv.setPosition(pos);
   }
   function watchMe(center){
