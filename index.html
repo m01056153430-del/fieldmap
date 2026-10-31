@@ -755,7 +755,9 @@ const LS = {
 };
 const COLORS = ['#1f6feb','#e5484d','#30a46c','#f76b15','#8e4ec6','#0d9488','#d6409f','#a16207','#64748b'];
 let region = LS.get('region', '전라남도 구례군');
-const SETTINGS_PW = '0070';          // 설정 비밀번호
+// 설정(관리자) 비밀번호는 코드에 두지 않고 구글 동기화 서버(Apps Script)에서만 확인합니다
+let ADMIN_PW = '';   // 서버에서 확인된 비밀번호 (이 탭에서만 기억)
+try{ ADMIN_PW = sessionStorage.getItem('admPw') || ''; }catch(_){}
 let allowTop = LS.get('allowTop', false); // 상단 엑셀 버튼 허용 여부
 let unlocked = false;                // 이번 실행 중 비밀번호 확인 여부
 let rows = LS.get('rows', []);
@@ -1164,10 +1166,15 @@ function bindUi(){
   $('region').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); $('dlg').querySelector('button[value="ok"]').click(); } });
   // 엔터(모바일 '이동')를 누르면 '취소'가 먼저 눌리던 문제 → 엔터 = 확인
   $('pw').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); $('pwOk').click(); } });
-  $('pwForm').addEventListener('submit', e => {
+  $('pwForm').addEventListener('submit', async e => {
     if(e.submitter && e.submitter.value === 'cancel') return;
-    if($('pw').value === SETTINGS_PW){ unlocked = true; return; }
-    e.preventDefault(); $('pwMsg').textContent = '비밀번호가 맞지 않습니다.'; $('pw').select();
+    e.preventDefault();
+    const pw = $('pw').value; if(!pw){ $('pwMsg').textContent = '비밀번호를 입력해 주세요.'; return; }
+    $('pwMsg').textContent = '서버에서 확인 중…'; $('pwOk').disabled = true;
+    const r = window.checkAdminPw ? await checkAdminPw(pw) : {ok:false, error:'확인 기능을 불러오지 못했습니다'};
+    $('pwOk').disabled = false;
+    if(r.ok){ unlocked = true; $('pwDlg').close('ok'); return; }
+    $('pwMsg').textContent = r.error || '비밀번호가 맞지 않습니다.'; $('pw').select();
   });
   $('pwDlg').addEventListener('close', () => { if(unlocked && $('pwDlg').returnValue !== 'cancel') openSettings(); });
   $('dlg').addEventListener('close', () => {
@@ -4705,16 +4712,30 @@ $('iHwp').onclick = async () => {
   setInterval(() => { if(document.visibilityState === 'visible') gateCheck(); }, 2 * 60 * 1000);
   document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible') gateCheck(); });
 
-  $('gateAdmin').onclick = () => {
+  $('gateAdmin').onclick = async () => {
     const pw = prompt('관리자 비밀번호');
     if(pw === null) return;
-    if(pw !== SETTINGS_PW){ alert('비밀번호가 맞지 않습니다.'); return; }
+    const r = await checkAdminPw(pw);
+    if(!r.ok){ alert(r.error || '비밀번호가 맞지 않습니다.'); return; }
     adminBypass = true; unlocked = true; showGate(null);
     toast('관리자로 들어왔습니다. 설정 → 운영 관리에서 운영을 재개할 수 있습니다.');
   };
 
   /* ---------- 관리자 기능 ---------- */
-  const admin = (op, extra) => gatePost({action:'admin', op, pw:SETTINGS_PW, ...(extra || {})}, 30000);
+  const admin = (op, extra) => gatePost({action:'admin', op, pw:ADMIN_PW, ...(extra || {})}, 30000);
+  // 비밀번호 확인: 서버에 물어봄 (코드에는 비밀번호가 없음)
+  window.checkAdminPw = async pw => {
+    if(!gateUrl()) return {ok:false, error:'동기화 서버 주소가 없어 확인할 수 없습니다'};
+    try{
+      await gatePost({action:'admin', op:'state', pw}, 20000);
+      ADMIN_PW = pw; try{ sessionStorage.setItem('admPw', pw); }catch(_){}
+      return {ok:true};
+    }catch(e){
+      const m = String(e && e.message || '');
+      if(/비밀번호/.test(m)) return {ok:false, error:'비밀번호가 맞지 않습니다.'};
+      return {ok:false, error:'서버에 연결하지 못했습니다 — 인터넷 연결을 확인해 주세요 (설정은 인터넷이 있어야 열립니다)'};
+    }
+  };
   let last = null;
   const out = t => { $('admMsgOut').textContent = t; };
   async function loadState(){
