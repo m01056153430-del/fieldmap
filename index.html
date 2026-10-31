@@ -5735,7 +5735,7 @@ $('iHwp').onclick = async () => {
     const r = route; if(!r) return;
     pn.innerHTML = `<div class="rth"><b>🚗 ${r.town ? esc(r.town) + ' ' : ''}미완료 ${r.stops.length}곳 동선</b><span>약 ${r.km.toFixed(1)}km (직선거리×1.3 추정)</span><button type="button" data-rt="x" title="동선 지우기">✕</button></div>
       <div class="rtb">${r.stops.map((s, k) => `<div class="rti"><i>${k + 1}</i><div><b>${esc(s.r.name)}</b> <small>${s.leg.toFixed(1)}km</small><br>
-        <a href="${navUrl(s)}" target="_blank" rel="noopener">🧭 ${esc(s.r.place || '길찾기')}</a>${s.r.tel ? ` · <a href="${telUrl(s.r.tel)}">📞 ${esc(s.r.tel)}</a>` : ''}</div></div>`).join('')}</div>
+        <a href="${navUrl(s)}" target="_blank" rel="noopener">🧭 ${esc(s.r.place || '길찾기')}</a>${s.r.tel ? `<br><a href="${telUrl(s.r.tel)}" style="white-space:nowrap">📞 ${esc(s.r.tel)}</a>` : ''}</div></div>`).join('')}</div>
       <div class="rtf"><button type="button" data-rt="pdf">PDF 저장</button><button type="button" data-rt="share">팀원과 공유</button></div>`;
     pn.hidden = false;
   }
