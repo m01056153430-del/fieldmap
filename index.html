@@ -70,6 +70,15 @@
   #side.hide{display:none}
   #toggle{display:inline-block}
   #toggle.on{background:#dbeafe}
+  #instGuide{position:fixed;inset:0;z-index:10000;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;padding:18px}
+  #instGuide .ig{background:#fff;border-radius:14px;padding:18px;max-width:380px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.3);font-size:15px;line-height:1.6;color:#111}
+  #instGuide .igt{display:block;font-size:17px;margin-bottom:8px}
+  #instGuide ol{padding-left:20px;margin:6px 0}
+  #instGuide li{margin:6px 0}
+  #instGuide .sm{font-size:13px;color:#6b7280;margin:8px 0 0}
+  #instGuide button{width:100%;margin-top:12px;background:#1f6feb;color:#fff;padding:11px;font-size:16px}
+  #instGuide .igArrow{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);font-size:34px;color:#fff;animation:igb 1.2s infinite}
+  @keyframes igb{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,8px)}}
   /* 내 위치 · 동선 */
   #rtBar{display:flex;gap:6px;padding:0 10px 8px;flex-wrap:wrap}
   #rtBar button{flex:1;border:1px solid var(--b);color:var(--b);background:#fff;border-radius:8px;padding:7px 8px;font-size:13px;white-space:nowrap}
@@ -1218,7 +1227,30 @@ if(!window.kakao || !kakao.maps){
 // 안드로이드 크롬: '앱 설치' 버튼
 let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; $('install').style.display = 'inline-block'; });
-$('install').onclick = async () => { if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; $('install').style.display = 'none'; };
+/* 아이폰·아이패드: 설치 창이 없으므로 [앱 설치]를 누르면 '공유 → 홈 화면에 추가' 안내 */
+const UA = navigator.userAgent;
+const isIOS = /iPhone|iPad|iPod/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1);
+const isStandalone = () => !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches));
+const inAppBrowser = /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\//i.test(UA);
+if((isIOS || inAppBrowser) && !isStandalone()) $('install').style.display = 'inline-block';
+function installGuide(){
+  let g = document.getElementById('instGuide'); if(g) g.remove();
+  g = document.createElement('div'); g.id = 'instGuide';
+  const share = '<svg width="22" height="22" viewBox="0 0 24 24" style="vertical-align:-5px"><path d="M12 3v12M7 8l5-5 5 5" fill="none" stroke="#1f6feb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 11v9h14v-9" fill="none" stroke="#1f6feb" stroke-width="2" stroke-linejoin="round"/></svg>';
+  const steps = inAppBrowser
+    ? `<p>지금은 <b>${/KAKAOTALK/i.test(UA) ? '카카오톡' : '앱'} 안의 브라우저</b>라 설치할 수 없습니다.</p>
+       <ol><li>오른쪽 위(또는 아래) <b>⋮ / 공유</b> 메뉴를 누릅니다</li><li><b>${isIOS ? 'Safari로 열기' : '다른 브라우저로 열기(크롬)'}</b>를 누릅니다</li><li>열린 화면에서 다시 <b>[앱 설치]</b>를 누릅니다</li></ol>`
+    : `<ol><li>사파리 화면 아래(아이패드는 위) <b>공유 버튼</b> ${share} 을 누릅니다</li>
+       <li>목록을 올려 <b>[홈 화면에 추가]</b>를 누릅니다</li><li>오른쪽 위 <b>[추가]</b>를 누르면 홈 화면에 아이콘이 생깁니다</li></ol>
+       <p class="sm">홈 화면 아이콘으로 열면 주소창 없이 앱처럼 전체 화면으로 열립니다.<br>사파리가 아닌 크롬 등에서는 <b>공유 → 홈 화면에 추가</b>가 없을 수 있으니 사파리로 열어 주세요.</p>`;
+  g.innerHTML = `<div class="ig"><b class="igt">📱 홈 화면에 앱 설치하기</b>${steps}<button type="button" id="igOk">확인</button></div>${!inAppBrowser && isIOS ? '<div class="igArrow">⬇</div>' : ''}`;
+  document.body.appendChild(g);
+  g.onclick = e => { if(e.target === g || e.target.id === 'igOk') g.remove(); };
+}
+$('install').onclick = async () => {
+  if(deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; $('install').style.display = 'none'; return; }
+  installGuide();
+};
 window.addEventListener('appinstalled', () => { $('install').style.display = 'none'; });
 if('serviceWorker' in navigator && location.protocol === 'https:'){
   fetch('sw.js',{method:'HEAD'}).then(r=>{ if(r.ok) navigator.serviceWorker.register('sw.js'); }).catch(()=>{});
