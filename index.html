@@ -173,6 +173,10 @@
   .hwprev td[data-k]:hover{outline:2px solid #f59e0b;outline-offset:-2px}
   .hwprev.fold{max-height:0;padding:0;border:0;overflow:hidden}
   .badge.done{background:#e5e7eb;color:#374151}
+  .badge.st-done{background:#1f6feb;color:#fff}
+  .badge.st-ing{background:#fff7ed;color:#c2410c;border:1px solid #fdba74}
+  .badge.st-old{background:#f3f4f6;color:#6b7280;border:1px dashed #9ca3af}
+  #lRecs .rec.old{opacity:.6}
   .iw .st{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 7px;margin:4px 0 2px}
   .iw .st.ok{background:#e5e7eb;color:#374151}.iw .st.ing{background:#fef3c7;color:#92400e}.iw .st.no{background:#eff6ff;color:#1e40af}
   #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1b1f24;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:99;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90%;text-align:center}
@@ -1833,10 +1837,11 @@ async function openList(){
   renderStats();
   const townOf = r => r.target.town || '기타';
   const shown = listTown ? allRecs.filter(r => townOf(r) === listTown) : allRecs;
-  $('lRecs').innerHTML = shown.length ? shown.map(r => `<div class="rec">
+  const latestOf = new Map(); [...allRecs].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0)).forEach(r => { if(!latestOf.has(r.key)) latestOf.set(r.key, r.id); });
+  $('lRecs').innerHTML = shown.length ? shown.map(r => `<div class="rec${latestOf.get(r.key) === r.id ? '' : ' old'}">
       <input type="checkbox" data-id="${r.id}">
       <div class="m" data-open="${r.id}">
-        <div>${esc(r.target.name)} <span class="badge ${BAD.test(r.overall)?'warn':''}" ${r.overall?'':'style="background:#eef0f3;color:#555"'}>${esc(r.overall || '판정 없음')}</span></div>
+        <div>${esc(r.target.name)} ${r.done ? '<span class="badge st-done">✔ 완료</span>' : '<span class="badge st-ing">작성 중</span>'}${latestOf.get(r.key) === r.id ? '' : '<span class="badge st-old">이전 기록</span>'} <span class="badge ${BAD.test(r.overall)?'warn':''}" ${r.overall?'':'style="background:#eef0f3;color:#555"'}>${esc(r.overall || '판정 없음')}</span></div>
         <div>${esc(r.title)} · ${esc(fmtDT(r.date))} · ${esc(r.target.place)}</div>
       </div></div>`).join('')
     : listTown ? `<div style="color:var(--mut);text-align:center;padding:20px">${esc(listTown)}에는 아직 점검 기록이 없습니다.</div>`
