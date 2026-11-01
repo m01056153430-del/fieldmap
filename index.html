@@ -1110,7 +1110,7 @@ function labSet(m){
   const el = document.createElement('div');
   el.className = 'mlab' + (m._open ? ' open' : '') + (m._det ? ' det' : '');
   el.innerHTML = `<b>${esc(r.name)}</b>` + (m._open ? `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}`
-    + `<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="info">${m._det ? '상세 접기 ▲' : '상세 정보 ▼'}</button></div>`
+    + `<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="info">${m._det ? '상세 ▲' : '상세 ▼'}</button></div>`
     + (m._det ? labDetail(r, m._pt) : '') : '');
   el.onclick = ev => {
     if(ev.target.closest('a')) return;   // 전화·길찾기 링크는 그대로
@@ -1453,7 +1453,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101124909';
+const APP_VER = '20261101125214';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
