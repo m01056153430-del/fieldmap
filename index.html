@@ -4147,6 +4147,7 @@ const fdb = {   // 한글 서식 원본 파일 (이 기기 보관)
 const nz = s => String(s ?? '').replace(/[\s·ㆍ:：()（）\[\]<>「」『』※*\-_.,]/g, '');
 const fmtArea = a => a !== '' && a != null ? (isNaN(a) ? String(a) : Number(a).toLocaleString() + '㎡') : '';
 /* 이름칸 → 채울 값 */
+const wonTxt = v => { const n = Number(String(v ?? '').replace(/,/g, '')); return v === '' || v == null ? '' : isNaN(n) ? String(v) : n.toLocaleString() + '원'; };
 const HF = [
   ['성명',   /^(성명|성명대표자|대표자|대표자성명|보조사업자|보조사업자명|사업자|사업자명|신청인|신청자|신청자성명|농가명|경영주|사업주체|대상자|대상자성명|업체명|사업장명|농장명|상호)$/, r => r.target.name],
   ['연락처', /^(연락처|전화|전화번호|휴대폰|휴대전화|핸드폰|휴대폰번호)$/, r => r.target.tel],
@@ -4154,7 +4155,14 @@ const HF = [
   ['주소',   /^(주소|주소지|거주지|신청인주소)$/, r => r.target.addr],
   ['품목',   /^(품목|작목|재배품목|작물|축종)$/, r => r.target.item],
   ['사업량', /^(사업량|면적|규모|사업규모|재배면적|수량)$/, r => fmtArea(r.target.area)],
-  ['사업명', /^(사업명|사업명칭|보조사업명|세부사업명|사업내용)$/, r => r.target.biz],
+  ['사업명', /^(사업명|사업명칭|보조사업명|사업내용)$/, r => r.target.biz],
+  ['세부사업', /^(세부사업|세부사업명|세부내역)$/, r => r.target.detail],
+  ['총사업비', /^(총사업비|사업비|사업비총액|사업비계|총사업비원)$/, r => wonTxt(r.target.total)],
+  ['보조금', /^(보조금|보조금계|보조금액|보조액|지원액|보조금합계)$/, r => wonTxt(r.target.subsidy)],
+  ['국비', /^(국비|국고)$/, r => wonTxt(r.target.national)],
+  ['도비', /^(도비)$/, r => wonTxt(r.target.province)],
+  ['군비', /^(군비|시비|시군비)$/, r => wonTxt(r.target.county)],
+  ['자부담', /^(자부담|자부담금|자부담액|자담)$/, r => wonTxt(r.target.self)],
   ['읍면',   /^(읍면|읍면동|읍면명)$/, r => r.target.town],
   ['점검일시', /^(점검일시|점검일자|점검일|점검기간|확인일자|확인일시|점검날짜|점검년월일|일시|일자)$/, r => r.dateText || fmtDT(r.date)],
   ['점검자', /^(점검자|확인자|점검공무원|담당자|점검관|점검자성명|담당공무원|점검반|점검자소속성명)$/, r => r.inspector],
