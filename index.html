@@ -232,6 +232,7 @@
   .hwprev.fold{max-height:0;padding:0;border:0;overflow:hidden}
   .badge.done{background:#e5e7eb;color:#374151}
   .badge.st-done{background:#1f6feb;color:#fff}
+  .badge.st-wait{background:#f9fafb;color:#6b7280;border:1px solid #d1d5db}
   .badge.st-ing{background:#fff7ed;color:#c2410c;border:1px solid #fdba74}
   .badge.st-old{background:#f3f4f6;color:#6b7280;border:1px dashed #9ca3af}
   #lRecs .rec.old{opacity:.6}
@@ -627,8 +628,6 @@
         <input id="iGps" class="inp" readonly placeholder="위치 미기록">
         <button id="iGpsBtn" class="bline">현재 위치</button>
       </div>
-      <label style="display:flex;gap:8px;align-items:center;margin-top:12px;padding:10px;border:1px solid var(--ln);border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">
-        <input type="checkbox" id="iDone" style="width:20px;height:20px"> 점검 완료 <small style="font-weight:400;color:var(--mut)">(저장하면 지도 마커가 회색으로 바뀝니다)</small></label>
     </div>
 
     <div class="card" id="cItems">
@@ -667,6 +666,11 @@
         <small style="color:var(--mut)">손가락으로 서명하세요</small>
         <button id="signClr" class="bline">다시 쓰기</button>
       </div>
+    </div>
+
+    <div class="card" id="cDone">
+      <label style="display:flex;gap:8px;align-items:center;padding:2px;font-size:15px;font-weight:600;cursor:pointer">
+        <input type="checkbox" id="iDone" style="width:20px;height:20px"> 점검 완료 <small style="font-weight:400;color:var(--mut)">(저장하면 지도 마커가 회색으로 바뀝니다)</small></label>
     </div>
 
     <div class="acts">
@@ -1522,7 +1526,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101144811';
+const APP_VER = '20261101150048';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -1549,7 +1553,15 @@ async function reloadRecs(){
   try{ allRecs = (await idb.all() || []).map(fixRec); }catch(e){ allRecs = []; }
   allRecs.sort((a,b) => (b.date||'').localeCompare(a.date||'') || b.savedAt - a.savedAt);
   inspDone = new Map(); inspComplete = new Map();
-  for(const r of allRecs) if(!inspDone.has(r.key)){ inspDone.set(r.key, r.overall || '점검'); if(r.done) inspComplete.set(r.key, r); }
+  // 아무것도 적지 않은 기록(열어만 본 것)은 '대기'로 보고 점검 수에서 뺌
+  for(const r of allRecs) if(!inspDone.has(r.key) && !recEmpty(r)){ inspDone.set(r.key, r.overall || '점검'); if(r.done) inspComplete.set(r.key, r); }
+}
+function recEmpty(r){
+  if(r.done || r.overall || String(r.memo || '').trim()) return false;
+  if((r.photos || []).some(Boolean) || (r.photoIds || []).length || r.sign || r.signId) return false;
+  if((r.items || []).some(it => it.result || String(it.note || '').trim())) return false;
+  if((r.extra || []).some(x => String(x.value || '').trim())) return false;
+  return true;
 }
 /* 이전 버전 기록 호환 */
 function fixRec(r){
@@ -2062,7 +2074,7 @@ async function openList(){
   $('lRecs').innerHTML = shown.length ? shown.map(r => `<div class="rec${latestOf.get(r.key) === r.id ? '' : ' old'}">
       <input type="checkbox" data-id="${r.id}">
       <div class="m" data-open="${r.id}">
-        <div>${esc(r.target.name)} ${r.done ? '<span class="badge st-done">✔ 완료</span>' : '<span class="badge st-ing">작성 중</span>'}${latestOf.get(r.key) === r.id ? '' : '<span class="badge st-old">이전 기록</span>'} <span class="badge ${BAD.test(r.overall)?'warn':''}" ${r.overall?'':'style="background:#eef0f3;color:#555"'}>${esc(r.overall || '판정 없음')}</span></div>
+        <div>${esc(r.target.name)} ${r.done ? '<span class="badge st-done">✔ 완료</span>' : recEmpty(r) ? '<span class="badge st-wait">대기</span>' : '<span class="badge st-ing">작성 중</span>'}${latestOf.get(r.key) === r.id ? '' : '<span class="badge st-old">이전 기록</span>'} <span class="badge ${BAD.test(r.overall)?'warn':''}" ${r.overall?'':'style="background:#eef0f3;color:#555"'}>${esc(r.overall || '판정 없음')}</span></div>
         <div>${esc(r.title)} · ${esc(fmtDT(r.date))} · ${esc(r.target.place)}</div>
       </div></div>`).join('')
     : listTown ? `<div style="color:var(--mut);text-align:center;padding:20px">${esc(listTown)}에는 아직 점검 기록이 없습니다.</div>`
