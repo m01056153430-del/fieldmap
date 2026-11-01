@@ -451,6 +451,41 @@
   .stt.s-done{color:#dc2626;border-color:#fca5a5;background:#fef2f2}
   .stt.s-ing{color:#c2410c;border-color:#fdba74;background:#fff7ed}
   .stt.s-wait{color:#6b7280;border-color:#d1d5db;background:#f9fafb}
+
+  /* ===== 디자인 도구: 접히는 구역 ===== */
+  #ldToolBody{background:#f8fafc;padding:10px}
+  #ldToolBar{gap:6px}
+  #ldToolBar b{font-family:var(--f-title);font-weight:400!important;font-size:16px;flex:1;white-space:nowrap}
+  #ldToolBar .ldnav{display:flex;align-items:center;gap:2px;background:rgba(0,0,0,.18);border-radius:999px;padding:2px}
+  #ldToolBar .ldnav button{background:transparent;padding:3px 8px;font-size:12px}
+  #ldToolBar .ldnav button:hover{background:rgba(255,255,255,.2)}
+  #ldPgInfo{min-width:46px;text-align:center;font-size:13px;font-weight:700;color:#fff;white-space:nowrap}
+  #ldToolBar #ldTUndo{font-size:16px;padding:3px 10px}
+  .ldsec{border:1px solid #e2e8f0;border-radius:14px;margin-bottom:10px;background:#fff;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .ldsec>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:11px 14px;cursor:pointer;user-select:none;font-family:var(--f-title);font-size:15px;color:#134e4a;background:#fff;transition:background .15s}
+  .ldsec>summary::-webkit-details-marker{display:none}
+  .ldsec>summary:hover{background:#f0fdfa}
+  .ldsec>summary .si{width:26px;height:26px;border-radius:8px;background:#ccfbf1;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
+  .ldsec>summary .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ldsec>summary::after{content:'';width:8px;height:8px;border-right:2px solid #64748b;border-bottom:2px solid #64748b;transform:rotate(-45deg);transition:transform .2s;margin-right:4px;flex:none}
+  .ldsec[open]>summary{background:#f0fdfa;border-bottom:1px solid #e2e8f0}
+  .ldsec[open]>summary::after{transform:rotate(45deg)}
+  .ldsb{padding:12px 14px}
+  .ldfl{display:block;font-size:13px;color:var(--mut);margin-bottom:4px}
+  .ldin{width:100%;padding:9px 10px;border:1px solid var(--ln);border-radius:10px;font-size:15px}
+  .ldgrid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .ldgrid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .ldgrid2 button,.ldgrid3 button{border:1px solid #99f6e4!important;background:#fff;color:#0f766e;padding:9px 6px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ldgrid3 button{display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:14px!important;padding:10px 4px}
+  .ldgrid3 button b{font-size:18px;line-height:1.1;font-weight:400}
+  .ldgrid2 button:hover,.ldgrid3 button:hover{background:#f0fdfa}
+  .ldgrid2 .ldwarn{border-color:#fecaca!important;color:#b91c1c}
+  .ldsub{margin-top:10px;padding-top:10px;border-top:1px dashed #e2e8f0}
+  .ldsub button{font-size:13px}
+  .ldchk{display:flex;gap:6px;align-items:center;font-size:13px;color:#334155;margin-top:10px}
+  .ldhint{font-size:12px;color:var(--mut);line-height:1.5;margin-bottom:8px}
+  #ldProps{border-top:0!important;padding-top:0!important;margin-top:0!important}
+  #ldProps>.pt{display:none}
 </style>
 <script>
 // 앱 설치 정보(manifest)를 파일 안에 내장
@@ -719,37 +754,47 @@
   </div>
   <div id="ldWrap">
     <div id="ldTool">
-      <div class="ldrow">
-        <label class="ldl">문서 제목</label>
-        <input id="ldTitle" placeholder="예) 현장점검표">
-      </div>
-      <div class="ldrow ldbtns">
-        <button type="button" data-add="text">＋ 글자</button>
-        <button type="button" data-add="table">＋ 표</button>
-        <button type="button" data-add="checklist">＋ 점검항목표</button>
-        <button type="button" data-add="photo">＋ 사진</button>
-        <button type="button" data-add="sign">＋ 서명</button>
-        <button type="button" data-add="line">＋ 선</button>
-      </div>
-      <div style="margin-bottom:8px;padding:8px;border:1px dashed #93c5fd;border-radius:8px;background:#f8fbff">
-        <div style="font-size:13px;font-weight:700;margin-bottom:4px">엑셀 항목 넣기</div>
-        <div id="ldPlaceMsg" style="font-size:12px;color:var(--mut);margin-bottom:6px">항목을 누른 뒤, 쪽에서 넣을 곳을 누르세요. 표 칸·글상자 위를 누르면 그 안에 들어갑니다. (PC는 끌어다 놓기도 됨)</div>
-        <div id="ldFields" class="chips" style="max-height:150px;overflow:auto"></div>
-      </div>
-      <div class="ldrow ldbtns">
-        <button type="button" id="ldPrevPg">◀</button>
-        <span id="ldPgInfo" style="min-width:64px;text-align:center;font-size:13px"></span>
-        <button type="button" id="ldNextPg">▶</button>
-        <button type="button" id="ldAddPg">＋ 쪽</button>
-        <button type="button" id="ldDelPg">쪽 삭제</button>
-        <button type="button" id="ldUndo">되돌리기</button>
-      </div>
-      <div class="ldrow ldbtns">
-        <button type="button" id="ldDefault">기본 양식으로 다시 시작</button>
-        <button type="button" id="ldOff" style="color:#b91c1c">디자인 끄기</button>
-        <label style="font-size:13px;display:flex;gap:4px;align-items:center"><input type="checkbox" id="ldMore" checked> 남는 사진은 뒤쪽에 4장씩</label>
-      </div>
-      <div id="ldProps"></div>
+      <details class="ldsec" id="ldSecDoc">
+        <summary><span class="si">📄</span><span class="t">문서 · 쪽 설정</span></summary>
+        <div class="ldsb">
+          <label class="ldfl" for="ldTitle">문서 제목</label>
+          <input id="ldTitle" class="ldin" placeholder="예) 현장점검표">
+          <div class="ldgrid2" style="margin-top:10px">
+            <button type="button" id="ldAddPg">＋ 쪽 추가</button>
+            <button type="button" id="ldDelPg" class="ldwarn">쪽 삭제</button>
+          </div>
+          <label class="ldchk"><input type="checkbox" id="ldMore" checked> 남는 사진은 뒤쪽에 4장씩 붙이기</label>
+          <div class="ldgrid2 ldsub">
+            <button type="button" id="ldDefault" title="기본 양식으로 다시 시작">기본 양식으로</button>
+            <button type="button" id="ldOff" class="ldwarn">디자인 끄기</button>
+          </div>
+          <button type="button" id="ldUndo">되돌리기</button>
+        </div>
+      </details>
+      <details class="ldsec" id="ldSecAdd">
+        <summary><span class="si">➕</span><span class="t">요소 넣기</span></summary>
+        <div class="ldsb">
+          <div class="ldgrid3">
+            <button type="button" data-add="text"><b>가</b>글자</button>
+            <button type="button" data-add="table"><b>▦</b>표</button>
+            <button type="button" data-add="checklist"><b>☑</b>점검항목표</button>
+            <button type="button" data-add="photo"><b>🖼</b>사진</button>
+            <button type="button" data-add="sign"><b>✍</b>서명</button>
+            <button type="button" data-add="line"><b>―</b>선</button>
+          </div>
+        </div>
+      </details>
+      <details class="ldsec" id="ldSecField">
+        <summary><span class="si">📋</span><span class="t">엑셀 항목 넣기</span></summary>
+        <div class="ldsb">
+          <div id="ldPlaceMsg" class="ldhint">항목을 누른 뒤 쪽에서 넣을 곳을 누르세요. 표 칸·글상자 위를 누르면 그 안에 들어갑니다. (PC는 끌어다 놓기도 됨)</div>
+          <div id="ldFields" class="chips" style="max-height:180px;overflow:auto"></div>
+        </div>
+      </details>
+      <details class="ldsec" id="ldSecSel">
+        <summary><span class="si">✏️</span><span class="t">선택한 요소</span></summary>
+        <div class="ldsb"><div id="ldProps"></div></div>
+      </details>
     </div>
     <div id="ldStage"><div id="ldZoom"><div id="ldPage"></div></div></div>
   </div>
@@ -1601,7 +1646,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101153708';
+const APP_VER = '20261101154857';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -3541,7 +3586,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const body = document.createElement('div'); body.id = 'ldToolBody';
     while(T.firstChild) body.appendChild(T.firstChild);
     const bar = document.createElement('div'); bar.id = 'ldToolBar';
-    bar.innerHTML = '<b>🛠 디자인 도구</b><button type="button" id="ldTUndo" title="되돌리기 (Ctrl+Z)">↶ 되돌리기</button><button type="button" id="ldTMin" title="최소화 / 펼치기">—</button><button type="button" id="ldTReset" title="처음 위치로">⟲</button>';
+    bar.innerHTML = '<b>🛠 디자인</b><span class="ldnav"><button type="button" id="ldPrevPg" title="이전 쪽">◀</button><span id="ldPgInfo"></span><button type="button" id="ldNextPg" title="다음 쪽">▶</button></span><button type="button" id="ldTUndo" title="되돌리기 (Ctrl+Z)">↶</button><button type="button" id="ldTMin" title="최소화 / 펼치기">—</button><button type="button" id="ldTReset" title="처음 위치로">⟲</button>';
     const rh = document.createElement('div'); rh.className = 'wrh';
     T.append(bar, body, rh);
     const KEY = 'ldToolPos';
@@ -3561,6 +3606,15 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       $('ldTMin').textContent = pos.min ? '▢' : '—';
     }
     const save = () => LS.set(KEY, pos);
+    // '선택한 요소' 구역: 제목을 선택 내용으로 바꾸고, 새로 요소를 고르면 자동으로 펼침
+    let lastSel = '';
+    new MutationObserver(() => {
+      const pt = $('ldProps').querySelector('.pt'), t = pt ? pt.textContent.trim() : '선택한 요소';
+      const sec = $('ldSecSel'); sec.querySelector('summary .t').textContent = /^선택/.test(t) ? t.replace(/^선택:\s*/, '선택한 요소 · ') : t + ' · 사용 방법';
+      const sel = document.querySelector('#ldPage .le.sel'), id = sel ? sel.dataset.id : '';
+      if(id && id !== lastSel) sec.open = true;
+      lastSel = id;
+    }).observe($('ldProps'), {childList:true});
     $('ldTMin').onclick = () => { pos.min = !pos.min; apply(); save(); };
     $('ldTUndo').onclick = () => $('ldUndo').click();
     $('ldUndo').style.display = 'none';
