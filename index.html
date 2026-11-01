@@ -148,6 +148,12 @@
   .mlab .mlinks a{color:#1f6feb;font-weight:700;text-decoration:none}
   .mlab .mst{margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:4px}
   .mlab .mst label{display:flex;gap:6px;align-items:center;font-size:13px}
+  .mlab .mbot{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb}
+  .mlab .mbot button{border:0;border-radius:8px;padding:7px 16px;font-size:14px;font-weight:700;background:#1f6feb;color:#fff;cursor:pointer}
+  .mlab .mbot label{display:flex;gap:6px;align-items:center;font-size:14px;font-weight:600}
+  .mlab .mbot input{width:18px;height:18px}
+  .mlab.auto{padding:4px 10px}
+  .mlab.auto b{font-size:14px;margin-bottom:0}
   .mlab .mlb button{border:1px solid #1f6feb;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;background:#fff;color:#1f6feb;cursor:pointer}
   .mlab .mlb button[data-ml="insp"]{background:#1f6feb;color:#fff}
   .mlab .mlb button[data-ml="info"].on{background:#1f6feb;color:#fff}
@@ -1103,16 +1109,21 @@ function labDetail(r, pt){
     + row('연락처', tel ? `<a href="tel:${tel}">${esc(r.tel)}</a>` : '')
     + row('비고', esc(r.note || ''))
     + `<div class="mlinks">${tel ? `<a href="tel:${tel}">📞 전화</a>` : ''}<a href="${to}" target="_blank" rel="noopener">🧭 길찾기</a><a href="${view}" target="_blank" rel="noopener">🗺 카카오맵</a></div>`
-    + `<div class="mst">${st}${has ? `<label><input type="checkbox" ${done ? 'checked' : ''} data-ml="done"> 점검 완료</label>` : ''}</div></div>`;
+    + `<div class="mst">${st}</div>`
+    + `<div class="mbot"><button type="button" data-ml="insp">${last ? '점검 보기·수정' : '점검'}</button>${has ? `<label><input type="checkbox" ${done ? 'checked' : ''} data-ml="done"> 점검 완료</label>` : ''}</div></div>`;
 }
+const AUTO_LEVEL = 0;   // 배율에 따른 자동 펼침은 쓰지 않음 (0 = 끔)
 function labSet(m){
   const r = rows[m._i]; if(!r || !m._lab) return;
   if(m._open && info) info.close();   // 예전 정보창이 떠 있으면 닫고 이 팝업 하나만
+  const auto = !m._open && map && map.getLevel() <= AUTO_LEVEL;
+  m._auto = auto;
   const el = document.createElement('div');
-  el.className = 'mlab' + (m._open ? ' open' : '') + (m._det ? ' det' : '');
-  el.innerHTML = `<b>${esc(r.name)}</b>` + (m._open ? `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}`
-    + `<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="info" class="${m._det ? 'on' : ''}">상세</button></div>`
-    + (m._det ? labDetail(r, m._pt) : '') : '');
+  el.className = 'mlab' + (m._open || auto ? ' open' : '') + (auto ? ' auto' : '') + (m._det ? ' det' : '');
+  const info2 = `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}`;
+  el.innerHTML = `<b>${esc(r.name)}</b>` + (auto ? info2 : m._open ? info2
+    + (m._det ? labDetail(r, m._pt)   // 상세: 점검·완료는 맨 아래
+      : `<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="info">상세</button></div>`) : '');
   el.onclick = ev => {
     if(ev.target.closest('a')) return;   // 전화·길찾기 링크는 그대로
     ev.stopPropagation();
@@ -1124,13 +1135,16 @@ function labSet(m){
       return;
     }
     if(!m._open){ m._open = true; labSet(m); updateLabels(); return; }
+    if(m._det && ev.target.closest('.mdet')) return;   // 상세 내용 안을 누르면 그대로
     m._det = !m._det; labSet(m);
   };
   m._lab.setContent(el); m._lab.setZIndex(m._open ? 10 : 3);
 }
 function updateLabels(){
   if(!map) return;
-  const on = map.getLevel() <= LABEL_LEVEL;
+  const on = map.getLevel() <= LABEL_LEVEL, au = map.getLevel() <= AUTO_LEVEL;
+  // 배율이 바뀌어 자동 표시 단계가 달라지면 이름표 내용을 다시 그림
+  markers.forEach(m => { if(m._lab && !m._open && !!m._auto !== au) labSet(m); });
   // 확대하면 이름만, 누른 마커는 사업명·세부사업까지 (축소해도 누른 것은 보임)
   markers.forEach(m => { if(m._lab) m._lab.setMap((on || m._open) && m.getMap() ? map : null); });
 }
@@ -1454,7 +1468,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101130127';
+const APP_VER = '20261101131139';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -3978,7 +3992,8 @@ const ROSTER_KEYS = ['name','town','addr','tel','place','item','detail','area','
 const SY = {
   url(){ return LS.get('syncUrl', '') || SYNC_URL_FIXED; },
   key(){ return LS.get('syncKey', ''); },
-  on(){ return !!(this.url() && this.key()); },
+  // 사용자 이름과 팀 키가 모두 있어야 동기화
+  on(){ return !!(this.url() && this.key() && String(LS.get('syncUser', '')).trim()); },
   busy:false, again:false, err:'', timer:null
 };
 function autoDevice(){
@@ -4009,7 +4024,12 @@ async function api(action, data, ms){
       body: JSON.stringify({...(data || {}), action, key:SY.key(), who:who()})
     });
     let j; try{ j = await r.json(); }catch(e){ throw new Error('서버 응답을 읽지 못했습니다 (웹앱 URL·배포 설정 확인)'); }
-    if(!j.ok){ if(j.gate && window.gateFromApi) gateFromApi(j.gate); throw new Error(j.error || '서버 오류'); }
+    if(!j.ok){
+      if(j.gate && window.gateFromApi) gateFromApi(j.gate);
+      // 팀 키가 틀리면 저장된 키를 지워 더 이상 동기화하지 않음
+      if(/팀\s*키/.test(j.error || '')){ LS.del('syncKey'); if(typeof syState === 'function') syState('연결', ''); }
+      throw new Error(j.error || '서버 오류');
+    }
     return j;
   }catch(e){
     if(e.name === 'AbortError') throw new Error('응답 시간 초과');
@@ -4233,7 +4253,13 @@ $('syncDlg').addEventListener('close', async () => {
 /* ---------- 자동 동기화 ---------- */
 syState(SY.on() ? '동기화' : (SY.url() ? '연결' : '동기화'), '');
 if(SY.on()) setTimeout(() => syncAll(false), 800);
-else if(SYNC_URL_FIXED) setTimeout(() => { toast('☁ 연결을 눌러 이름과 팀 키를 입력하면 함께 쓸 수 있습니다'); }, 1500);
+else if(SYNC_URL_FIXED) setTimeout(() => {
+  // 처음 접속(이름·팀 키 없음): 연결 창을 바로 띄움 — 입력하기 전에는 동기화하지 않음
+  let shown = false; try{ shown = sessionStorage.getItem('syAsk') === '1'; sessionStorage.setItem('syAsk', '1'); }catch(_){}
+  const gate = document.getElementById('gateCover');
+  if(!shown && !document.querySelector('dialog[open]') && !(gate && gate.style.display === 'flex')){ openSyncDlg(); toast('사용자 이름과 팀 키를 입력해야 동기화(명단 공유)가 됩니다'); }
+  else toast('☁ 연결을 눌러 이름과 팀 키를 입력하면 함께 쓸 수 있습니다');
+}, 1500);
 setInterval(() => { if(document.visibilityState === 'visible') syncAll(false); }, 3 * 60 * 1000);
 addEventListener('online', syncSoon);
 document.addEventListener('visibilitychange', () => {
@@ -6506,6 +6532,43 @@ $('iHwp').onclick = async () => {
     finally{ box.remove(); $('busy').hidden = true; }
   }
   window.ROUTE = {optimize, makeRoute, routePdf, get route(){ return route; }, set route(v){ route = v; }, renderPanel, routeImage};
+})();
+</script>
+<script>
+/* ===================== 뒤로가기: 사이트를 떠나지 않고 열린 창부터 닫기 ===================== */
+(function backNav(){
+  const $ = id => document.getElementById(id);
+  const vis = id => { const e = $(id); return e && !e.hidden; };
+  let lastExitTry = 0;
+  function closeTop(){
+    // 1) 떠 있는 작은 창들
+    for(const id of ['instGuide', 'sgPad']){ const e = $(id); if(e){ e.remove(); return true; } }
+    const dl = [...document.querySelectorAll('dialog[open]')].pop();
+    if(dl){ try{ dl.close('cancel'); }catch(_){} return true; }
+    // 2) 화면 단위: 양식 디자인 → 미리보기 → 점검 → 점검 목록
+    if(vis('ld')){ $('ldBack').click(); return true; }
+    if(vis('pv')){ $('pvBack').click(); return true; }
+    if(vis('insp')){ $('iBack').click(); return true; }
+    if(vis('ilist')){ $('lBack').click(); return true; }
+    // 3) 지도 위: 펼친 이름표 → 동선 창 → 명단 목록 창
+    if(typeof markers !== 'undefined'){
+      const open = markers.filter(m => m._open || m._det);
+      if(open.length){ open.forEach(m => { m._open = false; m._det = false; if(typeof labSet === 'function') labSet(m); }); if(typeof updateLabels === 'function') updateLabels(); return true; }
+    }
+    if(typeof info !== 'undefined' && info && info.getMap && info.getMap()){ info.close(); return true; }
+    if($('side') && !$('side').classList.contains('hide')){ $('side').classList.add('hide'); return true; }
+    return false;
+  }
+  try{ history.replaceState({fm:'base'}, ''); history.pushState({fm:'guard'}, ''); }catch(_){}
+  addEventListener('popstate', () => {
+    if(closeTop()){ try{ history.pushState({fm:'guard'}, ''); }catch(_){} return; }
+    // 닫을 창이 없으면: 한 번 더 누르면 나가기
+    const now = Date.now();
+    if(now - lastExitTry < 2000){ history.back(); return; }
+    lastExitTry = now;
+    try{ history.pushState({fm:'guard'}, ''); }catch(_){}
+    if(typeof toast === 'function') toast('뒤로가기를 한 번 더 누르면 사이트에서 나갑니다');
+  });
 })();
 </script>
 </body>
