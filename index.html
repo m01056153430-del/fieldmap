@@ -718,16 +718,13 @@
   <div class="ovb">
     <div class="card" id="lStats"></div>
     <div class="card">
-      <div class="rowf" style="flex-wrap:wrap">
-        <label style="display:flex;gap:6px;align-items:center;font-size:14px;flex:1"><input type="checkbox" id="lAll"> 전체 선택</label>
-        <button id="lPdf" class="bpri">PDF 묶음 저장</button>
-        <button id="lXls" class="bline">선택 엑셀 저장</button>
-        <button id="lXlsDone" class="bline" style="border-color:#0f766e!important;color:#0f766e">완료 건 전체 엑셀</button>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <button id="lPdf" class="bpri">PDF</button>
+        <button id="lXls" class="bline">엑셀</button>
+        <button id="lHwpZip" class="bline">한글(HWPX)</button>
       </div>
-      <div class="rowf" style="flex-wrap:wrap;margin-top:8px">
-        <button id="lTplBulk" class="bline" style="border-color:#7c3aed!important;color:#7c3aed">서식 일괄 적용</button>
-        <button id="lHwpZip" class="bline">한글 묶음 저장</button>
-      </div>
+      <label style="display:flex;gap:6px;align-items:center;font-size:14px;margin-top:10px"><input type="checkbox" id="lAll"> 전체 선택 <small style="color:var(--mut)">· 체크한 기록을 저장합니다</small></label>
+      <span hidden><button id="lXlsDone" type="button"></button><button id="lTplBulk" type="button"></button></span>
     </div>
     <div class="card" id="lRecs"></div>
   </div>
@@ -1489,7 +1486,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101142844';
+const APP_VER = '20261101143306';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
