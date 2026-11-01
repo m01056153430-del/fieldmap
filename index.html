@@ -479,8 +479,12 @@
   </header>
   <div id="main">
     <aside id="side" class="hide">
+      <div id="listRow" style="display:none;gap:6px;align-items:center;padding:10px 10px 0">
+        <span style="font-size:13px;color:var(--mut);white-space:nowrap;width:52px">명단</span>
+        <select id="listSel" style="flex:1;min-width:0;padding:8px;border:1px solid var(--ln);border-radius:8px;font-size:14px;background:#fff"></select>
+      </div>
       <div style="display:flex;gap:6px;align-items:center;padding:10px 10px 0">
-        <span style="font-size:13px;color:var(--mut);white-space:nowrap">점검 서식</span>
+        <span style="font-size:13px;color:var(--mut);white-space:nowrap;width:52px">점검 서식</span>
         <select id="mainTpl" style="flex:1;min-width:0;padding:8px;border:1px solid var(--ln);border-radius:8px;font-size:14px;background:#fff"></select>
         <button id="mainTplMgr" type="button" hidden style="display:none!important;white-space:nowrap;padding:8px 10px;border:1px solid var(--b);color:var(--b);background:#fff;border-radius:8px;font-size:13px;font-weight:600">관리</button>
       </div>
@@ -511,7 +515,9 @@
     <div class="sec">엑셀 업로드</div>
     <button type="button" id="tplXlsBtn" class="wide" style="background:#fff;color:var(--b);border:1px solid var(--b);margin-bottom:6px">업로드용 엑셀 서식 받기 (빈 서식)</button>
     <button type="button" id="curXlsBtn" class="wide" style="background:#fff;color:var(--b);border:1px solid var(--b);margin-bottom:6px">현재 명단을 서식으로 받기 (추가·수정용)</button>
-    <button type="button" id="openInSet" class="wide">엑셀 올리기 (명단 불러오기)</button>
+    <button type="button" id="openInSet" class="wide">엑셀 올리기 (명단 추가·교체)</button>
+    <div class="rowf" style="margin-top:6px"><button type="button" id="listRen" class="bline" style="flex:1">명단 이름 바꾸기</button><button type="button" id="listDel" class="bline bdan" style="flex:1">명단 삭제</button></div>
+    <small id="listNow" style="display:block;color:var(--mut);margin-top:4px"></small>
     <small style="display:block;color:var(--mut);margin:6px 0 4px">☁ 연결된 상태에서 올리면 모든 사용자에게 같은 명단이 공유됩니다.</small>
     <label class="chk"><input type="checkbox" id="allowTop"> 상단에 '엑셀 열기' 버튼 표시<br><small>켜면 비밀번호 없이 누구나 명단을 바꿀 수 있습니다</small></label>
     <div class="sec" style="margin-top:14px">점검 서식</div>
@@ -859,7 +865,29 @@ let ADMIN_PW = '';   // 서버에서 확인된 비밀번호 (이 탭에서만 �
 try{ ADMIN_PW = sessionStorage.getItem('admPw') || ''; }catch(_){}
 let allowTop = LS.get('allowTop', false); // 상단 엑셀 버튼 허용 여부
 let unlocked = false;                // 이번 실행 중 비밀번호 확인 여부
-let rows = LS.get('rows', []);
+/* ---------- 명단 여러 개: 모든 명단은 ROSTER에 함께, 각 행의 etc._list 에 명단 이름 ---------- */
+const LIST_DEF = '기본 명단';
+const etcRaw = r => { try{ return r && r.etc ? (typeof r.etc === 'string' ? JSON.parse(r.etc) : r.etc) : {}; }catch(e){ return {}; } };
+const listOf = r => etcRaw(r)._list || LIST_DEF;
+const withList = (r, name) => { const e = {...etcRaw(r)}; if(name && name !== LIST_DEF) e._list = name; else delete e._list; const {_pts, ...o} = r; return {...o, etc: Object.keys(e).length ? JSON.stringify(e) : ''}; };
+let ROSTER = LS.get('rows', []);
+let curList = LS.get('curList', '');
+const listNames = () => { const a = []; ROSTER.forEach(r => { const n = listOf(r); if(!a.includes(n)) a.push(n); }); return a; };
+function pickRows(){ const ns = listNames(); if(!ns.includes(curList)) curList = ns[0] || ''; return ROSTER.filter(r => listOf(r) === curList); }
+function saveRoster(){ LS.set('rows', ROSTER.map(({_pts, ...r}) => r)); }
+function queueListOp(op){
+  const ops = LS.get('listOps', []).filter(o => !(op.op === 'set' && o.op === 'set' && o.name === op.name));
+  ops.push(op); LS.set('listOps', ops);
+}
+function applyListOps(all, ops){
+  for(const op of ops){
+    if(op.op === 'set') all = all.filter(r => listOf(r) !== op.name).concat(op.rows);
+    else if(op.op === 'del') all = all.filter(r => listOf(r) !== op.name);
+    else if(op.op === 'ren') all = all.map(r => listOf(r) === op.from ? withList(r, op.to) : r);
+  }
+  return all;
+}
+let rows = pickRows();
 let geoCache = LS.get('geo', {});
 let map, geocoder, info, markers = [], filterTown = null, colorOf = {};
 
@@ -989,7 +1017,7 @@ function readWorkbook(buf){
     return o;
   }).filter(r => r.name || r.place);
 }
-const etcOf = r => { try{ return r && r.etc ? (typeof r.etc === 'string' ? JSON.parse(r.etc) : r.etc) : {}; }catch(e){ return {}; } };
+const etcOf = r => { const o = {...etcRaw(r)}; Object.keys(o).forEach(k => { if(k[0] === '_') delete o[k]; }); return o; };
 /* ---------- 업로드용 엑셀 서식 ---------- */
 function downloadRosterXlsx(withData){
   const extraHeads = withData ? [...new Set(rows.flatMap(r => Object.keys(etcOf(r))))] : [];
@@ -1200,7 +1228,20 @@ function updateLabels(){
   // 확대하면 이름만, 누른 마커는 사업명·세부사업까지 (축소해도 누른 것은 보임)
   markers.forEach(m => { if(m._lab) m._lab.setMap((on || m._open) && m.getMap() ? map : null); });
 }
+function renderListSel(){
+  const sel = $('listSel'); if(!sel) return;
+  const ns = listNames();
+  sel.innerHTML = ns.map(n => `<option value="${esc(n)}"${n === curList ? ' selected' : ''}>${esc(n)} (${ROSTER.filter(r => listOf(r) === n).length}명)</option>`).join('');
+  $('listRow').style.display = ns.length ? 'flex' : 'none';
+  const now = $('listNow'); if(now) now.textContent = ns.length ? `현재 명단: ${curList} · 전체 명단 ${ns.length}개 (${ns.join(', ')})` : '불러온 명단이 없습니다.';
+}
+function switchList(name){
+  curList = name; LS.set('curList', name); rows = pickRows();
+  filterTown = null; if($('q')) $('q').value = '';
+  plot();
+}
 async function plot(){
+  renderListSel();
   markers.forEach(m => { m.setMap(null); if(m._lab) m._lab.setMap(null); }); markers = []; if(info) info.close();
   buildColors(); renderFilters(); renderList();
   if(!rows.length || !map) return;
@@ -1238,11 +1279,19 @@ function bindUi(){
   $('file').onchange = async e => {
     const f = e.target.files[0]; if(!f) return;
     try{
-      rows = readWorkbook(await f.arrayBuffer());
-      LS.set('rows', rows.map(({_pts,...r}) => r));
-      LS.set('rosterPending', true); if(window.syncRoster) syncRoster(rows, f);
+      const parsed = readWorkbook(await f.arrayBuffer());
+      if(!parsed.length){ alert('엑셀에서 명단을 찾지 못했습니다.'); e.target.value = ''; return; }
+      const base = f.name.replace(/\.[^.]+$/, '').trim() || '새 명단', ns = listNames();
+      let name = prompt(`명단 이름을 정해 주세요 (${parsed.length}명).\n· 새 이름 → 명단이 하나 더 추가됩니다\n· 같은 이름 → 그 명단을 새 내용으로 바꿉니다` + (ns.length ? `\n\n지금 있는 명단: ${ns.join(', ')}` : ''), base);
+      if(name === null){ e.target.value = ''; return; }
+      name = name.trim() || base;
+      const newRows = parsed.map(r => withList(r, name));
+      ROSTER = [...ROSTER.filter(r => listOf(r) !== name), ...newRows];
+      curList = name; LS.set('curList', name); saveRoster(); rows = pickRows();
+      queueListOp({op:'set', name, rows:newRows});
+      if(window.syncRoster) syncRoster(f);
       filterTown = null; $('q').value = '';
-      setStatus(`${f.name} · ${rows.length}명 불러옴`);
+      setStatus(`${f.name} → '${name}' 명단 ${rows.length}명`);
       plot();
     }catch(err){ alert('엑셀을 읽지 못했습니다: ' + err.message); }
     e.target.value = '';
@@ -1253,6 +1302,24 @@ function bindUi(){
     const b = e.target.closest('.chip'); if(!b) return;
     filterTown = (b.dataset.t || null) === filterTown ? null : (b.dataset.t || null);
     renderFilters(); renderList(); fitVisible();
+  };
+  $('listSel').onchange = e => switchList(e.target.value);
+  $('listRen').onclick = () => {
+    if(!listNames().length) return toast('불러온 명단이 없습니다');
+    const from = curList, to = (prompt(`'${from}' 명단의 새 이름`, from) || '').trim();
+    if(!to || to === from) return;
+    if(listNames().includes(to)) return alert('같은 이름의 명단이 이미 있습니다.');
+    ROSTER = ROSTER.map(r => listOf(r) === from ? withList(r, to) : r);
+    queueListOp({op:'ren', from, to}); curList = to; LS.set('curList', to); saveRoster(); rows = pickRows(); plot();
+    if(window.syncSoon) syncSoon(); toast(`명단 이름을 '${to}'(으)로 바꿨습니다`);
+  };
+  $('listDel').onclick = () => {
+    if(!listNames().length) return toast('불러온 명단이 없습니다');
+    const name = curList, n = rows.length;
+    if(!confirm(`'${name}' 명단(${n}명)을 모든 사용자에게서 삭제할까요?\n점검 기록은 지워지지 않습니다.`)) return;
+    ROSTER = ROSTER.filter(r => listOf(r) !== name);
+    queueListOp({op:'del', name}); saveRoster(); rows = pickRows(); LS.set('curList', curList); plot();
+    if(window.syncSoon) syncSoon(); toast(`'${name}' 명단을 삭제했습니다`);
   };
   $('tplXlsBtn').onclick = () => downloadRosterXlsx(false);
   $('curXlsBtn').onclick = () => { if(!rows.length){ alert('불러온 명단이 없어 빈 서식을 내려받습니다.'); } downloadRosterXlsx(true); };
@@ -1339,7 +1406,7 @@ function bindUi(){
       if(nv !== region){ region = nv; LS.set('region', region); plot(); }
     } else if(v === 'clear'){
       if(confirm('이 기기에 저장된 명단과 위치 기록을 지울까요?')){
-        LS.del('rows'); LS.del('geo'); rows = []; geoCache = {}; plot(); setStatus('저장 데이터를 지웠습니다.');
+        LS.del('rows'); LS.del('listOps'); LS.del('geo'); ROSTER = []; rows = []; geoCache = {}; plot(); setStatus('저장 데이터를 지웠습니다.');
       }
     }
   });
@@ -1526,7 +1593,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101150454';
+const APP_VER = '20261101151325';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -4125,16 +4192,8 @@ window.syncSoon = syncSoon;
 
 /* ---------- 각 기능에서 부르는 연결점 ---------- */
 window.syncGeo = (k, hit) => { if(!hit) return; const g = LS.get('geoNew', {}); g[k] = hit; LS.set('geoNew', g); };
-window.syncRoster = async (rs, file) => {
-  if(!SY.on()) return;
-  try{
-    const payload = {rows: rs.map(({_pts, ...r}) => r)};
-    if(file && file.size < 15e6) payload.file = {name:file.name, data: await blobToDataUrl(file)};
-    await api('setRoster', payload, 180000);
-    LS.set('rosterPending', false);
-    toast('명단을 구글 시트에 올렸습니다 (모든 기기에 반영)');
-  }catch(e){ toast('명단 올리기 실패 — 연결되면 다시 올립니다: ' + e.message); }
-};
+let pendingRosterFile = null;
+window.syncRoster = file => { pendingRosterFile = file || null; if(SY.on()) syncAll(false); };
 window.syncDelete = id => { const q = LS.get('recDel', []); q.push(id); LS.set('recDel', q); syncSoon(); };
 window.syncTplDel = id => { const q = LS.get('tplDel', []); if(!q.includes(id)) q.push(id); LS.set('tplDel', q); syncSoon(); };
 window.syncPdf = async (blob, name, meta) => {
@@ -4230,8 +4289,8 @@ async function syncAll(manual){
       LS.set('recDel', LS.get('recDel', []).filter(x => x !== id));
     }
     // 2) 명단 대기분
-    if(LS.get('rosterPending', false) && rows.length){
-      await api('setRoster', {rows: rows.map(({_pts, ...r}) => r)});
+    if(LS.get('rosterPending', false)){   // 이전 버전에서 못 올린 명단 → 명단별로 올리기 예약
+      if(!LS.get('listOps', []).length) listNames().forEach(n => queueListOp({op:'set', name:n, rows:ROSTER.filter(r => listOf(r) === n).map(({_pts, ...r}) => r)}));
       LS.set('rosterPending', false);
     }
     // 3) 서식·위치 교환 + 서버 목록
@@ -4244,11 +4303,20 @@ async function syncAll(manual){
     for(const [k, v] of Object.entries(res.geo || {})) if(!geoCache[k]){ geoCache[k] = v; replot = true; }
     if(replot) LS.set('geo', geoCache);
     if(Array.isArray(res.roster)){
-      if(res.roster.length){
-        if(rosterSig(res.roster) !== rosterSig(rows)){ rows = res.roster; LS.set('rows', rows); filterTown = null; replot = true; }
-      } else if(rows.length){
-        await api('setRoster', {rows: rows.map(({_pts, ...r}) => r)});
+      let srvAll = res.roster;
+      const ops = LS.get('listOps', []);
+      if(ops.length){   // 내가 바꾼 명단만 서버 최신 목록 위에 덧씌움 (다른 사람이 올린 명단은 그대로)
+        srvAll = applyListOps(srvAll, ops);
+        const payload = {rows: srvAll.map(({_pts, ...r}) => r)};
+        const f = pendingRosterFile;
+        if(f && f.size < 15e6) payload.file = {name:f.name, data: await blobToDataUrl(f)};
+        await api('setRoster', payload, 180000);
+        LS.set('listOps', LS.get('listOps', []).slice(ops.length)); pendingRosterFile = null;
+        toast('명단을 구글 시트에 올렸습니다 (모든 기기에 반영)');
+      } else if(!srvAll.length && ROSTER.length){
+        await api('setRoster', {rows: ROSTER.map(({_pts, ...r}) => r)}); srvAll = ROSTER;
       }
+      if(rosterSig(srvAll) !== rosterSig(ROSTER)){ const was = curList; ROSTER = srvAll; saveRoster(); rows = pickRows(); if(curList !== was) LS.set('curList', curList); filterTown = null; replot = true; }
     }
     // 4) 점검기록 올리기 / 받기
     const local = new Map(((await idb.all()) || []).map(r => [r.id, fixRec(r)]));
