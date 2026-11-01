@@ -532,6 +532,33 @@
   .setchk small{display:block;font-size:12px;color:var(--mut);margin-top:2px}
   .setnote{display:block;font-size:12px!important;color:var(--mut);margin-top:8px;line-height:1.5}
   #opsDlg #admMsg{margin-top:8px}
+
+  /* ===== 칸 도구줄: 디자인 도구와 같은 밝은 카드 모양 ===== */
+  #ldPage .le .ctbar{background:#fff!important;color:#334155!important;border:1px solid #cbd5e1;border-radius:14px!important;padding:0!important;gap:0!important;overflow:hidden;box-shadow:0 12px 30px rgba(15,23,42,.22)!important;font-family:var(--f-body)}
+  #ldPage .le .ctbar .cr1{background:linear-gradient(135deg,#0f766e,#115e59);padding:6px 8px;gap:6px!important}
+  #ldPage .le .ctbar .ctgrip{background:rgba(255,255,255,.18)!important;color:#fff!important;border-radius:8px!important;padding:3px 7px!important;font-size:15px!important}
+  #ldPage .le .ctbar .ctn{color:#fff!important;font-family:var(--f-title);font-size:14px!important;flex:1;padding:0 2px!important}
+  #ldPage .le .ctbar .ctfb{background:rgba(255,255,255,.18)!important;color:#fff!important;border:0!important;padding:4px 11px!important;font-size:12px!important}
+  #ldPage .le .ctbar .ctfb.on{background:#fff!important;color:#0f766e!important}
+  #ldPage .le .ctbar .cr2{display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;border-bottom:1px solid #eef2f7;background:#f8fafc}
+  #ldPage .le .ctbar .cr2 button{background:#fff!important;border:1px solid #e2e8f0!important;color:#334155;padding:4px 10px!important;font-size:12px!important}
+  #ldPage .le .ctbar .cr2 button:hover{background:#f0fdfa!important;border-color:#99f6e4!important}
+  #ldPage .le .ctbar .cst{padding:7px 10px;border-bottom:1px solid #eef2f7;gap:8px}
+  #ldPage .le .ctbar .cst:last-child{border-bottom:0}
+  #ldPage .le .ctbar .cst .g{gap:3px;color:#64748b;font-size:12px}
+  #ldPage .le .ctbar span,#ldPage .le .ctbar .cst .g{color:#64748b!important}
+  #ldPage .le .ctbar .cst>span.g:first-child:not(:has(button)):not(:has(select)):not(:has(input)){font-family:var(--f-title);color:#0f766e!important;font-size:13px}
+  #ldPage .le .ctbar .cst button{background:#fff!important;border:1px solid #e2e8f0!important;color:#334155;border-radius:999px!important;padding:3px 9px!important;font-size:12px!important}
+  #ldPage .le .ctbar .cst button:hover{background:#f0fdfa!important}
+  #ldPage .le .ctbar .cst button.on{background:#0f766e!important;border-color:#0f766e!important;color:#fff!important}
+  #ldPage .le .ctbar .cst select{border:1px solid #e2e8f0;border-radius:8px;padding:3px 6px;background:#fff}
+  #ldPage .le .ctbar .cst input[type=color]{border:1px solid #e2e8f0;border-radius:6px;width:24px;height:22px}
+  #ldPage .le .ctbar .cst .sz{color:#0f766e;font-weight:700}
+  #ldPage .le .ctbar .phb{border-radius:8px!important;padding:0!important}
+  #ldPage .le .ctbar .phb.on{outline:3px solid #14b8a6}
+  #ldPage .le .ctbar .ctfl{white-space:normal;width:0;min-width:100%;box-sizing:border-box;max-height:150px;overflow:auto;background:#f0fdfa;gap:5px!important}
+  #ldPage .le .ctbar .ctfl .fg{width:100%;font-size:11px;color:#0f766e;font-weight:700;margin-top:2px}
+  #ldPage .le .ctbar .ctfl button{border-color:#99f6e4!important;color:#0f766e!important}
 </style>
 <script>
 // 앱 설치 정보(manifest)를 파일 안에 내장
@@ -1710,7 +1737,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101161255';
+const APP_VER = '20261101161535';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -3157,6 +3184,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     cell = null; crange = null; cmulti = null; draw(); props();
   }
   let ctOff = null;   // 칸 도구줄을 끌어 옮긴 위치
+  let ctFields = false;   // 칸 도구줄의 '엑셀 항목' 목록 펼침
   function addGrips(){
     const e = selEl(); if(!e || !(e.type === 'table' || e.type === 'checklist')) return;
     const node = $('ldPage').querySelector(`[data-id="${e.id}"]`); if(!node) return;
@@ -3193,7 +3221,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
               <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 넣기</button><button type="button" data-sat="1" title="사업장 위치 위성사진을 4:3 비율로 넣습니다">🛰 위성사진 넣기</button></div>`;
           } else if(SIGN_RE.test(t1)) extra = `<div class="cst"><span class="g">서명</span><button type="button" data-sg="pad">✍ 서명하기</button>${cur.sign ? '<button type="button" data-sg="clr" style="color:#b91c1c">서명 지우기</button>' : ''}</div>`;
         }
-        node.insertAdjacentHTML('beforeend', `<div class="ctbar" style="left:${Math.max(0, (left - nb0.left) / zoom)}px;top:0"><div class="cr1"><b class="ctgrip" title="끌어서 도구줄 옮기기">⠿</b><span>${n > 1 ? n + '칸' : '1칸'}</span>${bar}</div>${extra}${cellStyleCtl(e)}</div>`);
+        node.insertAdjacentHTML('beforeend', `<div class="ctbar" style="left:${Math.max(0, (left - nb0.left) / zoom)}px;top:0"><div class="cr1"><b class="ctgrip" title="끌어서 도구줄 옮기기">⠿</b><span class="ctn">${n > 1 ? n + '칸 선택' : '1칸 선택'}</span>${n === 1 && e.type === 'table' ? `<button type="button" class="ctfb${ctFields ? ' on' : ''}" data-fld="1" title="엑셀(명단) 항목을 이 칸에 넣기">📋 엑셀 항목</button>` : ''}</div><div class="cr2">${bar}</div>${ctFields && n === 1 && e.type === 'table' ? `<div class="cst ctfl">${fieldGroups(cur).map(([g, l]) => `<div class="fg">${esc(g)}</div>` + l.map(f => `<button type="button" data-ctf="${esc(f)}" title="${esc(fieldValue(cur, f) || '')}">${esc(f)}</button>`).join('')).join('')}</div>` : ''}${extra}${cellStyleCtl(e)}</div>`);
         const cb0 = node.querySelector('.ctbar');
         let ty = (top - nb0.top) / zoom - cb0.offsetHeight - 6;
         if(e.y + ty < 0) ty = Math.max(0 - e.y, e.h + 8);   // 위에 자리가 없으면 표 아래쪽에 (칸을 가리지 않게)
@@ -3837,6 +3865,15 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); draw(); props(); };
         addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up);
       }
+      return;
+    }
+    const fb = ev.target.closest('.ctbar [data-fld], .ctbar [data-ctf]');
+    if(fb){
+      ev.preventDefault(); ev.stopPropagation();
+      if(fb.dataset.fld){ ctFields = !ctFields; draw(); props(); return; }
+      const e0 = selEl(), L1 = selCells(); if(!e0 || e0.type !== 'table' || L1.length !== 1) return;
+      const {r, c} = L1[0], tag = '{' + fb.dataset.ctf + '}', old = String(e0.cells[r][c] || '');
+      snap(); e0.cells[r][c] = old.trim() ? old + ' ' + tag : tag; draw(); props(); toast(`${tag} 을(를) 칸에 넣었습니다`);
       return;
     }
     const cb = ev.target.closest('.ctbar [data-cb]');
