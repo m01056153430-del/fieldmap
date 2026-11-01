@@ -1601,7 +1601,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101152810';
+const APP_VER = '20261101153708';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -2091,7 +2091,7 @@ async function makePdf(jobs, filename){
     if(window.syncPdf) syncPdf(blob, filename, {pages: pdf.getNumberOfPages(),
       recId: jobs.length === 1 ? jobs[0].rec.id : '',
       inspector: [...new Set(jobs.map(j => j.rec.inspector).filter(Boolean))].join(',') || '',
-      tplName: (tplById(jobs[0].rec.tplId) || {}).name || jobs[0].rec.title,
+      tplName: mainTplName(jobs.map(j => j.rec)),
       target: [...new Set(jobs.map(j => j.rec.target.name))].join(', '), title: [...new Set(jobs.map(j => j.rec.title))].join(', ')});
     toast('PDF를 저장했습니다 (다운로드 폴더)');
   }catch(e){ alert('PDF를 만들지 못했습니다: ' + e.message); }
@@ -2102,6 +2102,7 @@ const shortTpl = s => String(s || '').replace(/보조사업|완료에\s*따른|�
 const whoOf = recs => { const a = [...new Set(recs.map(r => (r.inspector || '').trim().split(/[\s,·]+/).pop()).filter(Boolean))]; if(!a.length){ const u = LS.get('syncUser', '') || LS.get('inspector', ''); if(u) a.push(u); }
   return a.length ? safeName(a[0]) + (a.length > 1 ? `외${a.length - 1}` : '') : ''; };
 const tplsOf = recs => { const a = [...new Set(recs.map(r => shortTpl((tplById(r.tplId) || {}).name || r.title)))]; return a[0] + (a.length > 1 ? `외${a.length - 1}` : ''); };
+const mainTplName = recs => { const c = {}; recs.forEach(r => { const n = (tplById(r.tplId) || {}).name || r.title || '현장점검표'; c[n] = (c[n] || 0) + 1; }); return Object.keys(c).sort((a, b) => c[b] - c[a])[0] || '현장점검표'; };
 const joinName = (...p) => p.filter(Boolean).join('_');
 const today10 = () => localDT(new Date()).slice(0, 10);
 const pdfName = rec => joinName('[농가]', safeName(rec.title || '').replace(/^(보조사업_)?(완료_)?/, '') || '점검결과', safeName(rec.target.name || ''), whoOf([rec]), (rec.date || '').slice(0, 10)) + '.pdf';
@@ -2213,8 +2214,10 @@ function exportXlsx(recs, opt){
     add(todo, '미완료 명단', {'사업명':30, '사업장 장소':30, '주소':24});
   }
   const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-  saveBlob(new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
-    joinName(opt.prefix === '점검완료' ? '[완료]' : '[결과]', tplsOf(recs), whoOf(recs), today10()) + '.xlsx');
+  const xb = new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const xn = joinName(opt.prefix === '점검완료' ? '[완료]' : '[결과]', tplsOf(recs), whoOf(recs), today10()) + '.xlsx';
+  saveBlob(xb, xn);
+  if(window.syncPdf && recs.length) syncPdf(xb, xn, {kind:'엑셀', tplName: mainTplName(recs), inspector: whoOf(recs), target: recs.length + '건', title: '점검결과 엑셀'});
   toast(`엑셀로 저장했습니다 (${recs.length}건 · 시트: 점검결과, 항목별 상세${rows.length ? ', 미완료 명단' : ''})`);
 }
 
@@ -2444,7 +2447,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         $('busy').textContent = `한글 파일 만드는 중… ${i + 1}/${recs.length}`;
       }
       const out = await zip.generateAsync({type:'blob', compression:'DEFLATE'});
-      saveBlob(out, bulkName(recs, '.zip'));
+      const zn = bulkName(recs, '.zip'); saveBlob(out, zn);
+      if(window.syncPdf) syncPdf(out, zn, {kind:'한글 묶음', tplName: mainTplName(recs), inspector: whoOf(recs), target: recs.length + '건', title: '한글 묶음'});
       toast(`한글 파일 ${recs.length - fails.length}건을 zip으로 저장했습니다`);
       if(fails.length) alert('만들지 못한 파일:\n' + fails.join('\n'));
     } finally { $('busy').hidden = true; $('busy').textContent = 'PDF 만드는 중…'; }
@@ -4217,7 +4221,7 @@ window.syncPdf = async (blob, name, meta) => {
       await syncAll(false);
     }
     await api('savePdf', {name, data: await blobToDataUrl(blob), ...(meta || {})}, 240000);
-    toast('구글 드라이브 점검 폴더에도 보관했습니다');
+    toast(`구글 드라이브 '${(meta && meta.tplName) || '서식'}' 폴더에도 보관했습니다`);
   }catch(e){ toast('드라이브 PDF 보관 실패: ' + e.message); }
 };
 /* 다른 기기에서 받은 기록의 사진·서명 내려받기 */
