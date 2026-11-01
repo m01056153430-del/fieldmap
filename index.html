@@ -17,7 +17,7 @@
   html,body{margin:0;height:100%;font-family:-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:var(--fg);background:var(--bg)}
   #app{display:flex;flex-direction:column;height:100%}
   header{display:flex;gap:8px;align-items:center;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));background:var(--b);color:#fff;flex-wrap:wrap}
-  header h1{font-size:17px;margin:0;flex:1;min-width:140px}
+  header h1{font-size:17px;margin:0;flex:1;min-width:0}
   button,.btn{border:0;border-radius:8px;padding:8px 12px;font-size:14px;cursor:pointer;background:#fff;color:var(--b);font-weight:600}
   .btn input{display:none}
   #main{flex:1;display:flex;min-height:0}
@@ -415,10 +415,10 @@
 <body>
 <div id="app">
   <header>
-    <h1>보조사업 현장지도</h1>
+    <h1 aria-label="보조사업 현장지도"></h1>
     <button id="openTop" style="display:none">엑셀 열기</button>
     <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
-    <button id="install" style="display:none">앱 설치</button>
+    <button id="install" style="display:none">설치</button>
     <button id="syncBtn" title="구글 동기화">☁ 동기화</button>
     <button id="toggle">목록</button>
     <button id="inspAll">점검</button>
@@ -1468,7 +1468,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101131139';
+const APP_VER = '20261101131458';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -4040,7 +4040,8 @@ async function api(action, data, ms){
 
 function syState(t, st){
   const b = $('syncBtn'); if(!b) return;
-  b.textContent = '☁ ' + t; b.dataset.st = st || '';
+  b.textContent = '☁ ' + (t === '연결' ? '동기화' : t); b.dataset.st = st || '';   // 연결 전에도 '동기화'로 표시
+  b.classList.toggle('off', t === '연결');
   const last = LS.get('syncLast', 0);
   b.title = '구글 동기화' + (last ? ' · 마지막 ' + fmtTs(last) : '') + (SY.err ? ' · ' + SY.err : '');
 }
@@ -4258,7 +4259,7 @@ else if(SYNC_URL_FIXED) setTimeout(() => {
   let shown = false; try{ shown = sessionStorage.getItem('syAsk') === '1'; sessionStorage.setItem('syAsk', '1'); }catch(_){}
   const gate = document.getElementById('gateCover');
   if(!shown && !document.querySelector('dialog[open]') && !(gate && gate.style.display === 'flex')){ openSyncDlg(); toast('사용자 이름과 팀 키를 입력해야 동기화(명단 공유)가 됩니다'); }
-  else toast('☁ 연결을 눌러 이름과 팀 키를 입력하면 함께 쓸 수 있습니다');
+  else toast('☁ 동기화를 눌러 이름과 팀 키를 입력하면 함께 쓸 수 있습니다');
 }, 1500);
 setInterval(() => { if(document.visibilityState === 'visible') syncAll(false); }, 3 * 60 * 1000);
 addEventListener('online', syncSoon);
