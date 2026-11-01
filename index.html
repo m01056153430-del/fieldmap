@@ -559,6 +559,26 @@
   #ldPage .le .ctbar .ctfl{white-space:normal;width:0;min-width:100%;box-sizing:border-box;max-height:150px;overflow:auto;background:#f0fdfa;gap:5px!important}
   #ldPage .le .ctbar .ctfl .fg{width:100%;font-size:11px;color:#0f766e;font-weight:700;margin-top:2px}
   #ldPage .le .ctbar .ctfl button{border-color:#99f6e4!important;color:#0f766e!important}
+
+  /* 칸 도구줄: 이름표 열 + 묶음 버튼 */
+  #ldPage .le .ctbar .ctrow,#ldProps .cst.ctrow{display:grid!important;grid-template-columns:46px 1fr;align-items:center;gap:8px!important}
+  #ldPage .le .ctbar .ctrow .lab,#ldProps .ctrow .lab{font-family:var(--f-title);font-size:13px!important;color:#0f766e!important;padding:0!important;text-align:right;white-space:nowrap}
+  .ctrow .ctg{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+  .ctrow .seg{display:inline-flex;align-items:center;border:1px solid #e2e8f0;border-radius:999px;overflow:hidden;background:#fff}
+  #ldPage .le .ctbar .ctrow .seg button,#ldProps .ctrow .seg button{border:0!important;border-radius:0!important;border-right:1px solid #eef2f7!important;margin:0!important}
+  #ldPage .le .ctbar .ctrow .seg button:last-child,#ldProps .ctrow .seg button:last-child{border-right:0!important}
+  .ctrow .seg .sz{padding:0 6px;color:#0f766e;font-weight:700;font-size:12px}
+  .ctrow .sw input[type=color]{width:28px!important;height:24px!important;border-radius:8px!important;cursor:pointer}
+  #ldPage .le .ctbar .ctrow:nth-of-type(even){background:#fbfdff}
+
+  /* 칸 도구줄 v3: 구역 제목 + 같은 너비 이름표 */
+  #ldPage .le .ctbar .ctsec{border-bottom:1px solid #e2e8f0}
+  #ldPage .le .ctbar .ctsec:last-child{border-bottom:0}
+  #ldPage .le .ctbar .cth,#ldProps .cth{font-family:var(--f-title);font-size:12px;color:#fff;background:#14b8a6;display:inline-block;margin:8px 0 2px 10px;padding:1px 10px;border-radius:999px;letter-spacing:.5px}
+  #ldPage .le .ctbar .ctrow,#ldProps .cst.ctrow{grid-template-columns:62px 1fr!important;padding:5px 12px 5px 10px!important;border-bottom:0!important;background:transparent!important}
+  #ldPage .le .ctbar .ctrow .lab,#ldProps .ctrow .lab{display:block;width:62px;box-sizing:border-box;text-align:center!important;font-size:12px!important;color:#0f766e!important;background:#f0fdfa;border:1px solid #ccfbf1;border-radius:8px;padding:3px 0!important}
+  #ldPage .le .ctbar .ctrow .lab:empty,#ldProps .ctrow .lab:empty{visibility:hidden}
+  #ldPage .le .ctbar .ctsec>.ctrow:last-child{padding-bottom:9px!important}
 </style>
 <script>
 // 앱 설치 정보(manifest)를 파일 안에 내장
@@ -1737,7 +1757,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101161931';
+const APP_VER = '20261101163303';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -2995,24 +3015,31 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   }
   /* ---------- 선택한 칸의 글씨·선 스타일 ---------- */
   let bdr = {w:1, s:'solid', c:'#333333'};
-  function cellStyleCtl(e){
-    const L = selCells(); if(!L.length) return '';
+  /* 셀 도구 조각들 (칸 도구줄 · 속성 창에서 함께 씀) */
+  const ROW = (lab, inner) => `<div class="cst ctrow"><span class="lab">${lab}</span><div class="ctg">${inner}</div></div>`;
+  const SEC = (title, rows) => rows ? `<div class="ctsec"><div class="cth">${title}</div>${rows}</div>` : '';
+  function cellParts(e){
+    const L = selCells(); if(!L.length) return null;
     const k0 = cellAKey(e, L[0].r, L[0].c), c0 = (e.cst || {})[k0] || {};
     const on = v => v ? ' class="on"' : '';
     const sz = c0.size || e.size || 13;
-    return `<div class="cst">
-      <span class="g"><button type="button" data-cs="bold"${on(c0.bold ?? (e.bold || false))} title="굵게"><b>가</b></button><button type="button" data-cs="italic"${on(c0.italic)} title="기울임"><i>가</i></button><button type="button" data-cs="under"${on(c0.under)} title="밑줄"><u>가</u></button></span>
-      <span class="g"><button type="button" data-cs="size-" title="글자 작게">A−</button><b class="sz">${sz}</b><button type="button" data-cs="size+" title="글자 크게">A＋</button></span>
-      <span class="g"><select data-csv="font" title="글꼴">${FONTS.map(([v, l]) => `<option value="${esc(v)}"${(c0.font ?? e.font ?? '') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></span>
-      <span class="g" title="글자 색">글자<input type="color" data-csv="color" value="${c0.color || e.color || '#111111'}"></span>
-      <span class="g" title="칸 배경색">배경<input type="color" data-csv="bg" value="${c0.bg || '#ffffff'}"><button type="button" data-cs="bgnone" title="배경 없음">✕</button></span>
-    </div>
-    <div class="cst">
-      <span class="g">선<select data-bv="s" title="선 모양"><option value="solid"${bdr.s === 'solid' ? ' selected' : ''}>━ 실선</option><option value="dashed"${bdr.s === 'dashed' ? ' selected' : ''}>╍ 파선</option><option value="dotted"${bdr.s === 'dotted' ? ' selected' : ''}>┈ 점선</option><option value="double"${bdr.s === 'double' ? ' selected' : ''}>═ 이중</option></select>
+    return {
+      shape: `<span class="seg"><button type="button" data-cs="bold"${on(c0.bold ?? (e.bold || false))} title="굵게"><b>가</b></button><button type="button" data-cs="italic"${on(c0.italic)} title="기울임"><i>가</i></button><button type="button" data-cs="under"${on(c0.under)} title="밑줄"><u>가</u></button></span>`,
+      size: `<span class="seg"><button type="button" data-cs="size-" title="글자 작게">A−</button><b class="sz">${sz}</b><button type="button" data-cs="size+" title="글자 크게">A＋</button></span>`,
+      font: `<span class="g"><select data-csv="font" title="글꼴">${FONTS.map(([v, l]) => `<option value="${esc(v)}"${(c0.font ?? e.font ?? '') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></span>`,
+      tcolor: `<span class="g sw" title="글자 색"><input type="color" data-csv="color" value="${c0.color || e.color || '#111111'}"></span>`,
+      bg: `<span class="g sw" title="칸 배경색"><input type="color" data-csv="bg" value="${c0.bg || '#ffffff'}"></span><button type="button" data-cs="bgnone" title="배경 없음">색 없음</button>`,
+      bsel: `<span class="g"><select data-bv="s" title="선 모양"><option value="solid"${bdr.s === 'solid' ? ' selected' : ''}>━ 실선</option><option value="dashed"${bdr.s === 'dashed' ? ' selected' : ''}>╍ 파선</option><option value="dotted"${bdr.s === 'dotted' ? ' selected' : ''}>┈ 점선</option><option value="double"${bdr.s === 'double' ? ' selected' : ''}>═ 이중</option></select>
         <select data-bv="w" title="선 굵기">${[0.5, 1, 1.5, 2, 3, 4].map(w => `<option value="${w}"${bdr.w == w ? ' selected' : ''}>${w}px</option>`).join('')}</select>
-        <input type="color" data-bv="c" value="${bdr.c}" title="선 색"></span>
-      <span class="g"><button type="button" data-bd="all" title="모든 선">▦</button><button type="button" data-bd="out" title="바깥 선">▢</button><button type="button" data-bd="t" title="위 선">▔</button><button type="button" data-bd="b" title="아래 선">▁</button><button type="button" data-bd="l" title="왼쪽 선">▏</button><button type="button" data-bd="r" title="오른쪽 선">▕</button><button type="button" data-bd="none" title="선 없애기">✕선</button><button type="button" data-bd="reset" title="원래 선으로">↺</button></span>
-    </div>`;
+        <input type="color" data-bv="c" value="${bdr.c}" title="선 색"></span>`,
+      bbtn: `<span class="seg"><button type="button" data-bd="all" title="모든 선">▦</button><button type="button" data-bd="out" title="바깥 선">▢</button><button type="button" data-bd="t" title="위 선">▔</button><button type="button" data-bd="b" title="아래 선">▁</button><button type="button" data-bd="l" title="왼쪽 선">▏</button><button type="button" data-bd="r" title="오른쪽 선">▕</button><button type="button" data-bd="none" title="선 없애기">✕선</button><button type="button" data-bd="reset" title="원래 선으로">↺</button></span>`
+    };
+  }
+  const textRows = P => ROW('모양', P.shape + P.size) + ROW('글꼴', P.font + P.tcolor);
+  const cellRows = P => ROW('셀 색', P.bg) + ROW('테두리', P.bsel) + ROW('', P.bbtn);
+  function cellStyleCtl(e){
+    const P = cellParts(e); if(!P) return '';
+    return SEC('셀', cellRows(P)) + SEC('글자', textRows(P));
   }
   function applyCellStyle(e, op, val){
     const L = selCells(); if(!L.length) return;
@@ -3200,9 +3227,12 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         const top = Math.min(...tds.map(t => t.getBoundingClientRect().top)), left = Math.min(...tds.map(t => t.getBoundingClientRect().left));
         const n = selCells().length;
         const btn = (a, l, red) => `<button type="button" data-cb="${a}"${red ? ' style="color:#b91c1c"' : ''}>${l}</button>`;
-        const bar = e.type === 'checklist'
-          ? btn('clear', '내용 지우기') + btn('delrow', '항목 삭제', 1)
-          : btn('clear', '내용 지우기') + btn('delrow', '행 삭제', 1) + btn('delcol', '열 삭제', 1) + (n > 1 && isRect() ? btn('merge', '칸 합치기') : '') + btn('unmerge', '합치기 풀기') + btn('splitc', '열 나누기') + btn('splitr', '행 나누기');
+        const barEdit = e.type === 'checklist'
+          ? `<span class="seg">${btn('clear', '내용 지우기')}</span>`
+          : `<span class="seg">${btn('clear', '내용 지우기')}</span><span class="seg">${n > 1 && isRect() ? btn('merge', '셀 합치기') : ''}${btn('unmerge', '합치기 풀기')}</span>`;
+        const barRC = e.type === 'checklist'
+          ? `<span class="seg">${btn('delrow', '항목 삭제', 1)}</span>`
+          : `<span class="seg">${btn('delrow', '행 삭제', 1)}${btn('delcol', '열 삭제', 1)}</span><span class="seg">${btn('splitr', '행 나누기')}${btn('splitc', '열 나누기')}</span>`;
         let extra = '';
         const L1 = selCells();
         const src1 = L1.length === 1 ? srcText(e, L1[0]) : null;
@@ -3211,17 +3241,17 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
           const pm = PHOTO_RE.exec(t1);
           if(pm){
             const curN = +pm[1], fit = ((e.cst || {})[L1[0].r + ':' + L1[0].c] || {}).fit || 'contain';
-            extra = `<div class="cst"><span class="g">사진</span>${cur.photos.map((src, i) => src ? `<button type="button" data-ph="${i}" draggable="true" class="phb${i + 1 === curN ? ' on' : ''}" title="사진 ${i + 1} · 눌러서 넣기, 끌어서 다른 칸에 놓기"><img src="${src}"><i>${i + 1}</i></button>` : '').join('')}
-              <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 추가</button><button type="button" data-sat="1" title="사업장 위치 위성사진을 4:3 비율로 넣고, 아래 사진설명 칸에는 사업장 위치를 넣습니다">🛰 위성사진 넣기</button><button type="button" data-phfit="1">${fit === 'cover' ? '전체 보이기' : '꽉 채우기'}</button></div>`;
+            extra = `<div class="cst ctrow"><span class="lab">사진</span><div class="ctg">${cur.photos.map((src, i) => src ? `<button type="button" data-ph="${i}" draggable="true" class="phb${i + 1 === curN ? ' on' : ''}" title="사진 ${i + 1} · 눌러서 넣기, 끌어서 다른 칸에 놓기"><img src="${src}"><i>${i + 1}</i></button>` : '').join('')}
+              <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 추가</button><button type="button" data-sat="1" title="사업장 위치 위성사진을 4:3 비율로 넣고, 아래 사진설명 칸에는 사업장 위치를 넣습니다">🛰 위성사진 넣기</button><button type="button" data-phfit="1">${fit === 'cover' ? '전체 보이기' : '꽉 채우기'}</button></div></div>`;
           } else if(SAT_RE.test(t1)){
-            extra = `<div class="cst"><span class="g">위성</span><button type="button" data-sat="1">🛰 다시 불러오기</button><button type="button" data-phadd="1">＋ 사진으로 바꾸기</button></div>`;
+            extra = `<div class="cst ctrow"><span class="lab">위성사진</span><div class="ctg"><button type="button" data-sat="1">🛰 다시 불러오기</button><button type="button" data-phadd="1">＋ 사진으로 바꾸기</button></div></div>`;
           } else if(!SIGN_RE.test(t1) && !CAP_RE.test(t1)){
             // 일반 칸에도 사진 넣기
-            extra = `<div class="cst"><span class="g">사진</span>${cur.photos.map((src, i) => src ? `<button type="button" data-ph="${i}" draggable="true" class="phb" title="사진 ${i + 1}을 이 칸에 넣기"><img src="${src}"><i>${i + 1}</i></button>` : '').join('')}
-              <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 넣기</button><button type="button" data-sat="1" title="사업장 위치 위성사진을 4:3 비율로 넣습니다">🛰 위성사진 넣기</button></div>`;
-          } else if(SIGN_RE.test(t1)) extra = `<div class="cst"><span class="g">서명</span><button type="button" data-sg="pad">✍ 서명하기</button>${cur.sign ? '<button type="button" data-sg="clr" style="color:#b91c1c">서명 지우기</button>' : ''}</div>`;
+            extra = `<div class="cst ctrow"><span class="lab">사진</span><div class="ctg">${cur.photos.map((src, i) => src ? `<button type="button" data-ph="${i}" draggable="true" class="phb" title="사진 ${i + 1}을 이 칸에 넣기"><img src="${src}"><i>${i + 1}</i></button>` : '').join('')}
+              <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 넣기</button><button type="button" data-sat="1" title="사업장 위치 위성사진을 4:3 비율로 넣습니다">🛰 위성사진 넣기</button></div></div>`;
+          } else if(SIGN_RE.test(t1)) extra = `<div class="cst ctrow"><span class="lab">서명</span><div class="ctg"><button type="button" data-sg="pad">✍ 서명하기</button>${cur.sign ? '<button type="button" data-sg="clr" style="color:#b91c1c">서명 지우기</button>' : ''}</div></div>`;
         }
-        node.insertAdjacentHTML('beforeend', `<div class="ctbar" style="left:${Math.max(0, (left - nb0.left) / zoom)}px;top:0"><div class="cr1"><b class="ctgrip" title="끌어서 도구줄 옮기기">⠿</b><span class="ctn">${n > 1 ? n + '칸 선택' : '1칸 선택'}</span>${n === 1 && e.type === 'table' ? `<button type="button" class="ctfb${ctFields ? ' on' : ''}" data-fld="1" title="엑셀(명단) 항목을 이 칸에 넣기">📋 엑셀 항목</button>` : ''}</div><div class="cr2">${bar}</div>${ctFields && n === 1 && e.type === 'table' ? `<div class="cst ctfl">${fieldGroups(cur).map(([g, l]) => `<div class="fg">${esc(g)}</div>` + l.map(f => `<button type="button" data-ctf="${esc(f)}" title="${esc(fieldValue(cur, f) || '')}">${esc(f)}</button>`).join('')).join('')}</div>` : ''}${extra}${cellStyleCtl(e)}</div>`);
+        node.insertAdjacentHTML('beforeend', `<div class="ctbar" style="left:${Math.max(0, (left - nb0.left) / zoom)}px;top:0"><div class="cr1"><b class="ctgrip" title="끌어서 도구줄 옮기기">⠿</b><span class="ctn">${n > 1 ? n + '셀 선택' : '1셀 선택'}</span>${n === 1 && e.type === 'table' ? `<button type="button" class="ctfb${ctFields ? ' on' : ''}" data-fld="1" title="엑셀(명단) 항목을 이 셀에 넣기">📋 엑셀 항목</button>` : ''}</div>${ctFields && n === 1 && e.type === 'table' ? `<div class="cst ctfl">${fieldGroups(cur).map(([g, l]) => `<div class="fg">${esc(g)}</div>` + l.map(f => `<button type="button" data-ctf="${esc(f)}" title="${esc(fieldValue(cur, f) || '')}">${esc(f)}</button>`).join('')).join('')}</div>` : ''}${(() => { const P = cellParts(e); return SEC('셀', ROW('편집', barEdit) + ROW('행 · 열', barRC) + (P ? cellRows(P) : '')) + (P ? SEC('글자', textRows(P)) : '') + SEC('사진 · 서명', extra); })()}</div>`);
         const cb0 = node.querySelector('.ctbar');
         let ty = (top - nb0.top) / zoom - cb0.offsetHeight - 6;
         if(e.y + ty < 0) ty = Math.max(0 - e.y, e.h + 8);   // 위에 자리가 없으면 표 아래쪽에 (칸을 가리지 않게)
@@ -3275,7 +3305,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const rangeBox = R0 ? `<div class="pt" style="margin-top:10px;color:#b45309">선택한 칸 ${selCells().length}개${cmulti ? ' (Ctrl로 고름)' : ` (${R0.r1 + 1}~${R0.r2 + 1}행 × ${R0.c1 + 1}~${R0.c2 + 1}열)`}</div>
       <div class="ldrow"><button type="button" data-rg="clear">내용 지우기</button><button type="button" data-rg="delrow" style="color:#b91c1c">${e.type === 'checklist' ? '항목 삭제' : '행 삭제'}</button>${e.type === 'table' ? '<button type="button" data-rg="delcol" style="color:#b91c1c">열 삭제</button><button type="button" data-rg="merge">칸 합치기</button><button type="button" data-rg="unmerge">합치기 풀기</button><button type="button" data-rg="splitc">열 나누기</button><button type="button" data-rg="splitr">행 나누기</button>' : ''}</div>
       <div class="hint">칸을 끌어서 여러 칸을 고르거나, Shift+누르기로 범위를 넓히거나, <b>Ctrl+누르기로 떨어진 칸을 하나씩</b> 더하고 뺍니다. Delete 키: 줄 전체면 행 삭제, 아니면 내용 지우기 · Esc: 선택 풀기</div>` : `<div class="hint" style="margin-top:8px">여러 칸을 고르려면 칸 위를 끌거나, Shift+누르기(범위), Ctrl+누르기(하나씩) 하세요.</div>`;
-    return rangeBox + `<div class="pt" style="margin-top:10px">칸 글씨·선</div>` + cellStyleCtl(e) + cellTools1(e);
+    return rangeBox + `<div class="pt" style="margin-top:10px">셀 서식</div>` + cellStyleCtl(e) + cellTools1(e);
   }
   function cellTools1(e){
     const k = cellAKey(e, cell.r, cell.c), ca = (e.ca || {})[k] || '', cva = (e.cva || {})[k] || '';
