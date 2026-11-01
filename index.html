@@ -1296,7 +1296,7 @@ function bindUi(){
       ROSTER = [...ROSTER.filter(r => listOf(r) !== name), ...newRows];
       curList = name; LS.set('curList', name); saveRoster(); rows = pickRows();
       queueListOp({op:'set', name, rows:newRows});
-      if(window.syncRoster) syncRoster(f);
+      if(window.syncRoster) syncRoster(f, name);
       filterTown = null; $('q').value = '';
       setStatus(`${f.name} → '${name}' 명단 ${rows.length}명`);
       plot();
@@ -1601,7 +1601,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101152028';
+const APP_VER = '20261101152810';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -4204,8 +4204,8 @@ window.syncSoon = syncSoon;
 
 /* ---------- 각 기능에서 부르는 연결점 ---------- */
 window.syncGeo = (k, hit) => { if(!hit) return; const g = LS.get('geoNew', {}); g[k] = hit; LS.set('geoNew', g); };
-let pendingRosterFile = null;
-window.syncRoster = file => { pendingRosterFile = file || null; if(SY.on()) syncAll(false); };
+let pendingRosterFile = null, pendingRosterList = '';
+window.syncRoster = (file, list) => { pendingRosterFile = file || null; pendingRosterList = list || ''; if(SY.on()) syncAll(false); };
 window.syncDelete = id => { const q = LS.get('recDel', []); q.push(id); LS.set('recDel', q); syncSoon(); };
 window.syncTplDel = id => { const q = LS.get('tplDel', []); if(!q.includes(id)) q.push(id); LS.set('tplDel', q); syncSoon(); };
 window.syncPdf = async (blob, name, meta) => {
@@ -4321,7 +4321,7 @@ async function syncAll(manual){
         srvAll = applyListOps(srvAll, ops);
         const payload = {rows: srvAll.map(({_pts, ...r}) => r)};
         const f = pendingRosterFile;
-        if(f && f.size < 15e6) payload.file = {name:f.name, data: await blobToDataUrl(f)};
+        if(f && f.size < 15e6) payload.file = {name:f.name, list:pendingRosterList, data: await blobToDataUrl(f)};
         await api('setRoster', payload, 180000);
         LS.set('listOps', LS.get('listOps', []).slice(ops.length)); pendingRosterFile = null;
         toast('명단을 구글 시트에 올렸습니다 (모든 기기에 반영)');
