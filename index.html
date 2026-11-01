@@ -759,7 +759,7 @@
 <section id="ilist" class="ov" hidden>
   <div class="ovh">
     <button id="lBack">← 닫기</button>
-    <b>점검 목록</b>
+    <b id="lTitle">점검 목록</b>
   </div>
   <div class="ovb">
     <div class="card" id="lStats"></div>
@@ -869,7 +869,9 @@ let unlocked = false;                // 이번 실행 중 비밀번호 확인 �
 const LIST_DEF = '기본 명단';
 const etcRaw = r => { try{ return r && r.etc ? (typeof r.etc === 'string' ? JSON.parse(r.etc) : r.etc) : {}; }catch(e){ return {}; } };
 const listOf = r => etcRaw(r)._list || LIST_DEF;
-const withList = (r, name) => { const e = {...etcRaw(r)}; if(name && name !== LIST_DEF) e._list = name; else delete e._list; const {_pts, ...o} = r; return {...o, etc: Object.keys(e).length ? JSON.stringify(e) : ''}; };
+const listIdOf = r => etcRaw(r)._lid || '';
+// 명단 이름은 바뀌어도 _lid(명단 고유번호)는 그대로 → 점검 기록 연결이 끊기지 않음
+const withList = (r, name, lid) => { const e = {...etcRaw(r)}; if(name && name !== LIST_DEF) e._list = name; else delete e._list; if(lid !== undefined){ if(lid) e._lid = lid; else delete e._lid; } const {_pts, ...o} = r; return {...o, etc: Object.keys(e).length ? JSON.stringify(e) : ''}; };
 let ROSTER = LS.get('rows', []);
 let curList = LS.get('curList', '');
 const listNames = () => { const a = []; ROSTER.forEach(r => { const n = listOf(r); if(!a.includes(n)) a.push(n); }); return a; };
@@ -1123,7 +1125,7 @@ function renderList(){
     if(!visible(r)) return;
     const li = document.createElement('li');
     const ok = r._pts && r._pts.length;
-    li.innerHTML = `<div class="n"><span class="dot" style="background:${pinColor(r)}"></span>${esc(r.name)}${(() => { const jd = window.inspDone && inspDone.get(r.name+'|'+r.place); return isDone(r) ? '<span class="stt s-done">완료</span>' : jd ? '<span class="stt s-ing">점검중</span>' : '<span class="stt s-wait">대기</span>'; })()} <span style="font-weight:400;color:#6b7280">${esc(r.item)}${r.detail?' · '+esc(r.detail):''}</span>${(() => { const jd = window.inspDone && inspDone.get(r.name+'|'+r.place); return jd && jd !== '점검' ? `<span class="badge ${/보완|부적합/.test(jd)?'warn':''}">${esc(jd)}</span>` : ''; })()}</div>
+    li.innerHTML = `<div class="n"><span class="dot" style="background:${pinColor(r)}"></span>${esc(r.name)}${(() => { const jd = window.inspDone && inspDone.get(rowKey(r)); return isDone(r) ? '<span class="stt s-done">완료</span>' : jd ? '<span class="stt s-ing">점검중</span>' : '<span class="stt s-wait">대기</span>'; })()} <span style="font-weight:400;color:#6b7280">${esc(r.item)}${r.detail?' · '+esc(r.detail):''}</span>${(() => { const jd = window.inspDone && inspDone.get(rowKey(r)); return jd && jd !== '점검' ? `<span class="badge ${/보완|부적합/.test(jd)?'warn':''}">${esc(jd)}</span>` : ''; })()}</div>
       <div class="s">${esc(r.place)}</div>${ok?'':'<div class="fail">위치를 찾지 못했습니다</div>'}`;
     li.insertAdjacentHTML('afterbegin', `<button type="button" class="chip" data-insp="${i}" style="float:right;margin-left:6px">점검</button>`);
     li.onclick = e => { if(e.target.closest('[data-insp]')) return openInspect(i); focusRow(i); };
@@ -1138,9 +1140,9 @@ function renderList(){
   const shown = rows.filter(visible).length;
   if(rows.length && (filterTown || $('q').value.trim())) setStatus(`검색·선택 결과 ${shown}명 / 전체 ${rows.length}명`);
   if(window.inspDone && rows.length){
-    const done = rows.filter(r => inspDone.has((r.name||'') + '|' + (r.place||''))).length;
+    const done = rows.filter(r => inspDone.has(rowKey(r))).length;
     const ft = filterTown ? rows.filter(r => placeTown(r) === filterTown) : null;
-    const fd = ft ? ft.filter(r => inspDone.has((r.name||'') + '|' + (r.place||''))).length : 0;
+    const fd = ft ? ft.filter(r => inspDone.has(rowKey(r))).length : 0;
     $('rate').style.display = 'block';
     const comp = rows.filter(isDone).length;
     $('rate').innerHTML = `전체 점검률 <b style="color:#1f6feb">${Math.round(done / rows.length * 1000) / 10}%</b> (${done}/${rows.length}명) · 완료 <b style="color:#374151">${comp}명</b>`
@@ -1237,6 +1239,9 @@ function renderListSel(){
 }
 function switchList(name){
   curList = name; LS.set('curList', name); rows = pickRows();
+  // 이 명단에서 마지막으로 쓴 서식을 자동 선택 (기기별)
+  const tid = LS.get('listTpl', {})[curList];
+  if(tid && typeof tplById === 'function' && tplById(tid) && $('mainTpl') && $('mainTpl').value !== tid){ useTpl(tid); if(window.fillMainTpl) fillMainTpl(); toast(`'${curList}' 명단 · '${tplById(tid).name}' 서식`); }
   filterTown = null; if($('q')) $('q').value = '';
   plot();
 }
@@ -1285,7 +1290,9 @@ function bindUi(){
       let name = prompt(`명단 이름을 정해 주세요 (${parsed.length}명).\n· 새 이름 → 명단이 하나 더 추가됩니다\n· 같은 이름 → 그 명단을 새 내용으로 바꿉니다` + (ns.length ? `\n\n지금 있는 명단: ${ns.join(', ')}` : ''), base);
       if(name === null){ e.target.value = ''; return; }
       name = name.trim() || base;
-      const newRows = parsed.map(r => withList(r, name));
+      const old = ROSTER.find(r => listOf(r) === name);
+      const lid = old ? listIdOf(old) : (name === LIST_DEF ? '' : 'L' + Date.now().toString(36));
+      const newRows = parsed.map(r => withList(r, name, lid));
       ROSTER = [...ROSTER.filter(r => listOf(r) !== name), ...newRows];
       curList = name; LS.set('curList', name); saveRoster(); rows = pickRows();
       queueListOp({op:'set', name, rows:newRows});
@@ -1310,6 +1317,7 @@ function bindUi(){
     if(!to || to === from) return;
     if(listNames().includes(to)) return alert('같은 이름의 명단이 이미 있습니다.');
     ROSTER = ROSTER.map(r => listOf(r) === from ? withList(r, to) : r);
+    const lt = LS.get('listTpl', {}); if(lt[from]){ lt[to] = lt[from]; delete lt[from]; LS.set('listTpl', lt); }
     queueListOp({op:'ren', from, to}); curList = to; LS.set('curList', to); saveRoster(); rows = pickRows(); plot();
     if(window.syncSoon) syncSoon(); toast(`명단 이름을 '${to}'(으)로 바꿨습니다`);
   };
@@ -1582,7 +1590,7 @@ const pad = n => String(n).padStart(2, '0');
 const localDT = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 const fmtDT = v => { if(!v) return ''; const [d, t] = v.split('T'); const [y, m, dd] = d.split('-'); return `${y}. ${+m}. ${+dd}. ${t||''}`.trim(); };
 function fmtTs(ts){ const d = new Date(ts); return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
-const rowKey = r => (r.name||'') + '|' + (r.place||'');
+const rowKey = r => (r.name||'') + '|' + (r.place||'') + (listIdOf(r) ? '|' + listIdOf(r) : '');   // 다른 명단의 같은 사람은 따로 점검
 const safeName = s => String(s).replace(/[\\/:*?"<>|\s]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
 const gpsStr = g => g ? `${g.lat.toFixed(6)}, ${g.lng.toFixed(6)} (오차 ±${Math.round(g.acc)}m)` : '';
 function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2600); }
@@ -1593,7 +1601,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101151325';
+const APP_VER = '20261101152028';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -2136,7 +2144,11 @@ async function openList(){
   await reloadRecs();
   renderStats();
   const townOf = r => r.target.town || '기타';
-  const shown = listTown ? allRecs.filter(r => townOf(r) === listTown) : allRecs;
+  // 지금 고른 명단의 기록만 (다른 명단 기록은 그 명단을 고르면 보임)
+  if($('lTitle')) $('lTitle').textContent = listNames().length > 1 ? `점검 목록 · ${curList}` : '점검 목록';
+  const keys = new Set(rows.map(rowKey)), inList = r => keys.has(r.key) || (!rows.length);
+  const base = allRecs.filter(inList);
+  const shown = listTown ? base.filter(r => townOf(r) === listTown) : base;
   const latestOf = new Map(); [...allRecs].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0)).forEach(r => { if(!latestOf.has(r.key)) latestOf.set(r.key, r.id); });
   $('lRecs').innerHTML = shown.length ? shown.map(r => `<div class="rec${latestOf.get(r.key) === r.id ? '' : ' old'}">
       <input type="checkbox" data-id="${r.id}">
@@ -5170,7 +5182,7 @@ window.fillMainTpl = () => {
   sel.innerHTML = list.map(t => `<option value="${t.id}">${t.hwpx ? '[한글] ' : ''}${esc(t.name)}</option>`).join('');
   sel.value = list[0].id;
 };
-$('mainTpl').onchange = e => { useTpl(e.target.value); fillMainTpl(); toast(`'${(tplById(e.target.value) || {}).name}' 서식으로 점검합니다 — 지도 핀이나 목록의 [점검]을 누르세요`); };
+$('mainTpl').onchange = e => { const lt = LS.get('listTpl', {}); if(typeof curList === 'string'){ lt[curList] = e.target.value; LS.set('listTpl', lt); } useTpl(e.target.value); fillMainTpl(); toast(`'${(tplById(e.target.value) || {}).name}' 서식으로 점검합니다 — 지도 핀이나 목록의 [점검]을 누르세요`); };
 fillMainTpl();
 
 $('iHwp').onclick = async () => {
