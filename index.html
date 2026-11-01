@@ -124,6 +124,7 @@
   #rtPanel .rtf{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--ln)}
   #rtPanel .rtf button{flex:1;border:1px solid var(--b);color:var(--b)}
   #rtPanel .rtf button:last-child{background:var(--b);color:#fff}
+  #map .mtBox{border-radius:999px!important;box-shadow:0 2px 8px rgba(0,0,0,.18)!important;overflow:hidden;box-sizing:content-box}
   .rpP{width:794px;min-height:1123px;padding:34px 30px;box-sizing:border-box;background:#fff;color:#111;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
   .rpH{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;border-bottom:2px solid #1f6feb;padding-bottom:8px}
   .rpH b{font-size:22px}.rpH span{font-size:13px;color:#4b5563}
@@ -1325,6 +1326,12 @@ if(!window.kakao || !kakao.maps){
     kakao.maps.event.addListener(map, 'click', () => { markers.forEach(m => { if(m._open){ m._open = false; labSet(m); } }); updateLabels(); });
     map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
     map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
+    // 지도/스카이뷰 버튼 상자: 둥근 알약 모양
+    (function roundTypeBox(n){
+      const b = [...$('map').querySelectorAll('button')].find(x => /스카이뷰/.test(x.textContent || x.title || ''));
+      if(b && b.parentElement){ b.parentElement.classList.add('mtBox'); return; }
+      if(n < 40) setTimeout(() => roundTypeBox(n + 1), 250);
+    })(0);
     geocoder = new kakao.maps.services.Geocoder();
     info = new kakao.maps.InfoWindow({removable:true});
     if(rows.length) setStatus(`저장된 명단 ${rows.length}명 불러오는 중…`);
@@ -1482,7 +1489,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101140344';
+const APP_VER = '20261101142421';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -1970,7 +1977,16 @@ async function makePdf(jobs, filename){
   }catch(e){ alert('PDF를 만들지 못했습니다: ' + e.message); }
   finally{ box.remove(); $('busy').hidden = true; }
 }
-const pdfName = rec => `${safeName(rec.title)}_${safeName(rec.target.name)}_${(rec.date||'').slice(0,10)}.pdf`;
+/* 파일 이름: [종류]_서식_점검자_날짜 */
+const shortTpl = s => String(s || '').replace(/보조사업|완료에\s*따른|보고에\s*따른|완료/g, '').replace(/[\\/:*?"<>|\s_·]+/g, '').slice(0, 15) || '점검';
+const whoOf = recs => { const a = [...new Set(recs.map(r => (r.inspector || '').trim().split(/[\s,·]+/).pop()).filter(Boolean))]; if(!a.length){ const u = LS.get('syncUser', '') || LS.get('inspector', ''); if(u) a.push(u); }
+  return a.length ? safeName(a[0]) + (a.length > 1 ? `외${a.length - 1}` : '') : ''; };
+const tplsOf = recs => { const a = [...new Set(recs.map(r => shortTpl((tplById(r.tplId) || {}).name || r.title)))]; return a[0] + (a.length > 1 ? `외${a.length - 1}` : ''); };
+const joinName = (...p) => p.filter(Boolean).join('_');
+const today10 = () => localDT(new Date()).slice(0, 10);
+const pdfName = rec => joinName('[농가]', safeName(rec.title || '').replace(/^(보조사업_)?(완료_)?/, '') || '점검결과', safeName(rec.target.name || ''), whoOf([rec]), (rec.date || '').slice(0, 10)) + '.pdf';
+const bulkName = (recs, ext) => joinName('[총괄]', tplsOf(recs), whoOf(recs), recs.length + '건', today10()) + ext;
+window.fileWho = () => LS.get('syncUser', '') || LS.get('inspector', '');
 
 /* ---------- 점검 목록 · 묶음 저장 ---------- */
 /* 읍면별 점검률 (명단 기준, 사업자별 최근 점검의 판정) */
@@ -2074,7 +2090,7 @@ function exportXlsx(recs, opt){
   }
   const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
   saveBlob(new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
-    `${opt.prefix || '점검결과'}_${localDT(new Date()).slice(0,10)}.xlsx`);
+    joinName(opt.prefix === '점검완료' ? '[완료]' : '[결과]', tplsOf(recs), whoOf(recs), today10()) + '.xlsx');
   toast(`엑셀로 저장했습니다 (${recs.length}건 · 시트: 점검결과, 항목별 상세${rows.length ? ', 미완료 명단' : ''})`);
 }
 
@@ -2231,7 +2247,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   };
   $('lPdf').onclick = () => {
     const recs = checkedRecs(); if(!recs.length) return toast('저장할 점검 기록을 선택해 주세요');
-    makePdf(recs.map(rec => ({rec})), recs.length === 1 ? pdfName(recs[0]) : `점검결과_${recs.length}건_${localDT(new Date()).slice(0,10)}.pdf`);
+    makePdf(recs.map(rec => ({rec})), recs.length === 1 ? pdfName(recs[0]) : bulkName(recs, '.pdf'));
   };
   $('lXls').onclick = () => {
     const recs = checkedRecs(); if(!recs.length) return toast('저장할 점검 기록을 선택해 주세요');
@@ -2304,7 +2320,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         $('busy').textContent = `한글 파일 만드는 중… ${i + 1}/${recs.length}`;
       }
       const out = await zip.generateAsync({type:'blob', compression:'DEFLATE'});
-      saveBlob(out, `한글_점검결과_${recs.length}건_${localDT(new Date()).slice(0,10)}.zip`);
+      saveBlob(out, bulkName(recs, '.zip'));
       toast(`한글 파일 ${recs.length - fails.length}건을 zip으로 저장했습니다`);
       if(fails.length) alert('만들지 못한 파일:\n' + fails.join('\n'));
     } finally { $('busy').hidden = true; $('busy').textContent = 'PDF 만드는 중…'; }
@@ -5729,7 +5745,21 @@ $('iHwp').onclick = async () => {
       bins.push(`<opf:item id="${id}" href="BinData/${id}.${ext}" media-type="image/${ext === 'jpg' ? 'jpeg' : ext}" isEmbeded="1"/>`);
       return id;
     };
-    const picRun = async (dataUrl, maxW, maxH, charId) => {
+    // 칸 비율에 맞춰 가운데를 잘라 꽉 채우기 (PDF 화면과 같게)
+    const cropCover = (dataUrl, ar) => new Promise(res => {
+      const im = new Image();
+      im.onload = () => { try{
+        const iw = im.naturalWidth, ih = im.naturalHeight; if(!iw || !ih || !(ar > 0)) return res(dataUrl);
+        let sw = iw, sh = ih; if(iw / ih > ar) sw = Math.round(ih * ar); else sh = Math.round(iw / ar);
+        if(Math.abs(sw - iw) < 4 && Math.abs(sh - ih) < 4) return res(dataUrl);
+        const k = Math.min(1, 1600 / Math.max(sw, sh)), cv = document.createElement('canvas');
+        cv.width = Math.round(sw * k); cv.height = Math.round(sh * k);
+        cv.getContext('2d').drawImage(im, (iw - sw) / 2, (ih - sh) / 2, sw, sh, 0, 0, cv.width, cv.height);
+        res(cv.toDataURL('image/jpeg', .9)); }catch(e){ res(dataUrl); } };
+      im.onerror = () => res(dataUrl); im.src = dataUrl;
+    });
+    const picRun = async (dataUrl, maxW, maxH, charId, cover) => {
+      if(cover) dataUrl = await cropCover(dataUrl, maxW / maxH);
       const id = addBin(dataUrl); if(!id) return '';
       const xml = picXml(id, await imgDims(dataUrl), maxW, maxH).replace(/ xmlns:h[pc]="[^"]*"/g, '');
       return `<hp:run charPrIDRef="${charId}">${xml}</hp:run>`;
@@ -5749,6 +5779,8 @@ $('iHwp').onclick = async () => {
       const W = Math.min(CW, e.w) * PX;
       const cw = cols.map(w => Math.round(W * w / sum));
       const rh = Math.max(600, Math.round(e.h * PX / nr));
+      const rhOf = r => (e.rowH && e.rowH[r]) ? Math.round(e.rowH[r] * PX) : rh;
+      const rhSum = (r, n) => { let t = 0; for(let i = r; i < Math.min(nr, r + n); i++) t += rhOf(i); return t; };
       const bw = e.bw ?? 1, bc = e.bc || '#333333', hb = e.hbg || '#EEF1F5';
       let rows = '';
       for(let r = 0; r < nr; r++){
@@ -5767,16 +5799,19 @@ $('iHwp').onclick = async () => {
           const pid = S.paraId({align, lh:120});
           let inner = '';
           const pics = [...(extraPics.get(r + ':' + c) || []), ...(g.pic ? [g.pic] : [])];
-          if(pics.length) for(const pc of pics) inner += para(pid, await picRun(pc.src, Math.max(10, w - 1200), Math.max(600, pc.h * PX), S.charId(s)));
+          const ch = rhSum(r, rs);
+          if(pics.length) for(const pc of pics) inner += para(pid, pc.cover
+            ? await picRun(pc.src, Math.max(10, w - 1000), Math.max(600, ch - 500), S.charId(s), true)
+            : await picRun(pc.src, Math.max(10, w - 1200), Math.max(600, Math.min(pc.h * PX, ch - 400)), S.charId(s)));
           if(!pics.length || String(g.text || '').trim()) inner += textPara(g.text || '', s, pid);
           cells += `<hp:tc name="" header="0" hasMargin="0" protect="0" editable="0" dirty="0" borderFillIDRef="${fid}"><hp:subList id="" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="${VA(g.va || e.valign)}" linkListIDRef="0" linkListNextIDRef="0" textWidth="0" textHeight="0" hasTextRef="0" hasNumRef="0">${inner}</hp:subList>`
-            + `<hp:cellAddr colAddr="${c}" rowAddr="${r}"/><hp:cellSpan colSpan="${cs}" rowSpan="${rs}"/><hp:cellSz width="${w}" height="${(e.rowH && e.rowH[r] ? Math.round(e.rowH[r] * PX) : rh) * rs}"/><hp:cellMargin left="420" right="420" top="140" bottom="140"/></hp:tc>`;
+            + `<hp:cellAddr colAddr="${c}" rowAddr="${r}"/><hp:cellSpan colSpan="${cs}" rowSpan="${rs}"/><hp:cellSz width="${w}" height="${ch}"/><hp:cellMargin left="420" right="420" top="140" bottom="140"/></hp:tc>`;
         }
         rows += `<hp:tr>${cells}</hp:tr>`;
       }
       const tw = cw.reduce((a, b) => a + b, 0);
       return `<hp:tbl id="${rid()}" zOrder="0" numberingType="TABLE" textWrap="TOP_AND_BOTTOM" textFlow="BOTH_SIDES" lock="0" dropcapstyle="None" pageBreak="CELL" repeatHeader="0" rowCnt="${nr}" colCnt="${nc}" cellSpacing="0" borderFillIDRef="${S.fillId({bw:0, bc, bg:''})}" noAdjust="0">`
-        + `<hp:sz width="${tw}" widthRelTo="ABSOLUTE" height="${rh * nr}" heightRelTo="ABSOLUTE" protect="0"/><hp:pos treatAsChar="1" affectLSpacing="0" flowWithText="1" allowOverlap="0" holdAnchorAndSO="0" vertRelTo="PARA" horzRelTo="COLUMN" vertAlign="TOP" horzAlign="LEFT" vertOffset="0" horzOffset="0"/>`
+        + `<hp:sz width="${tw}" widthRelTo="ABSOLUTE" height="${rhSum(0, nr)}" heightRelTo="ABSOLUTE" protect="0"/><hp:pos treatAsChar="1" affectLSpacing="0" flowWithText="1" allowOverlap="0" holdAnchorAndSO="0" vertRelTo="PARA" horzRelTo="COLUMN" vertAlign="TOP" horzAlign="LEFT" vertOffset="0" horzOffset="0"/>`
         + `<hp:outMargin left="0" right="0" top="0" bottom="0"/><hp:inMargin left="420" right="420" top="140" bottom="140"/>${rows}</hp:tbl>`;
     }
     function gridOf(e){
@@ -5788,8 +5823,8 @@ $('iHwp').onclick = async () => {
           .map((row, r) => row.map((g, c) => { const k = window.LAY_cellAKey(e, r, c); const o = {...g, align:(e.ca || {})[k] || g.align, va:(e.cva || {})[k], cst:(e.cst || {})[k]};
             // 점검항목표 칸의 사진 · 위성사진
             if(r > 0){ const t = String(g.text || ''), rh0 = ((e.rowH && e.rowH[r]) || 120) - 8, pm = window.LAY_PHOTO_RE.exec(t);
-              if(window.LAY_SAT_RE.test(t)){ o.text = ''; const su = window.satOf(rec); if(su) o.pic = {src:su, h:rh0}; }
-              else if(pm){ o.text = ''; const src = rec.photos[+pm[1] - 1]; if(src){ o.pic = {src, h:rh0}; photosShown.add(+pm[1] - 1); } } }
+              if(window.LAY_SAT_RE.test(t)){ o.text = ''; const su = window.satOf(rec); if(su) o.pic = {src:su, h:rh0, cover:true}; }
+              else if(pm){ o.text = ''; const src = rec.photos[+pm[1] - 1]; if(src){ o.pic = {src, h:rh0, cover:true}; photosShown.add(+pm[1] - 1); } } }
             return o; }));
       }
       const cells = e.cells || [['']], nr = cells.length, nc = Math.max(...cells.map(r => r.length));
@@ -5806,10 +5841,10 @@ $('iHwp').onclick = async () => {
           while(r + rs < nr && get(r + rs, c) === '^') rs++;
           g[r][c] = {text:fillPlain(t, rec), cs, rs, shade: sr.includes(r) || sc.includes(c), align:(e.ca || {})[r + ':' + c], va:(e.cva || {})[r + ':' + c], cst:(e.cst || {})[r + ':' + c]};
           const rh0 = ((e.rowH && e.rowH[r]) || 40) - 8;
-          if(window.LAY_SAT_RE.test(t)){ g[r][c].text = ''; const su = window.satOf(rec); if(su) g[r][c].pic = {src:su, h:rh0}; }
+          if(window.LAY_SAT_RE.test(t)){ g[r][c].text = ''; const su = window.satOf(rec); if(su) g[r][c].pic = {src:su, h:rh0, cover:true}; }
           if(window.LAY_SIGN_RE.test(t)){ g[r][c].align = 'center'; g[r][c].text = rec.sign ? '' : '(서명 또는 날인)'; if(rec.sign) g[r][c].pic = {src:rec.sign, h:rh0}; }
           const pm = window.LAY_PHOTO_RE.exec(t);
-          if(pm){ g[r][c].text = ''; const src = rec.photos[+pm[1] - 1]; if(src){ g[r][c].pic = {src, h:rh0}; photosShown.add(+pm[1] - 1); } }
+          if(pm){ g[r][c].text = ''; const src = rec.photos[+pm[1] - 1]; if(src){ g[r][c].pic = {src, h:rh0, cover:true}; photosShown.add(+pm[1] - 1); } }
         }
       }
       return g;
@@ -5858,7 +5893,7 @@ $('iHwp').onclick = async () => {
             if(!src) continue;
             const k = cellAt(e, grid, pe.x + pe.w / 2, pe.y + pe.h / 2);
             if(!pics.has(k)) pics.set(k, []);
-            pics.get(k).push({src, h:pe.h});
+            pics.get(k).push({src, h:pe.h, cover:pe.type === 'photo'});
             if(pe.type === 'photo') photosShown.add((pe.idx || 1) - 1);
           }
           body += para(S.paraId({align:'left', left, lh:100}), `<hp:run charPrIDRef="${S.charId({size:10})}">${await tableXml(e, grid, pics)}<hp:t/></hp:run>`, pb);
@@ -6508,7 +6543,7 @@ $('iHwp').onclick = async () => {
     try{
       const img = await routeImage(r);
       const when = `${r.at.getFullYear()}. ${r.at.getMonth() + 1}. ${r.at.getDate()}. ${String(r.at.getHours()).padStart(2, '0')}:${String(r.at.getMinutes()).padStart(2, '0')}`;
-      const head = `<div class="rpH"><b>보조사업 현장점검 이동 동선</b><span>${when} 작성 · ${r.town ? esc(r.town) + ' · ' : ''}미완료 ${r.stops.length}곳 · 약 ${r.km.toFixed(1)}km · 출발: ${esc(r.startName)}</span></div>`;
+      const head = `<div class="rpH"><b>보조사업 현장점검 이동 동선</b><span>${when} 작성${(window.fileWho && fileWho()) ? '(' + esc(fileWho()) + ')' : ''} · ${r.town ? esc(r.town) + ' · ' : ''}미완료 ${r.stops.length}곳 · 약 ${r.km.toFixed(1)}km · 출발: ${esc(r.startName)}</span></div>`;
       const row = (s, k) => `<tr><td class="c"><i>${k + 1}</i></td><td><b>${esc(s.r.name)}</b>${s.r.town ? `<br><small>${esc(s.r.town)}</small>` : ''}</td>
         <td>${s.r.tel ? `<a data-link="${esc(telPdfUrl(s.r.tel, s.r.name))}">📞 ${esc(s.r.tel)}</a>` : ''}</td>
         <td><a data-link="${esc(navUrl(s))}">🧭 ${esc(s.r.place || '')}</a>${s.r.addr ? `<br><small>주소 ${esc(s.r.addr)}</small>` : ''}</td>
@@ -6534,7 +6569,7 @@ $('iHwp').onclick = async () => {
         const r0 = pg.getBoundingClientRect();
         pg.querySelectorAll('a[data-link]').forEach(a => { const q = a.getBoundingClientRect(); pdf.link((q.left - r0.left) * k, (q.top - r0.top) * k, q.width * k, q.height * k, {url:a.dataset.link}); });
       }
-      const name = `점검동선_${r.town ? r.town + '_' : ''}${r.at.getFullYear()}${String(r.at.getMonth() + 1).padStart(2, '0')}${String(r.at.getDate()).padStart(2, '0')}_${r.stops.length}곳.pdf`;
+      const name = `[동선]_${r.town ? r.town + '_' : ''}${(window.fileWho && fileWho()) ? String(fileWho()).replace(/[\\/:*?"<>|\s]+/g, '') + '_' : ''}${r.at.getFullYear()}${String(r.at.getMonth() + 1).padStart(2, '0')}${String(r.at.getDate()).padStart(2, '0')}_${r.stops.length}곳.pdf`;
       const blob = pdf.output('blob');
       if(share){
         const file = new File([blob], name, {type:'application/pdf'});
