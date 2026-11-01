@@ -4273,7 +4273,7 @@ function fillVal(tc, v){
 
 /* ---------- 양식 분석·채우기 (dry=true 이면 분석만) ---------- */
 function walkHwpx(docs, rec, dry){
-  const res = {mode:'auto', ph:[], items:[], extra:[], found:[], filled:0, slots:{sign:[], photo:[], photoCell:null, signCell:null}};
+  const res = {mode:'auto', ph:[], items:[], extra:[], found:[], filled:0, slots:{sign:[], photo:[], photoCell:null, signCell:null, satCell:null, photoCells:[]}};
   const ext = new Map(rec ? rec.extra.map(x => [nz(x.label), x.value]) : []);
   const resolve = raw => {
     const key = nz(raw);
@@ -4326,6 +4326,21 @@ function walkHwpx(docs, rec, dry){
   }
 
   // 2) 표 자동 인식
+  const capSlots = new Set();
+  for(const doc of docs) for(const tbl of kidsNS(doc, 'tbl')){
+    // 사진 아래 설명 칸("현장 위성사진", "보조사업 대상물 사진" 등) → 바로 위 빈 칸을 사진 자리로
+    const trs = childs(tbl, 'tr'), rowOf = tc => { const a = childs(tc, 'cellAddr')[0]; return a ? +a.getAttribute('rowAddr') : -1; };
+    const byAddr = new Map(); trs.forEach(tr => childs(tr, 'tc').forEach(c => byAddr.set(rowOf(c) + ':' + colOf(c), c)));
+    for(const [k, c] of byAddr){
+      const t = nz(cText(c)); if(!t || t.length > 20 || !/(사진|위성지도)\d*$/.test(t)) continue;
+      const [r0, c0] = k.split(':').map(Number);
+      let up = null; for(let r = r0 - 1; r >= 0 && !up; r--) up = byAddr.get(r + ':' + c0) || null;
+      if(!up || cText(up).trim() || capSlots.has(up)) continue;
+      capSlots.add(up);
+      if(/위성/.test(t)){ if(dry) res.found.push('위성사진'); else if(!res.slots.satCell) res.slots.satCell = up; }
+      else { if(dry) res.found.push('사진'); else res.slots.photoCells.push(up); }
+    }
+  }
   for(const doc of docs) for(const tbl of kidsNS(doc, 'tbl')){
     let ck = null;
     for(const tr of childs(tbl, 'tr')){
@@ -4372,6 +4387,7 @@ function walkHwpx(docs, rec, dry){
           if(dry) res.found.push('서명'); else if(!res.slots.signCell) res.slots.signCell = nx;
           i++; continue;
         }
+        if(/^(현장)?사진(대지)?$|^점검사진$|^사진첨부$/.test(lab) && !nxt && capSlots.has(nx)){ i++; continue; }
         if(/^(현장)?사진(대지)?$|^점검사진$|^사진첨부$/.test(lab) && !nxt){
           if(dry) res.found.push('사진'); else if(!res.slots.photoCell) res.slots.photoCell = nx;
           i++; continue;
@@ -4470,8 +4486,24 @@ async function placeImages(zip, docs, rec, slots){
     if(slots.sign.length){ for(const p of slots.sign) await putPic(p, rec.sign, 40 * MM, 15 * MM); }
     else if(slots.signCell){ const ps = cellParas(slots.signCell); if(ps[0]) await putPic(ps[0], rec.sign, Math.min(cellW(slots.signCell), 40 * MM), 15 * MM); }
   }
+  const cellH = tc => { const z = childs(tc, 'cellSz')[0]; return z ? Math.max(20 * MM, +z.getAttribute('height') - 3 * MM) : 70 * MM; };
+  // 위성사진 칸
+  if(slots.satCell){
+    const su = window.satOf && satOf(rec), ps = cellParas(slots.satCell);
+    if(su && ps[0]) await putPic(ps[0], su, cellW(slots.satCell), cellH(slots.satCell));
+  }
   // 사진
-  const photos = rec.photos.filter(Boolean);
+  let photos = rec.photos.filter(Boolean);
+  if(photos.length && rec.sec.photos !== false && slots.photoCells && slots.photoCells.length){
+    // 설명 칸이 있는 사진 자리: 한 칸에 한 장씩, 마지막 칸에는 남은 사진을 나눠서
+    const cells = slots.photoCells;
+    for(let k = 0; k < cells.length && photos.length; k++){
+      const ps = cellParas(cells[k]); if(!ps[0]) continue;
+      const take = k === cells.length - 1 ? photos.splice(0, Math.min(2, photos.length)) : photos.splice(0, 1);
+      for(const ph of take) await putPic(ps[0], ph, take.length > 1 ? cellW(cells[k]) / 2 - MM : cellW(cells[k]), cellH(cells[k]));
+    }
+    slots = {...slots, photo:[], photoCell:null};
+  }
   if(photos.length && rec.sec.photos !== false){
     if(slots.photo.length){
       let k = 0;
@@ -4542,6 +4574,7 @@ async function makeHwpx(rec){
       if(window.ensureSat && JSON.stringify(rec.layout || '').includes('{위성사진}')) await ensureSat(rec);
   const {zip, docs} = await hwpxDocs(await hwpxFile(rec.hwpx));
   const r = walkHwpx(docs.map(x => x.d), rec, false);
+  if(r.slots.satCell && window.ensureSat){ try{ await Promise.race([ensureSat(rec), new Promise(res => setTimeout(res, 20000))]); }catch(_){} }
   if(window.applyHwpxMap) r.filled += applyHwpxMap(docs.map(x => x.d), rec);
   r.filled += await placeImages(zip, docs, rec, r.slots);
   const ser = new XMLSerializer();
