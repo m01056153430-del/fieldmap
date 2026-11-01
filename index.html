@@ -528,9 +528,9 @@
         <button id="tplDesignBtn" class="bline" style="color:#0f766e!important;border-color:#0f766e!important">양식 디자인</button>
       </div>
       <div class="rowf" style="margin-top:8px">
-        <button id="tplHwpBtn" class="bline" style="flex:1">+ 한글 서식(.hwpx) 추가</button>
+        <button id="tplHwpBtn" class="bline" style="flex:1">+ 서식 파일 추가 (한글·엑셀·워드·PDF)</button>
       </div>
-      <input id="tplHwpIn" type="file" accept=".hwpx,.hwp" hidden>
+      <input id="tplHwpIn" type="file" accept=".hwpx,.hwp,.xlsx,.xls,.xlsm,.docx,.doc,.pdf" hidden>
       <div id="iPrevWrap" style="display:none">
         <span class="fl">이 사업자의 점검 기록</span>
         <div class="prev" id="iPrev"></div>
@@ -725,7 +725,7 @@
       <button type="button" id="tmDesign" style="color:#0f766e;border-color:#0f766e">양식 디자인</button>
       <button type="button" id="tmRename">이름 바꾸기</button>
       <button type="button" id="tmCopy">복제</button>
-      <button type="button" id="tmNew" title="한글 서식(.hwpx) 파일을 골라 새 서식으로 추가">＋ 새 서식 (한글 파일 올리기)</button>
+      <button type="button" id="tmNew" title="한글(.hwpx)·엑셀(.xlsx)·워드(.docx)·PDF 파일을 골라 새 서식으로 추가">＋ 새 서식 (파일 올리기)</button>
       <button type="button" id="tmDel" style="color:#b91c1c">삭제</button>
     </div>
     <div class="row"><button value="cancel" type="submit">닫기</button></div>
@@ -2258,6 +2258,18 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   ];
   const nk = s => normHead(s);
   function fieldValue(rec, name){
+    // {체크:항목} → □/■ 선택지, {비고:항목} → 비고
+    const mc = /^\s*(체크|비고)\s*:\s*(.+)$/.exec(String(name));
+    if(mc){
+      const lab = nk(mc[2]);
+      if(mc[1] === '체크'){
+        let opts, val;
+        if(/^(판정|종합판정|종합의견)$/.test(lab)){ opts = OVERALL; val = rec.overall; }
+        else { const it = (rec.items || []).find(e => nk(e.label) === lab); if(!it) return ''; opts = it.opts && it.opts.length ? it.opts : (rec.opts || []); val = it.result; }
+        return opts.map(o => (o === val ? '■ ' : '□ ') + o).join('   ');
+      }
+      const it = (rec.items || []).find(e => nk(e.label) === lab); return it ? (it.note || '') : '';
+    }
     const k = nk(name);
     for(const [n, alts, fn] of [...ROSTER_F, ...INSP_F]) if(nk(n) === k || alts.some(a => nk(a) === k)) return String(fn(rec) ?? '');
     const pm = /^사진(\d+)설명$/.exec(k); if(pm) return (rec.capt && rec.capt[+pm[1] - 1]) || '';
@@ -2269,7 +2281,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   const fill = (text, rec, design) => String(text ?? '').split(/(\{[^{}]+\})/g).map(part => {
     const m = /^\{([^{}]+)\}$/.exec(part); if(!m) return esc(part);
     const v = fieldValue(rec, m[1]);
-    if(design && (v === null || v === '')) return `<span style="color:#9ca3af">${/^사진\d+설명$/.test(nk(m[1])) ? '사진설명' : esc(part)}</span>`;
+    if(design && (v === null || v === '')) return `<span style="color:#9ca3af">${/^사진\d+설명$/.test(nk(m[1])) ? '사진설명' : /^\s*비고\s*:/.test(m[1]) ? '(비고)' : /^\s*체크\s*:/.test(m[1]) ? '(결과 선택)' : esc(part)}</span>`;
     return esc(v === null ? part : v);
   }).join('').replace(/\n/g, '<br>');
   function fieldGroups(rec){
@@ -2396,6 +2408,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       if(rec.sign) return `<img src="${rec.sign}" style="width:100%;height:100%;object-fit:contain">`;
       return `<div class="ph0" style="background:${design ? '#f3f4f6' : 'transparent'}">${design ? '서명 자리' : esc(e.empty ?? '(서명)')}</div>`;
     }
+    if(e.type === 'img') return `<img src="${e.src}" style="display:block;width:100%;height:100%;object-fit:fill;pointer-events:none">`;
     if(e.type === 'photo'){
       const i = (e.idx || 1) - 1, src = rec.photos && rec.photos[i];
       const capH = e.cap ? Math.max(18, Math.round((e.size || 12) * 1.7)) : 0;
@@ -2444,7 +2457,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       if(n && n > e.h + 1){
         const d = n - e.h, ob = e.y + e.h;
         e.h = n;
-        p.els.forEach(x => { if(x !== e && x.y >= ob - 4) x.y += d; });
+        if(e.float) continue;   // PDF 바탕 위에 얹은 글자: 다른 요소를 밀지 않음
+        p.els.forEach(x => { if(x !== e && x.y >= ob - 4 && !x.float && !(x.type === 'img' && x.locked)) x.y += d; });
         grown = true;
       }
     }
@@ -2845,7 +2859,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     node.insertAdjacentHTML('beforeend', h);
   }
 
-  const TYPE_NAME = {text:'글자', table:'표', checklist:'점검항목표', photo:'사진', sign:'서명', line:'선'};
+  const TYPE_NAME = {text:'글자', table:'표', checklist:'점검항목표', photo:'사진', sign:'서명', line:'선', img:'바탕 그림'};
+  const isBg = x => x && x.type === 'img' && x.locked;   // PDF 바탕 그림: 고르거나 밀리지 않음
   const opt = (v, cur, label) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(label)}</option>`;
   const tog = (k, e, label) => `<button type="button" data-tog="${k}" class="${e[k] ? 'on' : ''}">${label}</button>`;
   const setb = (k, v, e, label) => `<button type="button" data-set="${k}" data-v="${v}" class="${(e[k] || '') === v ? 'on' : ''}">${label}</button>`;
@@ -3064,7 +3079,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   }
   /* 끌어서 옮긴 요소가 다른 내용과 겹치면: 그 사이에 끼워 넣고 위아래 내용을 자동으로 다시 배치 */
   function settleMove(e, ox, oy){
-    const els = page().els, others = els.filter(x => x !== e);
+    const els = page().els, others = els.filter(x => x !== e && !isBg(x));
     const ovl = (a, b) => a.x < b.x + b.w - 2 && b.x < a.x + a.w - 2 && a.y < b.y + b.h - 2 && b.y < a.y + a.h - 2;
     const before = {x:ox, y:oy, w:e.w, h:e.h};
     const hit = others.filter(x => ovl(e, x) && !ovl(before, x)).sort((a, b) => a.y - b.y);   // 원래부터 겹쳐 있던 것(칸 위 서명 등)은 제외
@@ -3084,8 +3099,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     return true;
   }
   function placeFlow(e, atY, atX){
-    const els = page().els;
-    e.z = els.length ? Math.min(...els.map(x => x.z || 1)) : 1;
+    const all = page().els, els = all.filter(x => !isBg(x));
+    e.z = els.length ? Math.max(1, Math.min(...els.map(x => x.z || 1))) : 1;
     const lefts = els.filter(x => x.type !== 'line').map(x => x.x);
     e.x = clamp(Math.round(atX != null ? atX : (lefts.length ? Math.min(...lefts) : 56)), 0, Math.max(0, PW - e.w));
     e.h = Math.min(e.h, FLOW_LIM - FLOW_TOP);
@@ -3103,7 +3118,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       const sh = Math.max(0, top + e.h + 8 - Math.min(...below.map(x => x.y)));
       below.forEach(x => x.y += sh);
     }
-    e.y = Math.round(top); els.push(e);
+    e.y = Math.round(top); all.push(e);
     // 기존 내용은 어느 것도 다른 쪽으로 옮기지 않음 — 쪽 끝을 넘는 부분은 화면에 빨간 점선 아래로 보이고, PDF·한글에서 자동으로 다음 쪽으로 넘어감
     if(els.some(x => x.y + x.h > PH)) toast('쪽 끝(빨간 점선)을 넘는 내용은 PDF·한글에서 자동으로 다음 쪽에 이어집니다');
   }
@@ -3485,6 +3500,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const le = ev.target.closest('.le');
     if(!le){ if(sel){ sel = null; cell = null; crange = null; cmulti = null; draw(); props(); } return; }
     const e = page().els.find(x => x.id === le.dataset.id); if(!e) return;
+    if(isBg(e)){ if(sel){ sel = null; cell = null; crange = null; cmulti = null; draw(); props(); } return; }
     const resize = ev.target.classList.contains('rh');
     const td = ev.target.closest('td[data-r]');
     const wasSel = sel === e.id;
@@ -4620,6 +4636,7 @@ let hwpFromMgr = false;
 $('tplHwpBtn').onclick = () => { hwpFromMgr = false; $('tplHwpIn').click(); };
 $('tplHwpIn').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if(!f) return;
+  if(!/\.(hwpx|hwp)$/i.test(f.name)) return importOtherForm(f);
   if(/\.hwp$/i.test(f.name)) return alert('.hwp 파일은 바로 쓸 수 없습니다.\n한글에서 [파일 → 다른 이름으로 저장 → 파일 형식: 한글 표준 문서(*.hwpx)]로 저장한 뒤 올려 주세요.');
   try{
     const data = await blobToDataUrl(f);
@@ -4654,6 +4671,40 @@ $('tplHwpIn').onchange = async e => {
     if(window.syncSoon) syncSoon();
   }catch(err){ alert('서식을 읽지 못했습니다: ' + err.message); }
 };
+
+/* 엑셀·워드·PDF 서식 → 양식 디자인 서식으로 추가 */
+async function importOtherForm(f){
+  const inInsp = !hwpFromMgr && cur && !$('insp').hidden;
+  $('busy').textContent = '서식 파일 읽는 중…'; $('busy').hidden = false;
+  try{
+    const r = await importFormFile(f);
+    $('busy').hidden = true;
+    const base = f.name.replace(/\.[^.]+$/, '');
+    const name = (prompt('서식 이름 (목록에 표시)', base) || base).trim() || base;
+    if(inInsp) collectForm();
+    const now = Date.now();
+    const t = normTpl({
+      id:'t' + now, name, title:r.title || name,
+      items: r.items.length ? r.items : [], opts:[...(cur ? cur.opts : DEFAULT_TPL.opts)], extra:r.extra,
+      iopts: r.iopts && r.iopts.some(Boolean) ? r.items.map((_, i) => r.iopts[i] || null) : null,
+      sec:{...DEFAULT_SEC, items: r.items.length > 0, extra: r.extra.length > 0},
+      layout: r.layout, hwpx:null, src:r.kind, savedAt:now, usedAt:now
+    });
+    tpls.push(t); saveTpls();
+    if(inInsp){ applyTplToCur(t); dirty = true; renderForm(); }
+    if(window.mgrRefresh) mgrRefresh(t.id);
+    const kind = {excel:'엑셀', word:'워드', pdf:'PDF'}[r.kind];
+    alert(`'${name}' 서식을 추가했습니다 (${kind} → 양식 디자인 서식).\n\n`
+      + `문서 제목: ${r.title || '(찾지 못함)'}\n`
+      + `점검 항목: ${r.items.length ? r.items.length + '개' : '없음'}\n`
+      + `추가 사항(직접 입력): ${r.extra.length ? r.extra.join(', ') : '없음'}\n\n`
+      + (r.kind === 'pdf'
+        ? 'PDF는 쪽을 그림으로 깔고, 이름 글자 옆에 명단 항목(파란 글자)을 얹었습니다.\n[양식 디자인]에서 위치를 맞추거나 항목을 더 넣어 주세요. PDF 저장에 가장 잘 맞습니다.'
+        : '표 모양을 그대로 옮기고, 이름칸 옆 빈칸에 명단 항목을 넣었습니다.\n[양식 디자인]에서 확인·수정할 수 있습니다.'));
+    if(window.syncSoon) syncSoon();
+  }catch(err){ $('busy').hidden = true; alert('서식을 읽지 못했습니다: ' + err.message); }
+  finally{ $('busy').textContent = 'PDF 만드는 중…'; }
+}
 
 /* ---------- 한글 양식 미리보기 (채운 모습) ---------- */
 function hwpxRunHtml(c){
@@ -5687,6 +5738,8 @@ $('iHwp').onclick = async () => {
             if(pe.type === 'photo') photosShown.add((pe.idx || 1) - 1);
           }
           body += para(S.paraId({align:'left', left, lh:100}), `<hp:run charPrIDRef="${S.charId({size:10})}">${await tableXml(e, grid, pics)}<hp:t/></hp:run>`, pb);
+        } else if(e.type === 'img'){
+          body += para(S.paraId({align:'left', left, lh:100}), await picRun(e.src, e.w * PX, e.h * PX, S.charId({size:10})), pb);
         } else if(e.type === 'sign' || e.type === 'photo'){
           const src = e.type === 'sign' ? rec.sign : rec.photos[(e.idx || 1) - 1];
           const pid = S.paraId({align:'left', left, lh:100});
@@ -5750,6 +5803,312 @@ $('iHwp').onclick = async () => {
       toast('한글 파일을 저장했습니다 (다운로드 폴더)');
     }catch(err){ alert('한글 파일을 만들지 못했습니다: ' + err.message); }
     finally{ $('busy').hidden = true; $('busy').textContent = 'PDF 만드는 중…'; }
+  };
+})();
+</script>
+<script>
+/* ===================== 엑셀 · 워드 · PDF 파일을 점검 서식(양식 디자인)으로 바꾸기 =====================
+   - 엑셀(.xlsx/.xls)·워드(.docx): 표·글을 그대로 옮기고, 이름칸 옆 빈칸에 명단 항목을 자동으로 넣음
+   - 점검 항목 표(점검 항목 | 결과 | 비고)는 항목별 결과(□ 선택지 ■ 표시)·비고가 들어가게
+   - PDF: 쪽을 그림으로 깔고, 이름 글자 오른쪽에 명단 항목을 얹음 (양식 디자인에서 위치 조정)
+   ======================================================================================= */
+(function convMod(){
+  const PW = 794, PH = 1123, X0 = 56, CW = 682, TOP = 44, LIM = PH - 50;
+  const nid = () => 'c' + Math.random().toString(36).slice(2, 9);
+  const mk = o => ({id:nid(), font:'', size:13, color:'#111111', align:'left', valign:'middle', ...o});
+  const nzz = s => String(s ?? '').replace(/[\s·ㆍ:：()（）\[\]<>「」『』※*\-_.,]/g, '');
+  // 이름칸 → 양식 항목 이름
+  const FMAP = {'성명':'보조사업자 성명', '연락처':'연락처', '사업장':'사업장 장소', '주소':'주소', '품목':'품목', '사업량':'사업량', '사업명':'사업명',
+    '세부사업':'세부사업', '총사업비':'총사업비', '보조금':'보조금 계', '국비':'국비', '도비':'도비', '군비':'군비', '자부담':'자부담', '읍면':'읍면',
+    '점검일시':'점검일시', '점검자':'점검자', '종합의견':'판정', '특이사항':'특이사항', '점검위치':'점검위치'};
+  const isHintT = t => { t = String(t || '').trim(); return !!t && t.length <= 80 && /^[(（*※]/.test(t) && !/[□☐]/.test(t); };
+  const boxOpts = t => String(t || '').split(/[□☐■]/).slice(1).map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+  /* 표(격자) → 명단 항목 자리표시 넣기. grid: [[{t, cs, rs, skip}]] */
+  function smartify(grid, ctx){
+    const nr = grid.length, nc = Math.max(0, ...grid.map(r => r.length));
+    const at = (r, c) => (grid[r] && grid[r][c]) || null;
+    const emptyOrHint = g => g && !g.skip && (!String(g.t || '').trim() || isHintT(g.t));
+    // 1) 사진 설명 칸 → 위 빈칸에 사진/위성사진
+    for(let r = 1; r < nr; r++) for(let c = 0; c < nc; c++){
+      const g = at(r, c); if(!g || g.skip) continue; const t = nzz(g.t);
+      if(!t || t.length > 20 || !/(사진|위성지도|위치도|위치지도|지도)\d*$/.test(t)) continue;
+      let up = null; for(let k = r - 1; k >= 0 && !up; k--){ const u = at(k, c); if(u && !u.skip) up = u; }
+      if(!up || String(up.t || '').trim()) continue;
+      up.t = /위성|위치도|위치지도|지도$/.test(t) ? '{위성사진}' : `{사진 ${++ctx.photo}}`; up.big = true;
+    }
+    // 2) 점검 항목 표
+    let ck = null;
+    for(let r = 0; r < nr; r++){
+      const row = grid[r] || [], texts = row.map(g => g && !g.skip ? nzz(g.t) : '');
+      if(!ck){
+        const iI = texts.findIndex(t => /^(점검|확인|세부)?(점검)?(항목|내용|사항)(명)?$/.test(t) && t.length <= 8);
+        const iR = texts.findIndex((t, i) => i !== iI && t && t.length <= 10 && /(결과|적합|여부|유무|판정|양호|이행)/.test(t));
+        if(iI >= 0 && iR >= 0){ const iN = texts.findIndex((t, i) => i !== iI && i !== iR && /^(비고|조치사항|의견|지적사항|확인내용|세부내용)$/.test(t)); ck = {iI, iR, iN}; row.forEach(g => { if(g) g.head = true; }); continue; }
+      } else {
+        if(texts.some(t => t && HF.some(f => f[1].test(t)))){ ck = null; }
+        else {
+          const ig = at(r, ck.iI), label = ig ? String(ig.t || '').trim().replace(/^\(?\d+\)?[.)]?\s*/, '') : '';
+          if(label && !/[□☐]/.test(label)){
+            ctx.items.push(label);
+            const rg = at(r, ck.iR), os = rg ? boxOpts(rg.t) : [];
+            ctx.iopts.push(os.length >= 2 ? os : null);
+            if(rg && !rg.skip) rg.t = os.length >= 2 ? `{체크:${label}}` : `{${label}}`;
+            const ng = ck.iN >= 0 ? at(r, ck.iN) : null; if(ng && !ng.skip && !String(ng.t || '').trim()) ng.t = `{비고:${label}}`;
+            continue;
+          }
+        }
+      }
+      // 3) 이름칸 → 오른쪽 칸
+      for(let c = 0; c < nc - 1; c++){
+        const g = at(r, c); if(!g || g.skip || g.head) continue;
+        const raw = String(g.t || '').trim(), lab = nzz(raw); if(!lab || lab.length > 24 || /^\{/.test(raw)) continue;
+        let n = c + 1; while(n < nc && at(r, n) && at(r, n).skip && at(r, n).h) n++;
+        const nx = at(r, n); if(!nx || nx.skip) continue;
+        const nxt = String(nx.t || '').trim();
+        if(/서명|날인|확인자인$|^확인자$/.test(lab) && (!nxt || /^\(?(인|서명|서명또는인)\)?$/.test(nzz(nxt)))){ nx.t = '{서명}'; nx.sign = true; c = n; continue; }
+        if(/^(현장)?사진(대지)?$|^점검사진$|^사진첨부$/.test(lab) && !nxt){ nx.t = `{사진 ${++ctx.photo}}`; nx.big = true; c = n; continue; }
+        const f = HF.find(f => f[1].test(lab));
+        if(f){
+          if(nxt && !/[□☐]/.test(nxt) && !isHintT(nxt) && HF.some(h => h[1].test(nzz(nxt)))) continue;
+          if(/[□☐]/.test(nxt) && f[0] === '종합의견'){ nx.t = '{체크:판정}'; c = n; continue; }
+          if(!nxt || isHintT(nxt)){ nx.t = `{${FMAP[f[0]] || f[0]}}`; c = n; continue; }
+          continue;
+        }
+        if(emptyOrHint(nx) && /^[가-힣A-Za-z0-9]{2,}$/.test(lab) && !/^\d+$/.test(lab) && !SKIP_LAB.test(lab)){
+          const label = raw.replace(/\s+/g, ' ');
+          if(!ctx.extra.includes(label)) ctx.extra.push(label);
+          nx.t = `{${label}}`; c = n;
+        }
+      }
+    }
+  }
+  /* 격자 → 양식 표 요소 (쪽을 넘으면 행 단위로 나눔) */
+  function gridToTables(grid, colW, rowH){
+    const nr = grid.length, nc = colW.length, tw = colW.reduce((a, b) => a + b, 0) || 1, k = CW / tw;   // 쪽 너비에 맞춤
+    const cols = colW.map(w => Math.max(12, Math.round(w * k))), W = cols.reduce((a, b) => a + b, 0);
+    const cellsOf = (r0, r1) => {
+      const out = [];
+      for(let r = r0; r < r1; r++){
+        const row = [];
+        for(let c = 0; c < nc; c++){
+          const g = grid[r] && grid[r][c];
+          if(!g) row.push('');
+          else if(g.skip) row.push(r === r0 && g.v ? '' : g.v ? '^' : (g.h ? '<' : ''));
+          else row.push(String(g.t ?? ''));
+        }
+        out.push(row);
+      }
+      // 나눈 부분 첫 줄에서 위로 이어지던 칸은 새 칸으로, 그 오른쪽 '<' 정리
+      return out;
+    };
+    const shadeC = [], heads = [];
+    const tables = []; let r0 = 0;
+    const hOf = r => { const row = grid[r] || []; const lines = Math.max(1, ...row.map(g => g && !g.skip ? String(g.t || '').split('\n').length : 1));
+      return Math.max(row.some(g => g && g.big) ? 220 : row.some(g => g && g.sign) ? 52 : 28 + (lines - 1) * 18, Math.round(rowH[r] || 0)); };
+    while(r0 < nr){
+      let h = 0, r1 = r0;
+      while(r1 < nr && (h + hOf(r1) <= LIM - TOP || r1 === r0)){ h += hOf(r1); r1++; }
+      const cells = cellsOf(r0, r1);
+      const rh = {}; for(let r = r0; r < r1; r++) rh[r - r0] = hOf(r);
+      const ca = {}, cva = {}, cst = {};
+      for(let r = r0; r < r1; r++) for(let c = 0; c < nc; c++){
+        const g = grid[r] && grid[r][c]; if(!g || g.skip) continue; const key = (r - r0) + ':' + c;
+        if(g.al) ca[key] = g.al;
+        if(g.big || g.sign) ca[key] = 'center';
+        if(g.b || g.bg || g.sz) cst[key] = {...(g.b ? {bold:true} : {}), ...(g.bg ? {bg:g.bg} : {}), ...(g.sz ? {size:g.sz} : {})};
+        if(g.head && !g.bg) cst[key] = {...(cst[key] || {}), bg:'#eef1f5', bold:true};
+      }
+      tables.push(mk({type:'table', x:X0, y:0, w:W, h:h + 2, cols, shadeR:[], shadeC, cells, rowH:rh, ca, cva, cst, size:12, bw:1, bc:'#333333'}));
+      r0 = r1;
+    }
+    return tables;
+  }
+  /* 요소들을 위에서부터 쌓아 쪽 나누기 */
+  function paginate(blocks){
+    const pages = [{els:[]}]; let y = TOP;
+    for(const b of blocks){
+      if(b.pageBreak){ if(pages[pages.length - 1].els.length){ pages.push({els:[]}); y = TOP; } continue; }
+      if(y + b.h > LIM && pages[pages.length - 1].els.length){ pages.push({els:[]}); y = TOP; }
+      b.y = Math.round(y); pages[pages.length - 1].els.push(b); y += b.h + (b.type === 'table' ? 12 : 4);
+    }
+    return pages;
+  }
+  const textEl = (t, o = {}) => {
+    const size = o.size || 13, lines = Math.max(1, Math.ceil(String(t).length * size * .95 / CW) + (String(t).match(/\n/g) || []).length);
+    return mk({type:'text', x:X0, y:0, w:CW, h:Math.round(lines * size * 1.5 + 6), text:t, size, bold:!!o.bold, align:o.align || 'left', color:o.color || '#111111'});
+  };
+
+  /* ---------- 엑셀 ---------- */
+  async function fromXlsx(buf){
+    if(!window.XLSX) throw new Error('엑셀 도구를 불러오지 못했습니다 (인터넷 연결 확인)');
+    const wb = XLSX.read(buf, {type:'array', cellStyles:true});
+    const ws = wb.Sheets[wb.SheetNames[0]]; if(!ws || !ws['!ref']) throw new Error('엑셀에 내용이 없습니다');
+    const R = XLSX.utils.decode_range(ws['!ref']);
+    const nr = R.e.r - R.s.r + 1, nc = R.e.c - R.s.c + 1;
+    const grid = Array.from({length:nr}, () => Array.from({length:nc}, () => ({t:''})));
+    for(let r = 0; r < nr; r++) for(let c = 0; c < nc; c++){
+      const cell = ws[XLSX.utils.encode_cell({r:r + R.s.r, c:c + R.s.c})];
+      if(cell){ grid[r][c].t = cell.w != null ? cell.w : (cell.v != null ? String(cell.v) : ''); const s = cell.s || {};
+        if(s.font && s.font.bold) grid[r][c].b = true;
+        const fg = s.fgColor && s.fgColor.rgb; if(fg && !/^(FF)?FFFFFF$/i.test(fg) && s.patternType === 'solid') grid[r][c].bg = '#' + String(fg).slice(-6);
+        const al = s.alignment && s.alignment.horizontal; if(al === 'center' || al === 'right') grid[r][c].al = al; }
+    }
+    for(const m of ws['!merges'] || []){
+      const r1 = m.s.r - R.s.r, c1 = m.s.c - R.s.c, r2 = m.e.r - R.s.r, c2 = m.e.c - R.s.c;
+      for(let r = r1; r <= r2; r++) for(let c = c1; c <= c2; c++) if(r !== r1 || c !== c1){ grid[r][c] = {t:'', skip:true, h: c > c1, v: r > r1}; }
+    }
+    const colsInfo = ws['!cols'] || [], rowsInfo = ws['!rows'] || [];
+    let colW = Array.from({length:nc}, (_, c) => { const ci = colsInfo[c + R.s.c]; return ci ? (ci.wpx || (ci.wch ? ci.wch * 7.5 : 64)) : 64; });
+    let rowH = Array.from({length:nr}, (_, r) => { const ri = rowsInfo[r + R.s.r]; return ri ? (ri.hpx || (ri.hpt ? ri.hpt * 4 / 3 : 26)) : 26; });
+    // 완전히 빈 열 빼기
+    const keepC = []; for(let c = 0; c < nc; c++) if(grid.some(row => row[c].skip || String(row[c].t || '').trim()) ) keepC.push(c);
+    const G = grid.map(row => keepC.map(c => row[c])); colW = keepC.map(c => colW[c]);
+    return blocksFromGrid(G, colW, rowH);
+  }
+  /* 한 줄에 글자 하나만 있는 줄(제목·소제목)은 글자로, 나머지는 표로 */
+  function blocksFromGrid(G, colW, rowH){
+    const ctx = {items:[], iopts:[], extra:[], photo:0};
+    const nc = colW.length, blocks = []; let title = '';
+    let i = 0;
+    const HEAD = /^\s*(\d{1,2}|[Ⅰ-Ⅻ]{1,3}|[가-하])\s*[.)]\s*\S|^\s*[□■◆◇▶○●※]\s*\S/;
+    const isTextRow = (row, idx) => {
+      const real = row.filter(g => !g.skip); const filled = real.filter(g => String(g.t || '').trim());
+      if(filled.length !== 1) return false;
+      const t = String(filled[0].t).trim();
+      const fi = row.indexOf(filled[0]); let span = 1; while(fi + span < nc && row[fi + span].skip && row[fi + span].h) span++;
+      if(span >= Math.max(2, nc * .6)) return true;                                           // 글 칸 하나가 줄 전체를 차지
+      if(real.length === 1) return true;
+      if(HEAD.test(t) && !/[□☐]\s*\S+\s+[□☐]/.test(t)) return true;                          // 1. 2. 가. 같은 소제목
+      const prevEmpty = idx === 0 || isEmptyRow(G[idx - 1]);
+      return prevEmpty && t.length >= 8 && !HF.some(f => f[1].test(nzz(t)));                // 빈 줄 다음의 긴 글
+    };
+    const isEmptyRow = row => row.every(g => g.skip ? !g.v : !String(g.t || '').trim());
+    while(i < G.length){
+      const row = G[i];
+      if(isEmptyRow(row) && !row.some(g => g.skip && g.v)){ i++; continue; }
+      if(isTextRow(row, i) && !row.some(g => g.skip && g.v)){
+        const t = String(row.find(g => !g.skip && String(g.t || '').trim()).t).trim();
+        if(!title && t.length <= 60){ title = t; blocks.push(textEl(t, {size:22, bold:true, align:'center'})); }
+        else blocks.push(textEl(t, {size:/^[\dⅠ-Ⅹ가-하]{1,2}[.)]/.test(t) ? 14 : 12, bold:/^[\dⅠ-Ⅹ]{1,2}[.)]/.test(t)}));
+        i++; continue;
+      }
+      let j = i; while(j < G.length && !((isTextRow(G[j], j) || isEmptyRow(G[j])) && !G[j].some(g => g.skip && g.v))) j++;
+      if(j === i) j = i + 1;
+      const sub = G.slice(i, j).map(r => r.map(g => ({...g})));
+      // 첫 줄에서 위로 이어지던 칸 정리
+      sub[0].forEach((g, c) => { if(g.skip && g.v){ sub[0][c] = {t:''}; } });
+      smartify(sub, ctx);
+      blocks.push(...gridToTables(sub, colW, rowH.slice(i, j)));
+      i = j;
+    }
+    return {title, blocks, ...ctx};
+  }
+
+  /* ---------- 워드 ---------- */
+  async function fromDocx(buf){
+    if(!window.JSZip) throw new Error('문서 도구를 불러오지 못했습니다 (인터넷 연결 확인)');
+    const zip = await JSZip.loadAsync(buf);
+    const xml = await zip.file('word/document.xml').async('string');
+    const d = new DOMParser().parseFromString(xml, 'application/xml');
+    const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+    const kid = (el, n) => [...el.childNodes].filter(x => x.localName === n);
+    const one = (el, n) => kid(el, n)[0] || null;
+    const val = el => el ? (el.getAttributeNS(W, 'val') || el.getAttribute('w:val')) : null;
+    const pText = p => { let s = ''; for(const r of p.getElementsByTagNameNS(W, 'r')) for(const c of r.childNodes){ if(c.localName === 't') s += c.textContent; else if(c.localName === 'tab') s += '  '; else if(c.localName === 'br') s += '\n'; } return s; };
+    const pProps = p => { const pPr = one(p, 'pPr'), jc = pPr && one(pPr, 'jc'); const r = p.getElementsByTagNameNS(W, 'r')[0], rPr = r && one(r, 'rPr');
+      const sz = rPr && one(rPr, 'sz'); return {align:{center:'center', right:'right', both:'left'}[val(jc)] || 'left', bold:!!(rPr && one(rPr, 'b') && val(one(rPr, 'b')) !== '0'), size: sz ? Math.round(+val(sz) / 2 * 1.333) : 13,
+        pb: !!(pPr && one(pPr, 'pageBreakBefore')) || [...p.getElementsByTagNameNS(W, 'br')].some(b => (b.getAttributeNS(W, 'type') || b.getAttribute('w:type')) === 'page')}; };
+    const body = d.getElementsByTagNameNS(W, 'body')[0];
+    const ctx = {items:[], iopts:[], extra:[], photo:0}, blocks = []; let title = '';
+    for(const el of body.childNodes){
+      if(el.localName === 'p'){
+        const t = pText(el), pp = pProps(el);
+        if(pp.pb) blocks.push({pageBreak:true});
+        if(!t.trim()) continue;
+        if(!title && t.trim().length <= 60){ title = t.trim(); blocks.push(textEl(title, {size:Math.max(20, pp.size), bold:true, align:'center'})); continue; }
+        blocks.push(textEl(t, {size:Math.min(22, Math.max(11, pp.size)), bold:pp.bold, align:pp.align}));
+      } else if(el.localName === 'tbl'){
+        const gridCols = [...el.getElementsByTagNameNS(W, 'gridCol')].map(g => (+(g.getAttributeNS(W, 'w') || g.getAttribute('w:w')) || 1500) / 15);
+        const nc = gridCols.length || 1;
+        const G = [], rowH = [], vOpen = {};
+        kid(el, 'tr').forEach((tr, r) => {
+          const row = Array.from({length:nc}, () => null);
+          const trPr = one(tr, 'trPr'), th = trPr && one(trPr, 'trHeight'); rowH.push(th ? (+(th.getAttributeNS(W, 'val') || th.getAttribute('w:val')) || 400) / 15 : 26);
+          let c = 0;
+          for(const tc of kid(tr, 'tc')){
+            while(c < nc && row[c]) c++;
+            const tcPr = one(tc, 'tcPr'), gs = tcPr && one(tcPr, 'gridSpan'), vm = tcPr && one(tcPr, 'vMerge'), shd = tcPr && one(tcPr, 'shd');
+            const span = gs ? +val(gs) || 1 : 1;
+            const paras = kid(tc, 'p'), t = paras.map(pText).join('\n');
+            const pp = paras[0] ? pProps(paras[0]) : {};
+            const fill = shd && (shd.getAttributeNS(W, 'fill') || shd.getAttribute('w:fill'));
+            if(vm && val(vm) !== 'restart'){ row[c] = {t:'', skip:true, v:true}; for(let k = 1; k < span; k++) row[c + k] = {t:'', skip:true, h:true, v:true}; }
+            else { row[c] = {t, b:pp.bold, al:pp.align !== 'left' ? pp.align : '', bg: fill && fill !== 'auto' && !/^ffffff$/i.test(fill) ? '#' + fill : ''}; for(let k = 1; k < span; k++) row[c + k] = {t:'', skip:true, h:true}; }
+            c += span;
+          }
+          for(let k = 0; k < nc; k++) if(!row[k]) row[k] = {t:''};
+          G.push(row);
+        });
+        smartify(G, ctx);
+        blocks.push(...gridToTables(G, gridCols, rowH));
+      }
+    }
+    return {title, blocks, ...ctx};
+  }
+
+  /* ---------- PDF ---------- */
+  async function loadPdfJs(){
+    if(window.pdfjsLib) return window.pdfjsLib;
+    await new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'; s.onload = res; s.onerror = () => rej(new Error('PDF 도구를 불러오지 못했습니다 (인터넷 연결 확인)')); document.head.appendChild(s); });
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    return window.pdfjsLib;
+  }
+  async function fromPdf(buf){
+    const lib = await loadPdfJs();
+    const doc = await lib.getDocument({data:new Uint8Array(buf)}).promise;
+    const pages = [], ctx = {items:[], iopts:[], extra:[], photo:0}; let title = '';
+    for(let n = 1; n <= Math.min(doc.numPages, 10); n++){
+      const pg = await doc.getPage(n), vp1 = pg.getViewport({scale:1}), k = PW / vp1.width, vp = pg.getViewport({scale:k * 1.5});
+      const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
+      await pg.render({canvasContext:cv.getContext('2d'), viewport:vp}).promise;
+      const H = Math.round(vp1.height * k);
+      const els = [mk({type:'img', x:0, y:0, w:PW, h:Math.min(H, PH), src:cv.toDataURL('image/jpeg', .72), z:0, locked:true})];
+      const tc = await pg.getTextContent();
+      // 같은 줄 글자 묶기 → 이름 글자 오른쪽에 항목 얹기
+      const items = tc.items.filter(t => t.str && t.str.trim()).map(t => ({s:t.str, x:t.transform[4] * k, y:(vp1.height - t.transform[5]) * k, w:t.width * k, h:Math.abs(t.transform[3]) * k}));
+      for(const t of items){
+        const lab = nzz(t.s);
+        if(!title && lab.length >= 4 && t.h >= 14) title = t.s.trim();
+        if(!lab || lab.length > 12) continue;
+        const f = HF.find(f => f[1].test(lab)); let token = null;
+        if(f) token = `{${FMAP[f[0]] || f[0]}}`; else if(/서명|날인/.test(lab)) token = '{서명}';
+        if(!token) continue;
+        // 오른쪽에 이미 글자가 붙어 있으면(빈칸 아님) 건너뜀
+        const right = items.find(o => o !== t && Math.abs(o.y - t.y) < 4 && o.x > t.x + t.w && o.x < t.x + t.w + 40);
+        if(right) continue;
+        const x0 = Math.round(t.x + t.w + 8);
+        const nxt = items.filter(o => o !== t && Math.abs(o.y - t.y) < 4 && o.x > x0).sort((a, b) => a.x - b.x)[0];
+        const w = Math.max(60, Math.min(260, (nxt ? nxt.x - 6 : PW - 40) - x0));
+        els.push(mk({type:'text', x:x0, y:Math.round(t.y - t.h * 1.05), w, h:Math.round(t.h * 1.35 + 2), text:token, size:Math.max(9, Math.round(t.h * .95)), color:'#1d4ed8', valign:'top', lh:1.1, z:2, float:true}));
+      }
+      pages.push({els});
+    }
+    return {title, pages, ...ctx};
+  }
+
+  /* 파일 → 서식 */
+  window.importFormFile = async function(file){
+    const name = file.name, ext = (name.match(/\.([a-z0-9]+)$/i) || [, ''])[1].toLowerCase();
+    const buf = await file.arrayBuffer();
+    let r;
+    if(ext === 'xlsx' || ext === 'xls' || ext === 'xlsm') r = await fromXlsx(buf);
+    else if(ext === 'docx') r = await fromDocx(buf);
+    else if(ext === 'pdf') r = await fromPdf(buf);
+    else if(ext === 'doc') throw new Error('.doc(옛 워드) 파일은 바로 쓸 수 없습니다. 워드에서 [다른 이름으로 저장 → Word 문서(*.docx)]로 저장해 올려 주세요.');
+    else throw new Error('지원하지 않는 파일입니다 (한글 .hwpx · 엑셀 .xlsx · 워드 .docx · PDF)');
+    const layout = r.pages ? {pages:r.pages, morePhotos:true} : {pages:paginate(r.blocks), morePhotos:true};
+    return {kind:ext === 'pdf' ? 'pdf' : ext === 'docx' ? 'word' : 'excel', title:r.title || name.replace(/\.[^.]+$/, ''), layout, items:r.items, iopts:r.iopts, extra:r.extra};
   };
 })();
 </script>
