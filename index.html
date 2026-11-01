@@ -715,9 +715,8 @@
       <button type="button" id="tmDesign" style="color:#0f766e;border-color:#0f766e">양식 디자인</button>
       <button type="button" id="tmRename">이름 바꾸기</button>
       <button type="button" id="tmCopy">복제</button>
-      <button type="button" id="tmNew">＋ 새 서식</button>
+      <button type="button" id="tmNew" title="한글 서식(.hwpx) 파일을 골라 새 서식으로 추가">＋ 새 서식 (한글 파일 올리기)</button>
       <button type="button" id="tmDel" style="color:#b91c1c">삭제</button>
-      <button type="button" id="tmHwp" style="grid-column:1/-1;color:#7c3aed;border-color:#7c3aed">📄 ＋ 한글 서식(.hwpx) 올리기</button>
     </div>
     <div class="row"><button value="cancel" type="submit">닫기</button></div>
   </form>
@@ -5063,8 +5062,9 @@ $('iHwp').onclick = async () => {
   $('tmEdit').onclick = () => withTempRec(() => openTplEditor());
   $('tmDesign').onclick = () => withTempRec(() => openDesigner());
   window.mgrRefresh = id => { mgrSel = id; if($('tplMgr').open) renderMgr(); };
-  $('tmHwp').onclick = () => { hwpFromMgr = true; $('tplHwpIn').click(); };
-  $('tmNew').onclick = () => {
+  // [+ 새 서식] = 한글 서식 파일을 바로 골라 올리기
+  $('tmNew').onclick = () => { hwpFromMgr = true; $('tplHwpIn').click(); };
+  const _tmBlank = () => {
     const name = prompt('새 서식 이름', '새 점검표'); if(name === null) return;
     const now = Date.now(), {name:_n, ...d} = JSON.parse(JSON.stringify(DEFAULT_TPL));
     const t = {...d, id:'t' + now, name:name.trim() || '새 점검표', layout:null, hwpx:null, savedAt:now, usedAt:now};
