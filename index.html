@@ -1454,7 +1454,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101125703';
+const APP_VER = '20261101130127';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -3415,6 +3415,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   function finish(name, layout){
     cur.title = $('ldTitle').value.trim() || cur.title || '현장점검표';
     cur.layout = layout;
+    // 한글 서식을 양식 디자인에서 고쳐 저장하면, 이제부터는 고친 디자인으로 PDF·한글을 만듦
+    if(cur._fromHwpx){ cur.hwpx = null; delete cur._fromHwpx; }
     const t = upsertTpl(curAsTpl(), name);
     applyTplToCur(t); useTpl(t.id); dirty = true;
     $('ld').hidden = true; renderForm();
@@ -3955,10 +3957,10 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     const ox = new Map(cur.extra.map(x => [x.label, x]));
     cur.extra = $('tExtra').value.split('\n').map(s => s.trim()).filter(Boolean).map(l => ox.get(l) || {label:l, value:''});
     $('tplDlg').close('cancel');
-    openDesigner();
+    window.openDesigner();
   };
-  $('pvLayEdit').onclick = () => { closePreview(); openDesigner(); };
-  $('tplDesignBtn').onclick = () => { collectForm(); openDesigner(); };
+  $('pvLayEdit').onclick = () => { closePreview(); window.openDesigner(); };
+  $('tplDesignBtn').onclick = () => { collectForm(); window.openDesigner(); };
 })();
 </script>
 
@@ -6177,6 +6179,72 @@ $('iHwp').onclick = async () => {
     }
     return {title, pages, ...ctx};
   }
+
+  /* ---------- 한글(hwpx) → 양식 디자인 (양식 디자인에서 한글 서식을 그대로 고칠 수 있게) ---------- */
+  async function fromHwpx(dataUrl){
+    const {zip, docs} = await hwpxDocs(dataUrl);
+    let st = null; try{ const hf = zip.file('Contents/header.xml'); if(hf) st = hwpxStyleMaps(await hf.async('string')); }catch(_){}
+    const ctx = {items:[], iopts:[], extra:[], photo:0}, blocks = []; let title = '';
+    const ch = (el, n) => [...el.childNodes].filter(x => x.localName === n);
+    const H = v => (+v || 0) / 75;
+    const paraStyle = p => {
+      const run = ch(p, 'run').find(r => ch(r, 't').some(t => t.textContent.trim())) || ch(p, 'run')[0];
+      const cp = st && run && st.ch.get(run.getAttribute('charPrIDRef'));
+      const al = st && st.pa.get(p.getAttribute('paraPrIDRef'));
+      return {size: cp ? Math.round(cp.sz * 4 / 3) : 13, bold: !!(cp && cp.b), color: cp && cp.color && cp.color !== '#000000' ? cp.color : '#111111',
+        align: al === 'CENTER' ? 'center' : al === 'RIGHT' ? 'right' : 'left'};
+    };
+    const tblGrid = tbl => {
+      const trs = ch(tbl, 'tr'), cells = [];
+      for(const tr of trs) for(const tc of ch(tr, 'tc')){
+        const a = ch(tc, 'cellAddr')[0], sp = ch(tc, 'cellSpan')[0], sz = ch(tc, 'cellSz')[0];
+        cells.push({tc, r:+a.getAttribute('rowAddr'), c:+a.getAttribute('colAddr'), cs: sp ? +sp.getAttribute('colSpan') || 1 : 1, rs: sp ? +sp.getAttribute('rowSpan') || 1 : 1,
+          w: sz ? H(sz.getAttribute('width')) : 0, h: sz ? H(sz.getAttribute('height')) : 0});
+      }
+      const nr = Math.max(0, ...cells.map(x => x.r + x.rs)), nc = Math.max(0, ...cells.map(x => x.c + x.cs));
+      const colW = Array(nc).fill(0), rowH = Array(nr).fill(0);
+      cells.filter(x => x.cs === 1).forEach(x => { colW[x.c] = Math.max(colW[x.c], x.w); });
+      cells.filter(x => x.rs === 1).forEach(x => { rowH[x.r] = Math.max(rowH[x.r], x.h); });
+      // 합쳐진 칸만 있는 열은 나머지 너비를 나눠 줌
+      for(const x of cells.filter(x => x.cs > 1)){ const miss = []; let known = 0; for(let c = x.c; c < x.c + x.cs; c++){ if(colW[c]) known += colW[c]; else miss.push(c); } miss.forEach(c => colW[c] = Math.max(10, (x.w - known) / miss.length)); }
+      const G = Array.from({length:nr}, () => Array.from({length:nc}, () => ({t:''})));
+      for(const x of cells){
+        const paras = cellParas(x.tc), t = paras.map(paraText).join('\n').replace(/[\uE000-\uF8FF]/g, '•');
+        const ps = paras[0] ? paraStyle(paras[0]) : {};
+        const bf = st && st.bf.get(x.tc.getAttribute('borderFillIDRef'));
+        G[x.r][x.c] = {t, b:ps.bold, al: ps.align !== 'left' ? ps.align : '', bg: bf && bf.bg ? bf.bg : ''};
+        for(let r = x.r; r < x.r + x.rs; r++) for(let c = x.c; c < x.c + x.cs; c++) if(r !== x.r || c !== x.c) G[r][c] = {t:'', skip:true, h: c > x.c, v: r > x.r};
+      }
+      return {G, colW:colW.map(w => w || 40), rowH:rowH.map(h => h || 28)};
+    };
+    for(const x of docs) childs(x.d.documentElement, 'p').forEach((p, i) => {
+      if(i && p.getAttribute('pageBreak') === '1') blocks.push({pageBreak:true});
+      const tbls = []; for(const run of ch(p, 'run')) for(const c of run.childNodes) if(c.localName === 'tbl') tbls.push(c);
+      const t = paraText(p).replace(/[\uE000-\uF8FF]/g, '•');
+      if(t.trim()){
+        const ps = paraStyle(p);
+        if(!title && t.trim().length <= 60){ title = t.trim(); blocks.push(textEl(title, {size:Math.max(20, ps.size), bold:true, align:'center'})); }
+        else blocks.push(textEl(t, {size:Math.min(24, Math.max(10, ps.size)), bold:ps.bold, align:ps.align, color:ps.color}));
+      }
+      for(const tb of tbls){ const {G, colW, rowH} = tblGrid(tb); smartify(G, ctx); blocks.push(...gridToTables(G, colW, rowH)); }
+    });
+    return {title, blocks, ...ctx};
+  }
+  window.hwpxToLayout = async h => { const r = await fromHwpx(await hwpxFile(h)); return {layout:{pages:paginate(r.blocks), morePhotos:true}, title:r.title, items:r.items, iopts:r.iopts, extra:r.extra}; };
+  // 한글 서식으로 [양식 디자인]을 열면 기본 양식 대신 한글 서식 모양 그대로 시작
+  const _openD = window.openDesigner;
+  window.openDesigner = async function(){
+    if(cur && cur.hwpx && !cur.layout){
+      $('busy').textContent = '한글 서식을 양식 디자인으로 불러오는 중…'; $('busy').hidden = false;
+      try{
+        const r = await hwpxToLayout(cur.hwpx);
+        cur.layout = r.layout; cur._fromHwpx = true;
+        if(r.title && !cur.title) cur.title = r.title;
+      }catch(e){ alert('한글 서식을 양식 디자인으로 불러오지 못했습니다: ' + e.message + '\n기본 양식으로 엽니다.'); }
+      finally{ $('busy').hidden = true; $('busy').textContent = 'PDF 만드는 중…'; }
+    }
+    return _openD();
+  };
 
   /* 파일 → 서식 */
   window.importFormFile = async function(file){
