@@ -229,7 +229,7 @@
   #hcBar select{max-width:230px;padding:5px;border-radius:6px;border:0;font-size:13px}
   #hcBar button{background:#fff;color:#111;border:0;border-radius:6px;padding:5px 8px;font-size:12px}
   .hwprev td[data-k]:hover{outline:2px solid #f59e0b;outline-offset:-2px}
-  .hwprev.fold{max-height:0;padding:0;border:0;overflow:hidden}
+  .hwprev.fold{display:none!important}
   .badge.done{background:#e5e7eb;color:#374151}
   .badge.st-done{background:#1f6feb;color:#fff}
   .badge.st-wait{background:#f9fafb;color:#6b7280;border:1px solid #d1d5db}
@@ -579,6 +579,29 @@
   #ldPage .le .ctbar .ctrow .lab,#ldProps .ctrow .lab{display:block;width:62px;box-sizing:border-box;text-align:center!important;font-size:12px!important;color:#0f766e!important;background:#f0fdfa;border:1px solid #ccfbf1;border-radius:8px;padding:3px 0!important}
   #ldPage .le .ctbar .ctrow .lab:empty,#ldProps .ctrow .lab:empty{visibility:hidden}
   #ldPage .le .ctbar .ctsec>.ctrow:last-child{padding-bottom:9px!important}
+
+  /* 한글 양식 미리보기: 주황 버튼 + 이동·크기 조절 창 */
+  .hpbtn{display:block;width:100%;background:#f97316!important;color:#fff!important;border:3px solid #c2410c!important;padding:11px;font-size:15px;box-shadow:0 2px 6px rgba(194,65,12,.25)}
+  .hpbtn:hover{background:#ea580c!important}
+  #hwpDlg{width:min(880px,96vw);max-width:none;height:88vh;padding:18px 18px 12px;background:#f8fafc}
+  #hwpDlg[open]{display:flex;flex-direction:column}
+  #hwpDlg .wbar{background:#fff7ed;border-bottom-color:#fed7aa}
+  #hwpDlg .wbar .wt{color:#9a3412}
+  .hwpdtop{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;flex:none}
+  .hwpdtop small{flex:1;font-size:12px;color:var(--mut);line-height:1.5}
+  .hpref{flex:none;background:#fff;border:2px solid #f97316!important;color:#c2410c;padding:6px 12px;font-size:13px}
+  #hwpPrevWrap{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+  #hwpDlg .hwprev{flex:1;max-height:none!important;min-height:0}
+
+  /* 미리보기 버튼 (연한 주황) · 점검 완료 (같은 알약 모양, 초록) */
+  .hpbtn{background:#fdba74!important;color:#7c2d12!important;border:3px solid #f97316!important;box-shadow:0 2px 6px rgba(249,115,22,.2)}
+  .hpbtn:hover{background:#fb923c!important}
+  #cDone{background:none;border:0;padding:0;margin-bottom:12px}
+  #cDone label{justify-content:center;padding:11px 14px!important;border:3px solid #4ade80;border-radius:999px;background:#f0fdf4;color:#166534;font-family:var(--f-title);font-weight:400!important;font-size:16px!important;box-shadow:0 2px 6px rgba(34,197,94,.18);transition:background .15s}
+  #cDone label small{font-family:var(--f-body);color:#4d7c0f!important;font-size:12px}
+  #cDone label input{accent-color:#16a34a}
+  #cDone label:has(input:checked){background:#22c55e;border-color:#15803d;color:#fff}
+  #cDone label:has(input:checked) small{color:#ecfdf5!important}
 </style>
 <script>
 // 앱 설치 정보(manifest)를 파일 안에 내장
@@ -636,6 +659,11 @@
       <button value="ok" type="submit" id="pwOk">확인</button>
     </div>
   </form>
+</dialog>
+
+<dialog id="hwpDlg">
+  <div class="hwpdtop"><small>칸을 누르면 선택되고 옆에 작은 도구줄이 뜹니다 — 거기서 <b>엑셀·점검 항목</b>을 연결하거나, 칸을 <b>두 번 누르면 바로 입력</b>합니다. 노란 칸: 자동으로 채움 · 파란 칸: 직접 연결한 칸. 서명·사진은 [한글 저장] 파일에 들어갑니다.</small><button type="button" id="hwpPrevBtn" class="hpref">↻ 새로고침</button></div>
+  <div id="hwpPrevWrap"><div id="hwpPrev" class="hwprev"></div></div>
 </dialog>
 
 <dialog id="dlg" class="setdlg">
@@ -757,14 +785,6 @@
       </div>
     </div>
 
-    <div class="card" id="cHwpPrev" style="display:none">
-      <h3 style="display:flex;align-items:center;gap:8px">한글 양식 미리보기 <span style="flex:1"></span>
-        <button type="button" id="hwpPrevBtn" class="bline" style="font-size:12px;padding:5px 9px">새로고침</button>
-        <button type="button" id="hwpPrevFold" class="bline" style="font-size:12px;padding:5px 9px">접기</button></h3>
-      <div id="hwpPrev" class="hwprev"></div>
-      <small style="display:block;margin-top:6px;color:var(--mut)">칸을 누르면 선택되고 옆에 작은 도구줄이 뜹니다 — 거기서 <b>엑셀·점검 항목</b>을 연결하거나, 칸을 <b>두 번 누르면 바로 입력</b>합니다. 노란 칸: 자동으로 채움 · 파란 칸: 직접 연결한 칸. 서명·사진은 [한글 저장] 파일에 들어갑니다.</small>
-    </div>
-
     <div class="card">
       <h3>점검 정보</h3>
       <label class="fl" for="iDate">점검 일시</label>
@@ -816,9 +836,13 @@
       </div>
     </div>
 
+
     <div class="card" id="cDone">
       <label style="display:flex;gap:8px;align-items:center;padding:2px;font-size:15px;font-weight:600;cursor:pointer">
         <input type="checkbox" id="iDone" style="width:20px;height:20px"> 점검 완료 <small style="font-weight:400;color:var(--mut)">(저장하면 지도 마커가 회색으로 바뀝니다)</small></label>
+    </div>
+    <div id="cHwpPrev" style="display:none;margin-bottom:12px">
+      <button type="button" id="hwpPrevOpen" class="hpbtn">📄 한글 양식 미리보기</button>
     </div>
 
     <div class="acts">
@@ -1757,7 +1781,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101163303';
+const APP_VER = '20261101164820';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -5420,7 +5444,7 @@ renderForm = function(){
   } else renderHwpxPreview();
 };
 $('hwpPrevBtn').onclick = () => { collectForm(); renderHwpxPreview(); };
-$('hwpPrevFold').onclick = () => { const f = $('hwpPrev').classList.toggle('fold'); $('hwpPrevFold').textContent = f ? '펼치기' : '접기'; };
+$('hwpPrevOpen').onclick = () => { collectForm(); if(!$('hwpDlg').open) $('hwpDlg').showModal(); renderHwpxPreview(); };   // 미리보기는 따로 뜨는 창(이동·크기 조절)
 (() => {   // 입력할 때마다 잠시 뒤 미리보기 갱신
   let tm = null;
   const kick = () => { if(!cur || !cur.hwpx || $('insp').hidden) return;
@@ -5652,7 +5676,7 @@ $('iHwp').onclick = async () => {
   }
 
   /* ---------- 팝업(dialog) ---------- */
-  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', dlg:'설정', listDlg:'엑셀 명단 관리', opsDlg:'운영 관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리'};
+  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', hwpDlg:'한글 양식 미리보기', dlg:'설정', listDlg:'엑셀 명단 관리', opsDlg:'운영 관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리'};
   function winDialog(d){
     if(d._win) return; d._win = true;
     const bar = document.createElement('div');
@@ -5985,8 +6009,7 @@ $('iHwp').onclick = async () => {
   let hSel = null, hEditing = false;
   const hBar = document.createElement('div');
   hBar.id = 'hcBar'; hBar.hidden = true;
-  $('cHwpPrev').style.position = 'relative';
-  $('cHwpPrev').appendChild(hBar);
+  $('hwpPrevWrap').appendChild(hBar);
   const tdOf = k => $('hwpPrev').querySelector(`td[data-k="${k}"]`);
   function hFieldOpts(curF){
     return '<option value="">＋ 엑셀·점검 항목 연결…</option>' + LAY.fieldGroups(cur).map(([g, l]) => `<optgroup label="${esc(g)}">${l.map(n => {
@@ -6003,7 +6026,7 @@ $('iHwp').onclick = async () => {
     hBar.innerHTML = `<div class="hb1">${hSel.lab ? `<b>${esc(hSel.lab)}</b> 칸` : '선택한 칸'}${linked ? ` · 연결 <b style="color:#93c5fd">{${esc(linked)}}</b>` : ''}${man ? ' · 직접 입력' : ''}</div>
       <div class="hb2"><select id="hcSel">${hFieldOpts(linked)}</select>
       <button type="button" data-h="edit">✎ 직접 입력</button><button type="button" data-h="clear">지우기</button><button type="button" data-h="x">✕</button></div>`;
-    const cr = $('cHwpPrev').getBoundingClientRect(), r = td.getBoundingClientRect();
+    const cr = $('hwpPrevWrap').getBoundingClientRect(), r = td.getBoundingClientRect();
     hBar.hidden = false;
     const bw = hBar.offsetWidth, bh = hBar.offsetHeight;
     let left = r.left - cr.left, top = r.top - cr.top - bh - 6;
