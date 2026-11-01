@@ -1292,7 +1292,7 @@ const DEFAULT_TPL = {
   sec: {...DEFAULT_SEC}
 };
 const OVERALL = ['적합', '보완 필요', '부적합'];
-const BAD = /보완|부적합|불량|미설치|미흡|아니오/;
+const BAD = /보완|부적합|불량|미설치|미흡|아니오|미완료|불일치|미달|미부착|미집행|미이행|(위반|중복)\s*있음/;
 
 /* ---------- IndexedDB ---------- */
 const idb = {
@@ -1337,7 +1337,7 @@ const saveTpls = () => { LS.set('tpls', tpls); if(window.fillMainTpl) fillMainTp
 saveTpls();
 const sortedTpls = () => [...tpls].sort((a,b) => b.usedAt - a.usedAt);
 const tplById = id => tpls.find(t => t.id === id);
-const tplKey = t => JSON.stringify([t.title, t.items, t.opts, t.extra, SECS.map(([k]) => !!t.sec[k]), t.hwpx ? t.hwpx.key : '', t.layout || null]);
+const tplKey = t => JSON.stringify([t.title, t.items, t.iopts || null, t.opts, t.extra, SECS.map(([k]) => !!t.sec[k]), t.hwpx ? t.hwpx.key : '', t.layout || null]);
 function useTpl(id){ const t = tplById(id); if(t){ t.usedAt = Date.now(); saveTpls(); } }
 /* 같은 내용의 서식이 있으면 그것을 최근으로, 없으면 새 서식으로 추가 */
 function upsertTpl(d, name){
@@ -1349,6 +1349,7 @@ function upsertTpl(d, name){
     extra: (d.extra || []).map(s => String(s).trim()).filter(Boolean),
     sec: d.sec,
     hwpx: d.hwpx || null,
+    iopts: Array.isArray(d.iopts) && d.iopts.some(Boolean) ? d.iopts : null,
     layout: d.layout ? JSON.parse(JSON.stringify(d.layout)) : null
   });
   if(!clean.opts.length) clean.opts = [...DEFAULT_TPL.opts];
@@ -1362,7 +1363,7 @@ function upsertTpl(d, name){
   saveTpls();
   return t;
 }
-const curAsTpl = () => ({title:cur.title, items:cur.items.map(x => x.label), opts:cur.opts, extra:cur.extra.map(x => x.label), sec:cur.sec, hwpx:cur.hwpx || null, layout:cur.layout || null});
+const curAsTpl = () => ({title:cur.title, items:cur.items.map(x => x.label), iopts: cur.items.some(x => x.opts && x.opts.length) ? cur.items.map(x => x.opts && x.opts.length ? [...x.opts] : null) : null, opts:cur.opts, extra:cur.extra.map(x => x.label), sec:cur.sec, hwpx:cur.hwpx || null, layout:cur.layout || null});
 
 /* ---------- 공통 ---------- */
 const pad = n => String(n).padStart(2, '0');
@@ -1465,11 +1466,16 @@ window.ensureSat = async function(rec){
   })().finally(() => { setTimeout(() => { rec._satP = null; }, 0); });
   return rec._satP;
 };
+/* 점검 항목 하나: 한글 서식에서 읽은 항목 전용 선택지가 있으면 함께 */
+function itemOf(t, label, i){
+  const o = t && Array.isArray(t.iopts) && Array.isArray(t.iopts[i]) && t.iopts[i].length ? [...t.iopts[i]] : null;
+  return o ? {label, result:'', note:'', opts:o} : {label, result:'', note:''};
+}
 function newRecord(r){
   const t = sortedTpls()[0];
   return {
     id: 'r' + Date.now() + Math.random().toString(36).slice(2, 6), key: rowKey(r), tplId: t.id, title: t.title,
-    items: t.items.map(label => ({label, result:'', note:''})), opts: [...t.opts],
+    items: t.items.map((label, i) => itemOf(t, label, i)), opts: [...t.opts],
     extra: t.extra.map(label => ({label, value:''})), sec: {...t.sec}, hwpx: t.hwpx || null, layout: t.layout ? JSON.parse(JSON.stringify(t.layout)) : null,
     overall: '', memo: '', date: localDT(new Date()), dateText: '', gpsText: '',
     inspector: LS.get('inspector', ''), gps: null, photos: [], photoIds: [], capt: [], sign: null, signId: null,
@@ -1481,7 +1487,7 @@ function applyTplToCur(t){
   const oldI = new Map(cur.items.map(x => [x.label, x])), oldX = new Map(cur.extra.map(x => [x.label, x]));
   cur.tplId = t.id; cur.title = t.title; cur.opts = [...t.opts]; cur.sec = {...t.sec}; cur.hwpx = t.hwpx || null;
   cur.layout = t.layout ? JSON.parse(JSON.stringify(t.layout)) : null;
-  cur.items = t.items.map(label => oldI.get(label) || {label, result:'', note:''});
+  cur.items = t.items.map((label, i) => { const o = oldI.get(label); return o ? {...o, opts: itemOf(t, label, i).opts} : itemOf(t, label, i); });
   cur.extra = t.extra.map(label => oldX.get(label) || {label, value:''});
 }
 
@@ -1505,7 +1511,7 @@ function renderItems(){
   $('iItemsHead').textContent = `점검 항목 (${cur.items.length})`;
   $('iItems').innerHTML = cur.items.map((it, i) => `<div class="it">
       <div class="lb">${i+1}. ${esc(it.label)}</div>
-      <div class="seg">${segHtml(cur.opts, it.result, `data-i="${i}"`)}</div>
+      <div class="seg">${segHtml(it.opts && it.opts.length ? it.opts : cur.opts, it.result, `data-i="${i}"`)}</div>
       <input class="inp" data-note="${i}" placeholder="비고 (선택)" value="${esc(it.note)}">
     </div>`).join('');
   $('iExtra').innerHTML = cur.extra.length ? cur.extra.map((x, i) => `<label class="fl">${esc(x.label)}</label>
@@ -2136,7 +2142,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     rec.items.forEach(x => { if((x.result || x.note) && !t.items.includes(x.label)) lost++; });
     rec.tplId = t.id; rec.title = t.title; rec.opts = [...t.opts]; rec.sec = {...t.sec};
     rec.hwpx = t.hwpx || null; rec.layout = t.layout ? JSON.parse(JSON.stringify(t.layout)) : null;
-    rec.items = t.items.map(label => { const o = oldI.get(label); if(o && (o.result || o.note)) kept++; return o ? {...o} : {label, result:'', note:''}; });
+    rec.items = t.items.map((label, i) => { const o = oldI.get(label); if(o && (o.result || o.note)) kept++; return o ? {...o, opts: itemOf(t, label, i).opts} : itemOf(t, label, i); });
     rec.extra = t.extra.map(label => oldX.get(label) ? {...oldX.get(label)} : {label, value:''});
     rec.savedAt = Date.now(); rec._dirty = true;
     return {kept, lost};
@@ -4340,7 +4346,13 @@ function walkHwpx(docs, rec, dry){
         const label = ic ? cText(ic).trim().replace(/^\(?\d+\)?[.)]?\s*/, '') : '';
         if(label && !/[□☐]/.test(label)){
           const i = ck.n++;
-          if(dry) res.items.push(label);
+          if(dry){
+            res.items.push(label);
+            // 결과 칸의 □ 선택지를 그 항목 전용 선택지로 (예: □ 부착 □ 미부착)
+            const rc = byCol.get(ck.result), rt = rc ? cText(rc) : '';
+            const os = rt.split(/[□☐■]/).slice(1).map(x => x.replace(/\s+/g, ' ').trim()).filter(Boolean);
+            (res.iopts = res.iopts || [])[i] = os.length >= 2 ? os : null;
+          }
           else {
             const it = rec.items[i];
             if(it){
@@ -4574,7 +4586,7 @@ $('tplHwpIn').onchange = async e => {
     const t = normTpl({
       id:'t' + now, name, title:a.title || name,
       items: a.items.length ? a.items : ['(양식에서 점검 항목을 찾지 못함 — 서식 편집에서 입력)'],
-      opts:[...cur.opts], extra:a.extra,
+      opts:[...cur.opts], extra:a.extra, iopts: a.iopts && a.iopts.some(Boolean) ? a.items.map((_, i) => a.iopts[i] || null) : null,
       sec:{...DEFAULT_SEC, extra: a.extra.length > 0},
       hwpx:{key, name:f.name, mode:a.bullets ? 'bullet' : a.mode, driveId:'', v:2}, savedAt:now, usedAt:now
     });
