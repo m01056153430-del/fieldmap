@@ -715,6 +715,7 @@
       <button type="button" id="tmCopy">복제</button>
       <button type="button" id="tmNew">＋ 새 서식</button>
       <button type="button" id="tmDel" style="color:#b91c1c">삭제</button>
+      <button type="button" id="tmHwp" style="grid-column:1/-1;color:#7c3aed;border-color:#7c3aed">📄 ＋ 한글 서식(.hwpx) 올리기</button>
     </div>
     <div class="row"><button value="cancel" type="submit">닫기</button></div>
   </form>
@@ -4602,7 +4603,8 @@ async function uploadHwpxTpls(){
 window.uploadHwpxTpls = uploadHwpxTpls;
 
 /* ---------- 화면 연결 ---------- */
-$('tplHwpBtn').onclick = () => $('tplHwpIn').click();
+let hwpFromMgr = false;
+$('tplHwpBtn').onclick = () => { hwpFromMgr = false; $('tplHwpIn').click(); };
 $('tplHwpIn').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if(!f) return;
   if(/\.hwp$/i.test(f.name)) return alert('.hwp 파일은 바로 쓸 수 없습니다.\n한글에서 [파일 → 다른 이름으로 저장 → 파일 형식: 한글 표준 문서(*.hwpx)]로 저장한 뒤 올려 주세요.');
@@ -4614,17 +4616,19 @@ $('tplHwpIn').onchange = async e => {
     const name = (prompt('서식 이름 (목록에 표시)', base) || base).trim() || base;
     const key = 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     await fdb.put(key, data);
-    collectForm();
+    const inInsp = !hwpFromMgr && cur && !$('insp').hidden;
+    if(inInsp) collectForm();
     const now = Date.now();
     const t = normTpl({
       id:'t' + now, name, title:a.title || name,
       items: a.items.length ? a.items : ['(양식에서 점검 항목을 찾지 못함 — 서식 편집에서 입력)'],
-      opts:[...cur.opts], extra:a.extra, iopts: a.iopts && a.iopts.some(Boolean) ? a.items.map((_, i) => a.iopts[i] || null) : null,
+      opts:[...(cur ? cur.opts : DEFAULT_TPL.opts)], extra:a.extra, iopts: a.iopts && a.iopts.some(Boolean) ? a.items.map((_, i) => a.iopts[i] || null) : null,
       sec:{...DEFAULT_SEC, extra: a.extra.length > 0},
       hwpx:{key, name:f.name, mode:a.bullets ? 'bullet' : a.mode, driveId:'', v:2}, savedAt:now, usedAt:now
     });
     tpls.push(t); saveTpls();
-    applyTplToCur(t); dirty = true; renderForm();
+    if(inInsp){ applyTplToCur(t); dirty = true; renderForm(); }
+    if(window.mgrRefresh) mgrRefresh(t.id);   // 서식 관리 창에서 올렸으면 목록에 바로 표시·선택
     const found = [...new Set(a.found)];
     alert(`'${name}' 한글 서식을 추가했습니다.\n\n`
       + `문서 제목: ${a.title || '(찾지 못함)'}\n`
@@ -5056,6 +5060,8 @@ $('iHwp').onclick = async () => {
   $('tmUse').onclick = () => { useTpl(mgrSel); fillMainTpl(); renderMgr(); toast(`'${tplById(mgrSel).name}' 서식으로 점검합니다`); };
   $('tmEdit').onclick = () => withTempRec(() => openTplEditor());
   $('tmDesign').onclick = () => withTempRec(() => openDesigner());
+  window.mgrRefresh = id => { mgrSel = id; if($('tplMgr').open) renderMgr(); };
+  $('tmHwp').onclick = () => { hwpFromMgr = true; $('tplHwpIn').click(); };
   $('tmNew').onclick = () => {
     const name = prompt('새 서식 이름', '새 점검표'); if(name === null) return;
     const now = Date.now(), {name:_n, ...d} = JSON.parse(JSON.stringify(DEFAULT_TPL));
