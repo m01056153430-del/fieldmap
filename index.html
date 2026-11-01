@@ -1162,7 +1162,7 @@ function labSet(m){
   const auto = !m._open && map && map.getLevel() <= AUTO_LEVEL;
   m._auto = auto;
   const el = document.createElement('div');
-  el.className = 'mlab' + (m._open || auto ? ' open' : '') + (auto ? ' auto' : '') + (m._det ? ' det' : '');
+  el.className = 'mlab' + (m._open || auto ? ' open' : '') + (auto ? ' auto' : '') + (m._open && m._det ? ' det' : '');
   const info2 = `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}`;
   el.innerHTML = `<b>${esc(r.name)}</b>` + (auto ? info2 : m._open ? info2
     + (m._det ? labDetail(r, m._pt)   // 상세: 점검·완료는 맨 아래
@@ -1210,7 +1210,7 @@ async function plot(){
       labSet(m);
       // 마커 첫 클릭: 이름표에 사업명·세부사업 펼치기 → 한 번 더(또는 이름표 클릭): 상세 정보창
       kakao.maps.event.addListener(m, 'click', () => {
-        if(!m._open){ markers.forEach(x => { if(x !== m && x._open){ x._open = false; labSet(x); } }); m._open = true; labSet(m); if(info) info.close(); updateLabels(); }
+        if(!m._open){ markers.forEach(x => { if(x !== m && x._open){ x._open = false; x._det = false; labSet(x); } }); m._open = true; labSet(m); if(info) info.close(); updateLabels(); }
         else { m._det = !m._det; labSet(m); }
       });
       bounds.extend(m.getPosition());
@@ -1351,7 +1351,7 @@ if(!window.kakao || !kakao.maps){
   kakao.maps.load(() => {
     map = new kakao.maps.Map($('map'), {center:new kakao.maps.LatLng(35.2025,127.4627), level:8}); // 구례군청 부근
     kakao.maps.event.addListener(map, 'zoom_changed', () => updateLabels());
-    kakao.maps.event.addListener(map, 'click', () => { markers.forEach(m => { if(m._open){ m._open = false; labSet(m); } }); updateLabels(); });
+    kakao.maps.event.addListener(map, 'click', () => { markers.forEach(m => { if(m._open){ m._open = false; m._det = false; labSet(m); } }); updateLabels(); });
     map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
     map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
     // 지도/스카이뷰 버튼 상자: 둥근 알약 모양
@@ -1517,7 +1517,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101144110';
+const APP_VER = '20261101144610';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
