@@ -137,6 +137,9 @@
   .mlab span{display:block;color:#374151;font-size:13px;word-break:keep-all}
   .mlab span.dt{color:#1f6feb;font-weight:600}
   .mlab i{display:block;font-style:normal;font-size:11px;color:#9ca3af;margin-top:3px}
+  .mlab .mlb{display:flex;gap:6px;margin-top:6px;justify-content:center}
+  .mlab .mlb button{border:1px solid #1f6feb;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;background:#fff;color:#1f6feb;cursor:pointer}
+  .mlab .mlb button[data-ml="insp"]{background:#1f6feb;color:#fff}
   /* ---------- 현장 점검 ---------- */
   .ov{position:fixed;inset:0;background:#f5f7fa;z-index:50;display:flex;flex-direction:column}
   .ov[hidden]{display:none}
@@ -1063,8 +1066,11 @@ function labSet(m){
   const r = rows[m._i]; if(!r || !m._lab) return;
   const el = document.createElement('div');
   el.className = 'mlab' + (m._open ? ' open' : '');
-  el.innerHTML = `<b>${esc(r.name)}</b>` + (m._open ? `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}<i>한 번 더 누르면 상세 정보</i>` : '');
-  el.onclick = ev => { ev.stopPropagation(); if(!m._open){ m._open = true; labSet(m); updateLabels(); return; } info.setContent(infoHtml(r, m._pt)); info.open(map, m); };
+  el.innerHTML = `<b>${esc(r.name)}</b>` + (m._open ? `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="info">상세 정보</button></div>` : '');
+  el.onclick = ev => { ev.stopPropagation();
+    const mb = ev.target.closest('[data-ml]');
+    if(mb){ if(mb.dataset.ml === 'insp') openInspect(m._i); else { info.setContent(infoHtml(r, m._pt)); info.open(map, m); } return; }
+    if(!m._open){ m._open = true; labSet(m); updateLabels(); return; } info.setContent(infoHtml(r, m._pt)); info.open(map, m); };
   m._lab.setContent(el); m._lab.setZIndex(m._open ? 10 : 3);
 }
 function updateLabels(){
