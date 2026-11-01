@@ -1737,7 +1737,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101161535';
+const APP_VER = '20261101161931';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -3780,10 +3780,29 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     cur.layout = layout;
     // 한글 서식을 양식 디자인에서 고쳐 저장하면, 이제부터는 고친 디자인으로 PDF·한글을 만듦
     if(cur._fromHwpx){ cur.hwpx = null; delete cur._fromHwpx; }
+    const oldId = cur.tplId;
     const t = upsertTpl(curAsTpl(), name);
     applyTplToCur(t); useTpl(t.id); dirty = true;
     $('ld').hidden = true; renderForm();
     toast(`'${t.name}' 서식으로 저장했습니다 (맨 위에 표시)`);
+    // 같은 서식으로 이미 저장된 점검 기록에도 새 디자인을 적용할지 물어봄 (내용은 그대로, 문서 모양만)
+    (async () => {
+      try{
+        if(cur && cur.savedAt && typeof saveCur === 'function') await saveCur(true);   // 지금 보던 기록도 새 디자인으로 저장
+        if(typeof reloadRecs === 'function') await reloadRecs();
+        const targets = (typeof allRecs !== 'undefined' ? allRecs : []).filter(r => r.id !== cur.id && (r.tplId === t.id || r.tplId === oldId));
+        if(!targets.length) return;
+        if(!confirm(`이 서식으로 이미 저장된 점검 기록이 ${targets.length}건 있습니다.\n그 기록들도 새 디자인으로 바꿀까요?\n(점검 결과·사진·서명은 그대로, PDF·한글 문서 모양만 바뀝니다)`)) return;
+        for(const r of targets){
+          r.layout = clone(layout); r.hwpx = cur.hwpx || null; r.tplId = t.id; r.title = cur.title;
+          r.savedAt = Date.now(); r._dirty = true;
+          await idb.put(r);
+        }
+        if(typeof reloadRecs === 'function') await reloadRecs();
+        if(window.syncSoon) syncSoon();
+        toast(`점검 기록 ${targets.length}건에 새 디자인을 적용했습니다`);
+      }catch(e){ alert('기존 기록에 적용하지 못했습니다: ' + e.message); }
+    })();
   }
 
   /* ---------- 이벤트 ---------- */
@@ -5103,7 +5122,7 @@ window.uploadHwpxTpls = uploadHwpxTpls;
 /* 서식 안의 큰 그림(PDF 배경 등)은 구글 드라이브에 따로 올리고, 서버 목록에는 'drv:아이디'만 보냄
    (구글 시트 한 칸 5만 자 제한 때문에 큰 서식이 동기화에서 빠지지 않도록) */
 const BIG_IMG = 15000;
-async function hashStr(str){
+async function imgHash(str){
   try{ const b = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(str)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
   catch(e){ let h = 0; for(let i = 0; i < str.length; i += 7) h = (h * 31 + str.charCodeAt(i)) | 0; return 'h' + str.length + '_' + h; }
 }
@@ -5113,7 +5132,7 @@ async function packTpls(list){
     if(typeof v === 'string'){
       const m = v.length > BIG_IMG && /^data:(image\/[a-z+]+);base64,(.*)$/i.exec(v);
       if(!m) return v;
-      const h = await hashStr(v);
+      const h = await imgHash(v);
       if(!map[h]){
         const ext = m[1].split('/')[1].replace('jpeg', 'jpg').replace('svg+xml', 'svg');
         const r = await api('saveTplFile', {name:'서식그림_' + h.slice(0, 10) + '.' + ext, tplName:tname, data:m[2]}, 180000);
