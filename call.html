@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>전화 걸기</title>
+<style>
+body{margin:0;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#1f6feb;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
+.b{padding:24px}.n{font-size:22px;margin-bottom:6px}.t{font-size:32px;font-weight:800;letter-spacing:1px;margin-bottom:28px}
+a.c{display:inline-block;background:#fff;color:#1f6feb;font-size:24px;font-weight:800;padding:18px 46px;border-radius:999px;text-decoration:none;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.s{margin-top:24px;font-size:14px;opacity:.9;line-height:1.7}.s a{color:#fff}
+</style></head>
+<body><div class="b"><div class="n" id="n"></div><div class="t" id="t"></div><a class="c" id="c" href="#">📞 전화 걸기</a>
+<div class="s">전화가 바로 연결되지 않으면 위 버튼을 눌러 주세요<br><a href="./">현장지도 열기</a></div></div>
+<script>
+/* 현장점검 동선 PDF의 전화번호 링크 → 바로 전화 연결 (PDF 보기 프로그램이 tel: 링크를 막는 경우 대비) */
+var q = new URLSearchParams(location.search), num = (q.get('t') || '').replace(/[^0-9+]/g, ''), name = q.get('n') || '';
+document.getElementById('n').textContent = name;
+document.getElementById('t').textContent = num.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3') || '번호 없음';
+if(num){ document.getElementById('c').href = 'tel:' + num; setTimeout(function(){ location.href = 'tel:' + num; }, 300); }
+</script></body></html>
