@@ -18,12 +18,18 @@
   #app{display:flex;flex-direction:column;height:100%}
   header{display:flex;gap:8px;align-items:center;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));background:var(--b);color:#fff;flex-wrap:wrap}
   header h1{font-size:17px;margin:0;flex:1;min-width:0}
-  /* 상단 버튼: 둥글고 귀여운 글씨체 */
-  header button{font-family:'Jua','Gowun Dodum','Malgun Gothic',sans-serif;font-weight:400;font-size:16px;letter-spacing:.3px;border-radius:999px;padding:8px 16px;
-    box-shadow:0 2px 0 rgba(0,0,0,.12),inset 0 -2px 0 rgba(31,111,235,.12);transition:transform .08s,box-shadow .08s}
-  header button:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,.12)}
-  header #fsBtn{padding:8px 12px}
-  @media (max-width:520px){ header button{font-size:15px;padding:7px 12px} }
+  /* 상단: 파란 막대 안에 버튼을 같은 너비로 고르게 */
+  header{display:grid!important;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px;align-items:center}
+  header h1{display:none}
+  header button{font-size:16px;padding:9px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+    box-shadow:0 2px 0 rgba(0,0,0,.12),inset 0 -2px 0 rgba(31,111,235,.12)}
+  header #fsBtn .fst{display:none}
+  @media (max-width:520px){ header{gap:5px} header button{font-size:14px;padding:8px 2px} }
+  /* 앱 전체 버튼 모양 통일: 둥근 알약 모양 + 같은 글씨체 */
+  button,.btn{font-family:'Jua','Gowun Dodum','Malgun Gothic',sans-serif!important;font-weight:400!important;border-radius:999px!important;letter-spacing:.2px;transition:transform .08s,box-shadow .08s,background .15s}
+  button:active,.btn:active{transform:translateY(1px)}
+  button.phb,#ldPage .ctbar .phb{border-radius:8px!important}
+  #ldPage .ctbar button,#ldToolBar button,#sideBar button,#rtPanel .rth button{letter-spacing:0}
   button,.btn{border:0;border-radius:8px;padding:8px 12px;font-size:14px;cursor:pointer;background:#fff;color:var(--b);font-weight:600}
   .btn input{display:none}
   #main{flex:1;display:flex;min-height:0}
@@ -1474,7 +1480,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101132007';
+const APP_VER = '20261101132349';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
