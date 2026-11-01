@@ -1489,7 +1489,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101142421';
+const APP_VER = '20261101142844';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -6349,6 +6349,10 @@ $('iHwp').onclick = async () => {
   bar.innerHTML = '<button type="button" id="rtMe">📍 내 위치</button><button type="button" id="rtGo">🚗 미완료 최적 동선</button>';
   $('filters').after(bar);
   const pn = document.createElement('div'); pn.id = 'rtPanel'; pn.hidden = true; $('mapwrap').appendChild(pn);
+  // 마지막으로 열거나 누른 창을 맨 위로 (명단 목록 ↔ 동선 창)
+  const front = el => { const sd = $('side'); if(!sd) return; sd.style.zIndex = el === pn ? 16 : 17; pn.style.zIndex = el === pn ? 17 : 16; };
+  pn.addEventListener('pointerdown', () => front(pn), true);
+  $('side') && $('side').addEventListener('pointerdown', () => { if(!pn.hidden) front($('side')); }, true);
 
   /* ---- 내 위치 ---- */
   function drawMe(){
@@ -6456,7 +6460,7 @@ $('iHwp').onclick = async () => {
       <div class="rtb">${r.stops.map((s, k) => `<div class="rti"><i>${k + 1}</i><div style="flex:1;min-width:0"><b>${esc(s.r.name)}</b> <small>${s.leg.toFixed(1)}km</small>${isDone(s.r) ? ' <small style="color:#16a34a">✔완료</small>' : ''}<br>
         <a href="${navUrl(s)}" target="_blank" rel="noopener">🧭 ${esc(s.r.place || '길찾기')}</a>${s.r.tel ? `<br><a href="${telUrl(s.r.tel)}" style="white-space:nowrap">📞 ${esc(s.r.tel)}</a>` : ''}</div><button type="button" class="rtInsp" data-rt="insp" data-i="${s.i}">점검</button></div>`).join('')}</div>
       <div class="rtf"><button type="button" data-rt="pdf">PDF 저장</button><button type="button" data-rt="share">팀원과 공유</button></div><div class="wrh" title="끌어서 크기 조절"></div>`;
-    pn.hidden = false; rtApply();
+    pn.hidden = false; rtApply(); front(pn);
   }
   /* 동선 창: 파란 제목줄을 끌어 이동, 오른쪽 아래 모서리로 크기 조절, — 접기 (위치·크기 기억) */
   let rtPos = LS.get('rtPos', null);
