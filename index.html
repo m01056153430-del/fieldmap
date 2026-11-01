@@ -1526,7 +1526,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101150048';
+const APP_VER = '20261101150454';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -4236,10 +4236,10 @@ async function syncAll(manual){
     }
     // 3) 서식·위치 교환 + 서버 목록
     const geoNew = LS.get('geoNew', {}), tplDel = LS.get('tplDel', []);
-    const res = await api('sync', {tpls, tplDel, geo:geoNew});
+    const res = await api('sync', {tpls: window.packTpls ? await packTpls(tpls) : tpls, tplDel, geo:geoNew});
     const gLeft = LS.get('geoNew', {}); Object.keys(geoNew).forEach(k => delete gLeft[k]); LS.set('geoNew', gLeft);
     LS.set('tplDel', LS.get('tplDel', []).filter(id => !tplDel.includes(id)));
-    if(Array.isArray(res.tpls) && res.tpls.length) applyServerTpls(res.tpls);
+    if(Array.isArray(res.tpls) && res.tpls.length) applyServerTpls(window.unpackTpls ? await unpackTpls(res.tpls) : res.tpls);
     let replot = false;
     for(const [k, v] of Object.entries(res.geo || {})) if(!geoCache[k]){ geoCache[k] = v; replot = true; }
     if(replot) LS.set('geo', geoCache);
@@ -4815,6 +4815,59 @@ async function uploadHwpxTpls(){
   }
 }
 window.uploadHwpxTpls = uploadHwpxTpls;
+
+/* 서식 안의 큰 그림(PDF 배경 등)은 구글 드라이브에 따로 올리고, 서버 목록에는 'drv:아이디'만 보냄
+   (구글 시트 한 칸 5만 자 제한 때문에 큰 서식이 동기화에서 빠지지 않도록) */
+const BIG_IMG = 15000;
+async function hashStr(str){
+  try{ const b = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(str)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join(''); }
+  catch(e){ let h = 0; for(let i = 0; i < str.length; i += 7) h = (h * 31 + str.charCodeAt(i)) | 0; return 'h' + str.length + '_' + h; }
+}
+async function packTpls(list){
+  const map = LS.get('imgDrv', {});
+  const walk = async (v, tname) => {
+    if(typeof v === 'string'){
+      const m = v.length > BIG_IMG && /^data:(image\/[a-z+]+);base64,(.*)$/i.exec(v);
+      if(!m) return v;
+      const h = await hashStr(v);
+      if(!map[h]){
+        const ext = m[1].split('/')[1].replace('jpeg', 'jpg').replace('svg+xml', 'svg');
+        const r = await api('saveTplFile', {name:'서식그림_' + h.slice(0, 10) + '.' + ext, tplName:tname, data:m[2]}, 180000);
+        if(!r || !r.id) return v;
+        map[h] = r.id; LS.set('imgDrv', map);
+        try{ await fdb.put('img:' + r.id, v); }catch(e){}
+      }
+      return 'drv:' + map[h] + '|' + m[1];
+    }
+    if(Array.isArray(v)){ const o = []; for(const x of v) o.push(await walk(x, tname)); return o; }
+    if(v && typeof v === 'object'){ const o = {}; for(const k of Object.keys(v)) o[k] = await walk(v[k], tname); return o; }
+    return v;
+  };
+  const out = [];
+  for(const t of list) out.push(t.layout && JSON.stringify(t.layout).length > BIG_IMG ? {...t, layout: await walk(t.layout, t.name)} : t);
+  return out;
+}
+async function unpackTpls(list){
+  const need = new Map(), re = /^drv:([\w-]+)\|(image\/[a-z+]+)$/i;
+  const scan = v => { if(typeof v === 'string'){ const m = re.exec(v); if(m) need.set(m[1], m[2]); } else if(v && typeof v === 'object') Object.values(v).forEach(scan); };
+  list.forEach(t => scan(t.layout));
+  if(!need.size) return list;
+  const got = {};
+  for(const id of need.keys()){ const d = await fdb.get('img:' + id).catch(() => null); if(d) got[id] = d; }
+  const miss = [...need.keys()].filter(id => !got[id]);
+  if(miss.length){
+    const j = await api('files', {ids:miss}, 180000).catch(() => ({}));
+    for(const id of miss){ const b = (j.files || {})[id]; if(!b) continue; got[id] = /^data:/.test(b) ? b : 'data:' + need.get(id) + ';base64,' + b; try{ await fdb.put('img:' + id, got[id]); }catch(e){} }
+  }
+  const fix = v => {
+    if(typeof v === 'string'){ const m = re.exec(v); if(!m) return v; const d = got[m[1]]; if(!d) return v; return /^data:/.test(d) ? d : 'data:' + m[2] + ';base64,' + d; }
+    if(Array.isArray(v)) return v.map(fix);
+    if(v && typeof v === 'object'){ const o = {}; for(const k of Object.keys(v)) o[k] = fix(v[k]); return o; }
+    return v;
+  };
+  return list.map(t => t.layout ? {...t, layout: fix(t.layout)} : t);
+}
+window.packTpls = packTpls; window.unpackTpls = unpackTpls;
 
 /* ---------- 화면 연결 ---------- */
 let hwpFromMgr = false;
