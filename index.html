@@ -602,6 +602,14 @@
   #cDone label input{accent-color:#16a34a}
   #cDone label:has(input:checked){background:#22c55e;border-color:#15803d;color:#fff}
   #cDone label:has(input:checked) small{color:#ecfdf5!important}
+
+  /* 셀 도구줄: 내용만큼 넓게 + 이동 · 크기 조절 */
+  #ldPage .le .ctbar{width:max-content;min-width:300px;max-width:none;overflow:auto!important;display:flex!important;flex-direction:column}
+  #ldPage .le .ctbar .cr1{cursor:move;touch-action:none;position:sticky;top:0;z-index:2;flex:none}
+  #ldPage .le .ctbar .ctrow .ctg{flex-wrap:wrap}
+  #ldPage .le .ctbar .ctrow .seg{flex-wrap:nowrap;white-space:nowrap}
+  #ldPage .le .ctbar .ctrs{position:sticky;align-self:flex-end;bottom:0;margin-top:-18px;width:18px;height:18px;flex:none;cursor:nwse-resize;touch-action:none;z-index:3;
+    background:linear-gradient(135deg,transparent 50%,#94a3b8 50%,#94a3b8 58%,transparent 58%,transparent 70%,#94a3b8 70%,#94a3b8 78%,transparent 78%)}
 </style>
 <script>
 // 앱 설치 정보(manifest)를 파일 안에 내장
@@ -1781,7 +1789,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101164820';
+const APP_VER = '20261101165454';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -3235,7 +3243,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     cell = null; crange = null; cmulti = null; draw(); props();
   }
   let ctOff = null;   // 칸 도구줄을 끌어 옮긴 위치
-  let ctFields = false;   // 칸 도구줄의 '엑셀 항목' 목록 펼침
+  let ctFields = false;
+  let ctSize = LS.get('ctSize', null);   // 셀 도구줄 크기 (사용자가 조절)   // 칸 도구줄의 '엑셀 항목' 목록 펼침
   function addGrips(){
     const e = selEl(); if(!e || !(e.type === 'table' || e.type === 'checklist')) return;
     const node = $('ldPage').querySelector(`[data-id="${e.id}"]`); if(!node) return;
@@ -3283,8 +3292,22 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         const maxL = PW - e.x - cb0.offsetWidth - 4; if(parseFloat(cb0.style.left) > maxL) cb0.style.left = Math.max(-e.x, maxL) + 'px';
         // 사용자가 옮겨 둔 위치 유지 (같은 표를 선택하고 있는 동안)
         if(ctOff && ctOff.id === e.id){ cb0.style.left = ctOff.x + 'px'; cb0.style.top = ctOff.y + 'px'; }
-        const gp = cb0.querySelector('.ctgrip');
+        // 크기: 사용자가 바꾼 크기 기억 (모든 셀 도구줄 공통)
+        if(ctSize){ cb0.style.width = ctSize.w + 'px'; cb0.style.height = ctSize.h + 'px'; }
+        const rz = document.createElement('div'); rz.className = 'ctrs'; rz.title = '끌어서 크기 조절'; cb0.appendChild(rz);
+        rz.addEventListener('pointerdown', ev => {
+          ev.preventDefault(); ev.stopPropagation();
+          const sx = ev.clientX, sy = ev.clientY, w0 = cb0.offsetWidth, h0 = cb0.offsetHeight;
+          rz.setPointerCapture(ev.pointerId);
+          const mv = m => { cb0.style.width = Math.max(260, w0 + (m.clientX - sx) / zoom) + 'px'; cb0.style.height = Math.max(120, h0 + (m.clientY - sy) / zoom) + 'px'; };
+          const up = () => { rz.removeEventListener('pointermove', mv); rz.removeEventListener('pointerup', up); rz.removeEventListener('pointercancel', up);
+            ctSize = {w:cb0.offsetWidth, h:cb0.offsetHeight}; try{ LS.set('ctSize', ctSize); }catch(_){} };
+          rz.addEventListener('pointermove', mv); rz.addEventListener('pointerup', up); rz.addEventListener('pointercancel', up);
+        });
+        // 이동: 초록 제목줄 아무 곳이나 끌기 (버튼 제외)
+        const gp = cb0.querySelector('.cr1');
         gp.addEventListener('pointerdown', ev => {
+          if(ev.target.closest('button')) return;
           ev.preventDefault(); ev.stopPropagation();
           const sx = ev.clientX, sy = ev.clientY, l0 = parseFloat(cb0.style.left) || 0, t0 = parseFloat(cb0.style.top) || 0;
           gp.setPointerCapture(ev.pointerId); cb0.classList.add('drag');
