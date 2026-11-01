@@ -444,8 +444,6 @@
   .badge{font-size:var(--fs-xs)}
   #rtPanel .rtInsp{font-size:var(--fs-b)}
   /* 서식 관리 버튼: 두 줄 */
-  #setTplMgr{line-height:1.3;padding:10px 12px}
-  #setTplMgr small{display:block;font-size:var(--fs-s);opacity:.8;margin-top:2px;color:inherit}
   /* 명단 상태 표시: 완료(빨강) · 점검중(주황) · 대기(회색) */
   .stt{display:inline-block;font-size:var(--fs-xs);font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px;vertical-align:middle;border:1px solid}
   .stt.s-done{color:#dc2626;border-color:#fca5a5;background:#fef2f2}
@@ -504,6 +502,36 @@
   .ldpop .ldsb{padding:12px 14px}
   #ldTool>.wrh{display:none}
   #ldTool #ldToolBody{flex:none}
+
+  /* ===== 설정 창 ===== */
+  .setdlg{background:#f8fafc}
+  .setdlg .wbar{background:#fff}
+  .setmenu{display:flex;flex-direction:column;gap:8px}
+  .setcard{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:#fff;border:1px solid #e2e8f0!important;border-radius:16px!important;text-align:left;color:#1e293b;box-shadow:0 1px 2px rgba(15,23,42,.05)}
+  .setcard:hover{background:#eff6ff;border-color:#bfdbfe!important}
+  .setcard .si,.setinfo .si{width:36px;height:36px;border-radius:11px;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+  .setcard .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .setcard .tx b{font-family:var(--f-title);font-weight:400;font-size:16px;color:#1e3a8a}
+  .setcard .tx small{font-family:var(--f-body);font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .setcard .go{font-size:22px;color:#94a3b8;line-height:1}
+  .setbox{margin-top:12px;padding:12px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:16px}
+  .setlab{font-family:var(--f-title);font-size:14px!important;color:#334155;margin-bottom:8px!important}
+  .setfoot{margin-top:14px!important;align-items:center}
+  .setfoot .sgh{background:transparent;color:#94a3b8;font-size:13px;padding:8px 6px}
+  .setfoot .sgo{background:#fff;border:1px solid #cbd5e1!important;color:#334155}
+  .setfoot .sgp{background:var(--b);color:#fff}
+  .setinfo{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:10px}
+  .setinfo small{font-size:13px;color:#334155;line-height:1.5}
+  .sbp{display:block;width:100%;background:var(--b);color:#fff;padding:12px;font-size:15px}
+  .sg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .sbo{background:#fff;border:1px solid #93c5fd!important;color:var(--b);padding:10px 6px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sbo.sbw{border-color:#fdba74!important;color:#c2410c}
+  .setsub{font-family:var(--f-title);font-size:14px;color:#475569;margin:14px 0 0}
+  .setchk{display:flex!important;gap:10px;align-items:flex-start;margin:12px 0 4px!important;padding:10px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;font-size:14px!important;cursor:pointer}
+  .setchk input{width:18px!important;height:18px;margin-top:2px;flex:none}
+  .setchk small{display:block;font-size:12px;color:var(--mut);margin-top:2px}
+  .setnote{display:block;font-size:12px!important;color:var(--mut);margin-top:8px;line-height:1.5}
+  #opsDlg #admMsg{margin-top:8px}
 </style>
 <script>
 // 앱 설치 정보(manifest)를 파일 안에 내장
@@ -563,34 +591,48 @@
   </form>
 </dialog>
 
-<dialog id="dlg">
+<dialog id="dlg" class="setdlg">
   <form method="dialog">
-    <div class="sec">엑셀 업로드</div>
-    <button type="button" id="tplXlsBtn" class="wide" style="background:#fff;color:var(--b);border:1px solid var(--b);margin-bottom:6px">업로드용 엑셀 서식 받기 (빈 서식)</button>
-    <button type="button" id="curXlsBtn" class="wide" style="background:#fff;color:var(--b);border:1px solid var(--b);margin-bottom:6px">현재 명단을 서식으로 받기 (추가·수정용)</button>
-    <button type="button" id="openInSet" class="wide">엑셀 올리기 (명단 추가·교체)</button>
-    <div class="rowf" style="margin-top:6px"><button type="button" id="listRen" class="bline" style="flex:1">명단 이름 바꾸기</button><button type="button" id="listDel" class="bline bdan" style="flex:1">명단 삭제</button></div>
-    <small id="listNow" style="display:block;color:var(--mut);margin-top:4px"></small>
-    <small style="display:block;color:var(--mut);margin:6px 0 4px">☁ 연결된 상태에서 올리면 모든 사용자에게 같은 명단이 공유됩니다.</small>
-    <label class="chk"><input type="checkbox" id="allowTop"> 상단에 '엑셀 열기' 버튼 표시<br><small>켜면 비밀번호 없이 누구나 명단을 바꿀 수 있습니다</small></label>
-    <div class="sec" style="margin-top:14px">점검 서식</div>
-    <button type="button" id="setTplMgr" class="wide" style="background:#fff;color:var(--b);border:1px solid var(--b)">점검 서식 관리<small>(서식 업로드, 편집, 디자인)</small></button>
-    <small style="display:block;margin-top:6px">새 점검에 쓸 서식을 고르거나 한글·엑셀·워드·PDF 서식을 올립니다.</small>
-    <div class="sec" style="margin-top:14px">운영 관리 <small style="font-weight:400">(구글 서버 기준, 모든 접속자에게 적용)</small></div>
-    <label class="chk"><input type="checkbox" id="admOff"> 사이트 운영 중단</label>
-    <input id="admMsg" placeholder="중단 안내 문구 (예: 점검 기간 종료로 운영을 중단합니다)" style="margin-top:6px">
-    <button type="button" id="admOffApply" class="wide" style="margin-top:6px;background:#fff;color:#c2410c;border:1px solid #c2410c">운영 상태 적용</button>
-    <button type="button" id="admListBtn" class="wide" style="margin-top:6px;background:#fff;color:var(--b);border:1px solid var(--b)">접속자 목록 · 차단 관리</button>
-    <div id="admMsgOut" style="font-size:12px;color:var(--mut);margin:6px 0"></div>
-    <div class="sec" style="margin-top:14px">지도</div>
-    <label for="region">지번 앞에 붙일 시·군</label>
-    <input id="region" placeholder="예) 전라남도 구례군">
-    <div class="row">
-      <button value="clear" id="clearBtn" type="submit">저장 데이터 삭제</button>
-      <span style="flex:1"></span>
-      <button value="cancel" type="submit">닫기</button>
-      <button value="ok" type="submit">저장</button>
+    <div class="setmenu">
+      <button type="button" class="setcard" id="setList"><span class="si">📊</span><span class="tx"><b>엑셀 명단 관리</b><small id="setListSub">명단 올리기 · 이름 바꾸기 · 삭제</small></span><span class="go">›</span></button>
+      <button type="button" class="setcard" id="setTplMgr"><span class="si">📝</span><span class="tx"><b>점검 서식 관리</b><small>서식 업로드 · 편집 · 디자인</small></span><span class="go">›</span></button>
+      <button type="button" class="setcard" id="setOps"><span class="si">🛡</span><span class="tx"><b>운영 관리</b><small id="setOpsSub">운영 중단 · 접속자 · 차단</small></span><span class="go">›</span></button>
     </div>
+    <div class="setbox">
+      <label for="region" class="setlab">🗺 지번 앞에 붙일 시·군</label>
+      <input id="region" placeholder="예) 전라남도 구례군">
+    </div>
+    <div class="row setfoot">
+      <button value="clear" id="clearBtn" type="submit" class="sgh">저장 데이터 삭제</button>
+      <span style="flex:1"></span>
+      <button value="cancel" type="submit" class="sgo">닫기</button>
+      <button value="ok" type="submit" class="sgp">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="listDlg" class="setdlg" style="max-width:380px">
+  <form method="dialog">
+    <div class="setinfo"><span class="si">📊</span><small id="listNow"></small></div>
+    <button type="button" id="openInSet" class="sbp">엑셀 올리기 (명단 추가·교체)</button>
+    <div class="sg2"><button type="button" id="listRen" class="sbo">명단 이름 바꾸기</button><button type="button" id="listDel" class="sbo sbw">명단 삭제</button></div>
+    <div class="setsub">엑셀 서식 받기</div>
+    <div class="sg2"><button type="button" id="tplXlsBtn" class="sbo">빈 서식</button><button type="button" id="curXlsBtn" class="sbo">현재 명단 (추가·수정용)</button></div>
+    <label class="setchk"><input type="checkbox" id="allowTop"><span>상단에 '엑셀 열기' 버튼 표시<small>켜면 비밀번호 없이 누구나 명단을 바꿀 수 있습니다</small></span></label>
+    <small class="setnote">☁ 동기화가 연결된 상태에서 올리면 모든 사용자에게 같은 명단이 공유됩니다.</small>
+    <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">닫기</button></div>
+  </form>
+</dialog>
+
+<dialog id="opsDlg" class="setdlg" style="max-width:380px">
+  <form method="dialog">
+    <div class="setinfo"><span class="si">🛡</span><small>구글 서버 기준으로 모든 접속자에게 적용됩니다.</small></div>
+    <label class="setchk"><input type="checkbox" id="admOff"><span>사이트 운영 중단</span></label>
+    <input id="admMsg" placeholder="중단 안내 문구 (예: 점검 기간 종료로 운영을 중단합니다)">
+    <button type="button" id="admOffApply" class="sbo sbw" style="margin-top:8px;width:100%">운영 상태 적용</button>
+    <button type="button" id="admListBtn" class="sbo" style="margin-top:8px;width:100%">접속자 목록 · 차단 관리</button>
+    <div id="admMsgOut" class="setnote"></div>
+    <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">닫기</button></div>
   </form>
 </dialog>
 
@@ -1298,7 +1340,8 @@ function renderListSel(){
   const ns = listNames();
   sel.innerHTML = ns.map(n => `<option value="${esc(n)}"${n === curList ? ' selected' : ''}>${esc(n)} (${ROSTER.filter(r => listOf(r) === n).length}명)</option>`).join('');
   $('listRow').style.display = ns.length ? 'flex' : 'none';
-  const now = $('listNow'); if(now) now.textContent = ns.length ? `현재 명단: ${curList} · 전체 명단 ${ns.length}개 (${ns.join(', ')})` : '불러온 명단이 없습니다.';
+  const now = $('listNow'); if(now) now.innerHTML = ns.length ? `현재 명단 <b>${esc(curList)}</b> (${rows.length}명)<br>전체 ${ns.length}개: ${ns.map(esc).join(', ')}` : '불러온 명단이 없습니다.';
+  const sub = $('setListSub'); if(sub) sub.textContent = ns.length ? `현재: ${curList} · 명단 ${ns.length}개` : '명단 올리기 · 이름 바꾸기 · 삭제';
 }
 function switchList(name){
   curList = name; LS.set('curList', name); rows = pickRows();
@@ -1449,7 +1492,10 @@ function bindUi(){
   const applyTop = () => { $('openTop').style.display = allowTop ? 'inline-block' : 'none'; };
   applyTop();
   $('openTop').onclick = () => $('file').click();
-  $('openInSet').onclick = () => { $('dlg').close(); $('file').click(); };
+  $('openInSet').onclick = () => { try{ $('listDlg').close(); }catch(e){} $('dlg').close(); $('file').click(); };
+  $('setList').onclick = () => { $('allowTop').checked = allowTop; if(typeof renderListSel === 'function') renderListSel(); $('listDlg').showModal(); };
+  $('setOps').onclick = () => $('opsDlg').showModal();
+  $('allowTop').onchange = () => { allowTop = $('allowTop').checked; LS.set('allowTop', allowTop); applyTop(); };
   const openSettings = () => { $('region').value = region; $('allowTop').checked = allowTop; $('dlg').showModal(); };
   $('gear').onclick = () => {
     if(unlocked) return openSettings();
@@ -1664,7 +1710,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101160022';
+const APP_VER = '20261101161255';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -5520,7 +5566,7 @@ $('iHwp').onclick = async () => {
   }
 
   /* ---------- 팝업(dialog) ---------- */
-  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', dlg:'설정', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리'};
+  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', dlg:'설정', listDlg:'엑셀 명단 관리', opsDlg:'운영 관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리'};
   function winDialog(d){
     if(d._win) return; d._win = true;
     const bar = document.createElement('div');
