@@ -138,6 +138,16 @@
   .mlab span.dt{color:#1f6feb;font-weight:600}
   .mlab i{display:block;font-style:normal;font-size:11px;color:#9ca3af;margin-top:3px}
   .mlab .mlb{display:flex;gap:6px;margin-top:6px;justify-content:center}
+  .mlab.det{max-width:300px;width:300px}
+  .mlab .mdet{text-align:left;margin-top:8px;padding-top:6px;border-top:1px solid #e5e7eb;font-size:13px;line-height:1.5}
+  .mlab .md{display:flex;gap:8px;padding:2px 0}
+  .mlab .md em{flex:none;width:52px;font-style:normal;color:#6b7280}
+  .mlab .md span{flex:1;color:#111;word-break:keep-all;display:block}
+  .mlab .md a{color:#1f6feb;font-weight:600;text-decoration:none}
+  .mlab .mlinks{display:flex;gap:12px;justify-content:center;margin-top:6px}
+  .mlab .mlinks a{color:#1f6feb;font-weight:700;text-decoration:none}
+  .mlab .mst{margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .mlab .mst label{display:flex;gap:6px;align-items:center;font-size:13px}
   .mlab .mlb button{border:1px solid #1f6feb;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;background:#fff;color:#1f6feb;cursor:pointer}
   .mlab .mlb button[data-ml="insp"]{background:#1f6feb;color:#fff}
   /* ---------- 현장 점검 ---------- */
@@ -1062,15 +1072,55 @@ function focusRow(i){
 
 /* 지도를 가까이 확대하면(레벨 5 이하) 마커 위에 이름 · 사업명 · 세부사업 표시 */
 const LABEL_LEVEL = 5;
+/* 이름표 아래로 펼치는 상세 정보 (이름·사업명·세부사업은 위에 있으니 뺌) */
+function labDetail(r, pt){
+  const won = v => { if(v === '' || v == null) return ''; const n = Number(String(v).replace(/,/g, '')); return isNaN(n) ? esc(v) : n.toLocaleString() + '원'; };
+  const areaN = Number(String(r.area ?? '').replace(/,/g, '')), area = r.area === '' || r.area == null ? '' : (isNaN(areaN) ? String(r.area) : areaN.toLocaleString() + '㎡');
+  const tel = String(r.tel || '').replace(/[^\d+]/g, '');
+  const to = `https://map.kakao.com/link/to/${encodeURIComponent(r.name + ' 사업장')},${pt.lat},${pt.lng}`;
+  const view = `https://map.kakao.com/link/map/${encodeURIComponent(r.name + ' 사업장')},${pt.lat},${pt.lng}`;
+  const row = (k, v) => v ? `<div class="md"><em>${k}</em><span>${v}</span></div>` : '';
+  const gov = [['국비', r.national], ['도비', r.province], ['군비', r.county]].filter(x => won(x[1])).map(x => x[0] + ' ' + won(x[1])).join(' · ');
+  const k = rowKey(r), done = window.inspComplete && inspComplete.get(k), has = window.inspDone && inspDone.has(k);
+  const last = typeof allRecs !== 'undefined' ? allRecs.find(x => x.key === k) : null;
+  const when = last ? fmtDT(last.date).replace(/\s\d{1,2}:\d{2}$/, '') : '';
+  const st = done ? `<span class="st ok">✔ 점검 완료 · ${esc(when)}${last.overall ? ' · ' + esc(last.overall) : ''}</span>`
+    : has ? `<span class="st ing">점검 중 (미완료) · ${esc(when)}</span>` : '<span class="st no">미점검</span>';
+  return `<div class="mdet">`
+    + row('읍면', esc(placeTown(r)))
+    + row('사업장', esc(r.place) + (pt.approx ? ' <span class="fail">(근사 위치)</span>' : ''))
+    + row('품목', esc(r.item || ''))
+    + row('사업량', esc(area))
+    + row('총사업비', won(r.total))
+    + row('보조금', won(r.subsidy))
+    + row('자부담', won(r.self))
+    + row('재원', gov)
+    + row('주소', esc(r.addr || ''))
+    + row('연락처', tel ? `<a href="tel:${tel}">${esc(r.tel)}</a>` : '')
+    + row('비고', esc(r.note || ''))
+    + `<div class="mlinks">${tel ? `<a href="tel:${tel}">📞 전화</a>` : ''}<a href="${to}" target="_blank" rel="noopener">🧭 길찾기</a><a href="${view}" target="_blank" rel="noopener">🗺 카카오맵</a></div>`
+    + `<div class="mst">${st}${has ? `<label><input type="checkbox" ${done ? 'checked' : ''} data-ml="done"> 점검 완료</label>` : ''}</div></div>`;
+}
 function labSet(m){
   const r = rows[m._i]; if(!r || !m._lab) return;
   const el = document.createElement('div');
-  el.className = 'mlab' + (m._open ? ' open' : '');
-  el.innerHTML = `<b>${esc(r.name)}</b>` + (m._open ? `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="info">상세 정보</button></div>` : '');
-  el.onclick = ev => { ev.stopPropagation();
+  el.className = 'mlab' + (m._open ? ' open' : '') + (m._det ? ' det' : '');
+  el.innerHTML = `<b>${esc(r.name)}</b>` + (m._open ? `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}`
+    + `<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="info">${m._det ? '상세 접기 ▲' : '상세 정보 ▼'}</button></div>`
+    + (m._det ? labDetail(r, m._pt) : '') : '');
+  el.onclick = ev => {
+    if(ev.target.closest('a')) return;   // 전화·길찾기 링크는 그대로
+    ev.stopPropagation();
     const mb = ev.target.closest('[data-ml]');
-    if(mb){ if(mb.dataset.ml === 'insp') openInspect(m._i); else { info.setContent(infoHtml(r, m._pt)); info.open(map, m); } return; }
-    if(!m._open){ m._open = true; labSet(m); updateLabels(); return; } info.setContent(infoHtml(r, m._pt)); info.open(map, m); };
+    if(mb){
+      if(mb.dataset.ml === 'insp') openInspect(m._i);
+      else if(mb.dataset.ml === 'done') toggleDone(m._i, mb.checked).then(() => labSet(m));
+      else { m._det = !m._det; labSet(m); }
+      return;
+    }
+    if(!m._open){ m._open = true; labSet(m); updateLabels(); return; }
+    m._det = !m._det; labSet(m);
+  };
   m._lab.setContent(el); m._lab.setZIndex(m._open ? 10 : 3);
 }
 function updateLabels(){
@@ -1099,7 +1149,7 @@ async function plot(){
       // 마커 첫 클릭: 이름표에 사업명·세부사업 펼치기 → 한 번 더(또는 이름표 클릭): 상세 정보창
       kakao.maps.event.addListener(m, 'click', () => {
         if(!m._open){ markers.forEach(x => { if(x !== m && x._open){ x._open = false; labSet(x); } }); m._open = true; labSet(m); if(info) info.close(); updateLabels(); }
-        else { info.setContent(infoHtml(r, pt)); info.open(map, m); }
+        else { m._det = !m._det; labSet(m); }
       });
       bounds.extend(m.getPosition());
     }
