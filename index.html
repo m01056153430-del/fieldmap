@@ -486,6 +486,24 @@
   .ldhint{font-size:12px;color:var(--mut);line-height:1.5;margin-bottom:8px}
   #ldProps{border-top:0!important;padding-top:0!important;margin-top:0!important}
   #ldProps>.pt{display:none}
+
+  /* 디자인 도구: 구역 버튼 + 이동 가능한 팝업창 */
+  .ldopen{display:flex;align-items:center;gap:10px;width:100%;margin-bottom:8px;padding:11px 14px;background:#fff;border:1px solid #e2e8f0!important;border-radius:14px!important;color:#134e4a;font-size:15px;text-align:left;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+  .ldopen:hover{background:#f0fdfa}
+  .ldopen.on{background:#f0fdfa;border-color:#5eead4!important}
+  .ldopen .si,.ldpop .si{width:26px;height:26px;border-radius:8px;background:#ccfbf1;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
+  .ldopen .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ldopen .go{color:#64748b;font-size:14px}
+  .ldpop{position:absolute;z-index:30;display:flex;flex-direction:column;max-height:calc(100% - 16px);background:#fff;border:1px solid #cbd5e1;border-radius:14px;box-shadow:0 14px 36px rgba(15,23,42,.3);overflow:hidden}
+  .ldpop[hidden]{display:none}
+  .ldpop .lph{display:flex;align-items:center;gap:8px;padding:7px 7px 7px 10px;background:#134e4a;color:#fff;cursor:move;touch-action:none;user-select:none;flex:none}
+  .ldpop .lph .si{background:rgba(255,255,255,.2)}
+  .ldpop .lph b{flex:1;min-width:0;font-family:var(--f-title);font-weight:400!important;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ldpop .lpx{background:rgba(255,255,255,.18);color:#fff;border:0;padding:3px 10px;font-size:14px}
+  .ldpop .lpb{overflow:auto;min-height:0}
+  .ldpop .ldsb{padding:12px 14px}
+  #ldTool>.wrh{display:none}
+  #ldTool #ldToolBody{flex:none}
 </style>
 <script>
 // 앱 설치 정보(manifest)를 파일 안에 내장
@@ -780,7 +798,7 @@
             <button type="button" data-add="checklist"><b>☑</b>점검항목표</button>
             <button type="button" data-add="photo"><b>🖼</b>사진</button>
             <button type="button" data-add="sign"><b>✍</b>서명</button>
-            <button type="button" data-add="line"><b>―</b>선</button>
+            <button type="button" data-add="line" hidden></button>
           </div>
         </div>
       </details>
@@ -1646,7 +1664,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101154857';
+const APP_VER = '20261101160022';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -3601,19 +3619,64 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       if(!pos || !W) pos = pos || def();
       pos.w = Math.max(240, Math.min(W - 4, pos.w)); pos.h = Math.max(120, Math.min(H - 4, pos.h));
       pos.l = Math.max(-pos.w + 80, Math.min(W - 80, pos.l)); pos.t = Math.max(0, Math.min(H - 40, pos.t));
-      Object.assign(T.style, {left:pos.l + 'px', top:pos.t + 'px', width:pos.w + 'px', height:pos.h + 'px'});
+      Object.assign(T.style, {left:pos.l + 'px', top:pos.t + 'px', width:pos.w + 'px', height:'auto'});   // 버튼만 있으니 내용 높이에 맞춤
       T.classList.toggle('min', !!pos.min);
       $('ldTMin').textContent = pos.min ? '▢' : '—';
     }
     const save = () => LS.set(KEY, pos);
     // '선택한 요소' 구역: 제목을 선택 내용으로 바꾸고, 새로 요소를 고르면 자동으로 펼침
-    let lastSel = '';
+    /* 구역 → 버튼 + 떠 있는 팝업창 (끌어서 이동, 위치 기억) */
+    const pops = {};
+    const popPosKey = 'ldPopPos';
+    function placePop(w, id){
+      const W = wrap.clientWidth, H = wrap.clientHeight, all = LS.get(popPosKey, {});
+      let q = all[id];
+      if(!q){
+        const mob = innerWidth <= 760, pw = Math.min(340, W - 16);
+        q = mob ? {l:8, t:8} : {l: pos.l - pw - 12 >= 0 ? pos.l - pw - 12 : Math.max(8, pos.l + 20), t: Math.max(8, pos.t + 40)};
+      }
+      q.l = Math.max(-200, Math.min(W - 80, q.l)); q.t = Math.max(0, Math.min(H - 44, q.t));
+      Object.assign(w.style, {left:q.l + 'px', top:q.t + 'px', width:Math.min(340, W - 16) + 'px'});
+      return q;
+    }
+    let popZ = 30;
+    function makePop(sec){
+      const id = sec.id, sum = sec.querySelector('summary'), body = sec.querySelector('.ldsb');
+      const w = document.createElement('div'); w.className = 'ldpop'; w.hidden = true; w.dataset.id = id;
+      w.innerHTML = `<div class="lph"><span class="si">${sum.querySelector('.si').textContent}</span><b></b><button type="button" class="lpx" title="닫기">✕</button></div><div class="lpb"></div>`;
+      w.querySelector('b').textContent = sum.querySelector('.t').textContent;
+      w.querySelector('.lpb').appendChild(body);
+      wrap.appendChild(w);
+      const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'ldopen'; btn.dataset.pop = id;
+      btn.innerHTML = `<span class="si">${sum.querySelector('.si').textContent}</span><span class="t"></span><span class="go">↗</span>`;
+      btn.querySelector('.t').textContent = sum.querySelector('.t').textContent;
+      sec.replaceWith(btn);
+      let q = null;
+      const front = () => { w.style.zIndex = ++popZ; };
+      const open = () => { w.hidden = false; q = placePop(w, id); front(); btn.classList.add('on'); };
+      const close = () => { w.hidden = true; btn.classList.remove('on'); };
+      btn.onclick = () => w.hidden ? open() : close();
+      w.querySelector('.lpx').onclick = close;
+      w.addEventListener('pointerdown', front, true);
+      const head = w.querySelector('.lph');
+      head.addEventListener('pointerdown', ev => {
+        if(ev.target.closest('button')) return;
+        q = q || placePop(w, id);
+        const sx = ev.clientX, sy = ev.clientY, ol = q.l, ot = q.t;
+        const mv = m => { q.l = ol + m.clientX - sx; q.t = ot + m.clientY - sy; w.style.left = q.l + 'px'; w.style.top = q.t + 'px'; m.preventDefault(); };
+        const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); const all = LS.get(popPosKey, {}); all[id] = {l:q.l, t:q.t}; LS.set(popPosKey, all); };
+        addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up); ev.preventDefault();
+      });
+      pops[id] = {w, btn, open, close};
+    }
+    T.querySelectorAll('.ldsec').forEach(makePop);
+    window.LAY_closePops = () => Object.values(pops).forEach(p => p.close());
+    // '선택한 요소' 버튼·팝업 제목을 지금 선택한 것으로
     new MutationObserver(() => {
-      const pt = $('ldProps').querySelector('.pt'), t = pt ? pt.textContent.trim() : '선택한 요소';
-      const sec = $('ldSecSel'); sec.querySelector('summary .t').textContent = /^선택/.test(t) ? t.replace(/^선택:\s*/, '선택한 요소 · ') : t + ' · 사용 방법';
-      const sel = document.querySelector('#ldPage .le.sel'), id = sel ? sel.dataset.id : '';
-      if(id && id !== lastSel) sec.open = true;
-      lastSel = id;
+      const pt = $('ldProps').querySelector('.pt'), t0 = pt ? pt.textContent.trim() : '선택한 요소';
+      const t = /^선택/.test(t0) ? t0.replace(/^선택:\s*/, '선택한 요소 · ') : t0 + ' · 사용 방법';
+      const P = pops.ldSecSel; if(!P) return;
+      P.btn.querySelector('.t').textContent = t; P.w.querySelector('.lph b').textContent = t;
     }).observe($('ldProps'), {childList:true});
     $('ldTMin').onclick = () => { pos.min = !pos.min; apply(); save(); };
     $('ldTUndo').onclick = () => $('ldUndo').click();
@@ -3650,7 +3713,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   }
 
   /* ---------- 이벤트 ---------- */
-  document.querySelectorAll('#ldTool [data-add]').forEach(b => b.onclick = () => addEl(b.dataset.add));
+  document.querySelectorAll('#ld [data-add]').forEach(b => b.onclick = () => addEl(b.dataset.add));
   $('ldTitle').addEventListener('input', () => { changed = true; draw(); });
   $('ldMore').onchange = () => { snap(); L.morePhotos = $('ldMore').checked; };
   $('ldPrevPg').onclick = () => { if(pg > 0){ pg--; sel = null; draw(); props(); } };
