@@ -97,7 +97,9 @@
   .rtnum{width:26px;height:26px;border-radius:50%;background:#dc2626;color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer}
   #rtPanel{position:absolute;right:10px;bottom:10px;z-index:14;width:min(340px,calc(100% - 20px));max-height:55%;display:flex;flex-direction:column;background:#fff;border:1px solid #cbd5e1;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.28);overflow:hidden}
   #rtPanel[hidden]{display:none}
-  #rtPanel .rth{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#1f6feb;color:#fff;flex-wrap:wrap}
+  #rtPanel .rth{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#1f6feb;color:#fff;flex-wrap:wrap;cursor:move;touch-action:none;user-select:none;flex:none}
+  #rtPanel.min .rtb,#rtPanel.min .rtf,#rtPanel.min .wrh{display:none}
+  #rtPanel .wrh{z-index:3}
   #rtPanel .rth b{font-size:14px}#rtPanel .rth span{font-size:12px;opacity:.9;flex:1}
   #rtPanel .rth button{background:rgba(255,255,255,.2);color:#fff;border:0;padding:3px 8px}
   #rtPanel .rtb{overflow:auto;padding:4px 10px;flex:1}
@@ -5792,14 +5794,40 @@ $('iHwp').onclick = async () => {
   const telUrl = t => 'tel:' + String(t || '').replace(/[^0-9+]/g, '');
   function renderPanel(){
     const r = route; if(!r) return;
-    pn.innerHTML = `<div class="rth"><b>🚗 ${r.town ? esc(r.town) + ' ' : ''}미완료 ${r.stops.length}곳 동선</b><span>약 ${r.km.toFixed(1)}km (직선거리×1.3 추정)</span><button type="button" data-rt="x" title="동선 지우기">✕</button></div>
+    pn.innerHTML = `<div class="rth"><b>🚗 ${r.town ? esc(r.town) + ' ' : ''}미완료 ${r.stops.length}곳 동선</b><span>약 ${r.km.toFixed(1)}km (직선거리×1.3 추정)</span><button type="button" data-rt="min" title="접기 / 펼치기">${rtPos && rtPos.min ? '▢' : '—'}</button><button type="button" data-rt="x" title="동선 지우기">✕</button></div>
       <div class="rtb">${r.stops.map((s, k) => `<div class="rti"><i>${k + 1}</i><div><b>${esc(s.r.name)}</b> <small>${s.leg.toFixed(1)}km</small><br>
         <a href="${navUrl(s)}" target="_blank" rel="noopener">🧭 ${esc(s.r.place || '길찾기')}</a>${s.r.tel ? `<br><a href="${telUrl(s.r.tel)}" style="white-space:nowrap">📞 ${esc(s.r.tel)}</a>` : ''}</div></div>`).join('')}</div>
-      <div class="rtf"><button type="button" data-rt="pdf">PDF 저장</button><button type="button" data-rt="share">팀원과 공유</button></div>`;
-    pn.hidden = false;
+      <div class="rtf"><button type="button" data-rt="pdf">PDF 저장</button><button type="button" data-rt="share">팀원과 공유</button></div><div class="wrh" title="끌어서 크기 조절"></div>`;
+    pn.hidden = false; rtApply();
   }
+  /* 동선 창: 파란 제목줄을 끌어 이동, 오른쪽 아래 모서리로 크기 조절, — 접기 (위치·크기 기억) */
+  let rtPos = LS.get('rtPos', null);
+  function rtApply(){
+    const W = $('mapwrap').clientWidth, H = $('mapwrap').clientHeight; if(!W || !H) return;
+    if(!rtPos){ const w = Math.min(340, W - 20), h = Math.min(Math.round(H * .55), H - 20); rtPos = {l:W - w - 10, t:H - h - 10, w, h, min:false}; }
+    rtPos.w = Math.max(240, Math.min(W, rtPos.w)); rtPos.h = Math.max(160, Math.min(H, rtPos.h));
+    rtPos.l = Math.max(0, Math.min(W - rtPos.w, rtPos.l)); rtPos.t = Math.max(0, Math.min(H - (rtPos.min ? 46 : rtPos.h), rtPos.t));
+    Object.assign(pn.style, {left:rtPos.l + 'px', top:rtPos.t + 'px', right:'auto', bottom:'auto', width:rtPos.w + 'px', height:rtPos.min ? 'auto' : rtPos.h + 'px', maxHeight:'none'});
+    pn.classList.toggle('min', !!rtPos.min);
+    const mb = pn.querySelector('[data-rt="min"]'); if(mb) mb.textContent = rtPos.min ? '▢' : '—';
+  }
+  const rtSave = () => LS.set('rtPos', rtPos);
+  addEventListener('resize', () => { if(!pn.hidden) rtApply(); });
+  pn.addEventListener('pointerdown', ev => {
+    const head = ev.target.closest('.rth'), grip = ev.target.closest('.wrh');
+    if((!head && !grip) || ev.target.closest('button')) return;
+    ev.preventDefault();
+    const sx = ev.clientX, sy = ev.clientY, o = {...rtPos};
+    const mv = m => { const dx = m.clientX - sx, dy = m.clientY - sy;
+      if(grip){ rtPos.w = o.w + dx; rtPos.h = o.h + dy; } else { rtPos.l = o.l + dx; rtPos.t = o.t + dy; }
+      rtApply(); m.preventDefault(); };
+    const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); rtSave(); };
+    addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up); addEventListener('pointercancel', up);
+  });
+  pn.addEventListener('dblclick', e => { if(e.target.closest('.rth') && !e.target.closest('button')){ rtPos.min = !rtPos.min; rtApply(); rtSave(); } });
   pn.addEventListener('click', e => {
     const b = e.target.closest('[data-rt]'); if(!b) return;
+    if(b.dataset.rt === 'min'){ rtPos.min = !rtPos.min; rtApply(); rtSave(); return; }
     if(b.dataset.rt === 'x') clearRoute();
     if(b.dataset.rt === 'pdf') routePdf(false);
     if(b.dataset.rt === 'share') routePdf(true);
