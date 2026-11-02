@@ -1418,7 +1418,7 @@ function labDetail(r, pt){
     + row('비고', esc(r.note || ''))
     + `<div class="mlinks">${tel ? `<a href="tel:${tel}">📞 전화</a>` : ''}<a href="${to}" target="_blank" rel="noopener">🧭 길찾기</a><a href="${view}" target="_blank" rel="noopener">🗺 카카오맵</a></div>`
     + `<div class="mst">${st}</div>`
-    + `<div class="mbot"><button type="button" data-ml="insp">${last ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="move" class="mvb">📍 위치 조정</button>${has ? `<label><input type="checkbox" ${done ? 'checked' : ''} data-ml="done"> 점검 완료</label>` : ''}</div></div>`;
+    + `<div class="mbot"><button type="button" data-ml="insp">${last ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="move" class="mvb">📍 조정</button>${has ? `<label><input type="checkbox" ${done ? 'checked' : ''} data-ml="done"> 점검 완료</label>` : ''}</div></div>`;
 }
 const AUTO_LEVEL = 0;   // 배율에 따른 자동 펼침은 쓰지 않음 (0 = 끔)
 /* ---------- 마커 위치 조정 → 사업장 주소도 바꾸기 ---------- */
@@ -1513,7 +1513,7 @@ function labSet(m){
   const info2 = `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}`;
   el.innerHTML = `<b>${esc(r.name)}</b>` + (auto ? info2 : m._open ? info2
     + (m._det ? labDetail(r, m._pt)   // 상세: 점검·완료는 맨 아래
-      : `<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="info">상세</button><button type="button" data-ml="move" class="mvb">📍 위치 조정</button></div>`) : '');
+      : `<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="info">상세</button><button type="button" data-ml="move" class="mvb">📍 조정</button></div>`) : '');
   el.onclick = ev => {
     if(ev.target.closest('a')) return;   // 전화·길찾기 링크는 그대로
     ev.stopPropagation();
@@ -1916,7 +1916,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261102143517';
+const APP_VER = '20261102144331';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
