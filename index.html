@@ -617,6 +617,14 @@
   #rtSel{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 12px;border-top:1px solid var(--ln);background:#f8fafc;font-size:13px;color:#475569}
   #rtSel label{display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;color:#1e3a8a}
   #rtSel input{width:18px;height:18px;accent-color:#1f6feb}
+
+  /* 위치 조정 */
+  .mlab .mlb button.mvb,.mlab .mbot button.mvb{background:#fff7ed!important;border-color:#fdba74!important;color:#c2410c!important}
+  .mvaddr{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:10px 12px;margin-bottom:10px;font-size:14px}
+  .mvaddr div{display:flex;gap:10px;padding:4px 0}
+  .mvaddr em{font-style:normal;width:52px;flex:none;color:var(--mut);font-size:12px;padding-top:2px}
+  .mvaddr .to span{font-weight:700;color:#1d4ed8}
+  .mvbtns .sbp:disabled{opacity:.45}
 </style>
 <script>
 // 앱 설치 정보(manifest)를 파일 안에 내장
@@ -1410,9 +1418,91 @@ function labDetail(r, pt){
     + row('비고', esc(r.note || ''))
     + `<div class="mlinks">${tel ? `<a href="tel:${tel}">📞 전화</a>` : ''}<a href="${to}" target="_blank" rel="noopener">🧭 길찾기</a><a href="${view}" target="_blank" rel="noopener">🗺 카카오맵</a></div>`
     + `<div class="mst">${st}</div>`
-    + `<div class="mbot"><button type="button" data-ml="insp">${last ? '점검 보기·수정' : '점검'}</button>${has ? `<label><input type="checkbox" ${done ? 'checked' : ''} data-ml="done"> 점검 완료</label>` : ''}</div></div>`;
+    + `<div class="mbot"><button type="button" data-ml="insp">${last ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="move" class="mvb">📍 위치 조정</button>${has ? `<label><input type="checkbox" ${done ? 'checked' : ''} data-ml="done"> 점검 완료</label>` : ''}</div></div>`;
 }
 const AUTO_LEVEL = 0;   // 배율에 따른 자동 펼침은 쓰지 않음 (0 = 끔)
+/* ---------- 마커 위치 조정 → 사업장 주소도 바꾸기 ---------- */
+function setEtc(r, f){ const e = {...etcRaw(r)}; f(e); r.etc = Object.keys(e).length ? JSON.stringify(e) : ''; }
+function startMove(m){
+  if(m._moving) return;
+  markers.forEach(x => { if(x._open && x !== m){ x._open = false; x._det = false; labSet(x); } });
+  m._moving = true; m._from = m.getPosition();
+  m._open = false; m._det = false; labSet(m); updateLabels();
+  m.setDraggable(true); m.setZIndex && m.setZIndex(20);
+  toast(`📍 ${rows[m._i].name} — 마커를 실제 사업장 위치로 끌어다 놓으세요`);
+  if(!m._mvL){
+    m._mvL = true;
+    kakao.maps.event.addListener(m, 'dragend', () => { if(m._moving) finishMove(m); });
+  }
+}
+function coordToPlace(lat, lng){
+  return new Promise(res => {
+    if(!geocoder || !geocoder.coord2Address) return res('');
+    geocoder.coord2Address(lng, lat, (r, st) => {
+      if(st !== kakao.maps.services.Status.OK || !r.length || !r[0].address) return res('');
+      const full = r[0].address.address_name || '';   // 예) 전남 구례군 구례읍 봉북리 1420-2
+      const m = full.match(/([가-힣]+(?:읍|면|동))\s+(.+)$/);
+      res(m ? `${m[1]} ${m[2]}`.trim() : full);
+    });
+  });
+}
+function moveAsk(name, from, to){
+  return new Promise(res => {
+    let d = $('mvDlg');
+    if(!d){
+      d = document.createElement('dialog'); d.id = 'mvDlg'; d.className = 'setdlg'; d.style.maxWidth = '380px';
+      document.body.appendChild(d);
+      if(window.DLG_WIN) DLG_WIN(d, '위치 조정');
+    }
+    [...d.children].forEach(c => { if(!c.classList.contains('wbar') && !c.classList.contains('wrh')) c.remove(); });
+    const body = document.createElement('div');
+    body.innerHTML = `<div class="setinfo"><span class="si">📍</span><small><b>${esc(name)}</b> 사업장 위치를 옮겼습니다.<br>사업장 주소도 바꿀까요?</small></div>
+      <div class="mvaddr"><div><em>지금</em><span>${esc(from)}</span></div><div class="to"><em>새 주소</em><span>${to ? esc(to) : '(주소를 찾지 못했습니다)'}</span></div></div>
+      <div class="mvbtns"><button type="button" class="sbp" data-mv="addr"${to ? '' : ' disabled'}>주소도 변경</button>
+      <div class="sg2"><button type="button" class="sbo" data-mv="pos">위치만 저장</button><button type="button" class="sbo sbw" data-mv="cancel">취소</button></div></div>`;
+    d.appendChild(body);
+    let done = false;
+    const fin = v => { if(done) return; done = true; try{ d.close(); }catch(e){} res(v); };
+    body.onclick = e => { const b = e.target.closest('[data-mv]'); if(b) fin(b.dataset.mv); };
+    d.addEventListener('close', () => fin('cancel'), {once:true});
+    d.showModal();
+  });
+}
+async function finishMove(m){
+  m.setDraggable(false); m._moving = false;
+  const r = rows[m._i]; if(!r) return;
+  const pos = m.getPosition(), lat = pos.getLat(), lng = pos.getLng();
+  const to = await coordToPlace(lat, lng);
+  const choice = await moveAsk(r.name, m._part || r.place, to);
+  if(choice === 'cancel'){ m.setPosition(m._from); toast('위치 조정을 취소했습니다'); return; }
+  const oldKey = rowKey(r), part = m._part || '';
+  if(choice === 'addr' && to){
+    const parts = parsePlace(r.place);
+    if(m._pi != null && parts.length > m._pi) parts[m._pi] = to; else parts.splice(0, parts.length, to);
+    r.place = parts.join(', ');
+    setEtc(r, e => { const ps = {...(e._pos || {})}; delete ps[part]; ps[to] = [lat, lng]; e._pos = ps; });
+  } else {
+    setEtc(r, e => { const ps = {...(e._pos || {})}; ps[part] = [lat, lng]; e._pos = ps; });
+  }
+  const newKey = rowKey(r);
+  saveRoster();
+  queueListOp({op:'set', name:curList, rows:ROSTER.filter(x => listOf(x) === curList).map(({_pts, ...x}) => x)});
+  // 주소가 바뀌면 그 사람의 점검 기록도 새 주소로 옮김 (완료·점검중 표시 유지)
+  if(newKey !== oldKey){
+    try{
+      if(typeof reloadRecs === 'function') await reloadRecs();
+      for(const rec of (typeof allRecs !== 'undefined' ? allRecs : []).filter(x => x.key === oldKey)){
+        rec.key = newKey; rec.target = {...(rec.target || {}), place:r.place}; rec._dirty = true; rec.savedAt = Date.now();
+        await idb.put(rec);
+      }
+      if(rtEx.has(oldKey)){ rtEx.delete(oldKey); rtEx.add(newKey); rtSaveEx(); }
+      if(typeof reloadRecs === 'function') await reloadRecs();
+    }catch(e){ alert('점검 기록을 옮기지 못했습니다: ' + e.message); }
+  }
+  if(window.syncSoon) syncSoon();
+  toast(choice === 'addr' ? `사업장 주소를 '${to}'(으)로 바꿨습니다` : '마커 위치를 저장했습니다 (주소는 그대로)');
+  plot();
+}
 function labSet(m){
   const r = rows[m._i]; if(!r || !m._lab) return;
   if(m._open && info) info.close();   // 예전 정보창이 떠 있으면 닫고 이 팝업 하나만
@@ -1423,7 +1513,7 @@ function labSet(m){
   const info2 = `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}`;
   el.innerHTML = `<b>${esc(r.name)}</b>` + (auto ? info2 : m._open ? info2
     + (m._det ? labDetail(r, m._pt)   // 상세: 점검·완료는 맨 아래
-      : `<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="info">상세</button></div>`) : '');
+      : `<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '점검 보기·수정' : '점검'}</button><button type="button" data-ml="info">상세</button><button type="button" data-ml="move" class="mvb">📍 위치 조정</button></div>`) : '');
   el.onclick = ev => {
     if(ev.target.closest('a')) return;   // 전화·길찾기 링크는 그대로
     ev.stopPropagation();
@@ -1431,6 +1521,7 @@ function labSet(m){
     if(mb){
       if(mb.dataset.ml === 'insp') openInspect(m._i);
       else if(mb.dataset.ml === 'done') toggleDone(m._i, mb.checked).then(() => labSet(m));
+      else if(mb.dataset.ml === 'move') startMove(m);
       else { m._det = !m._det; labSet(m); }
       return;
     }
@@ -1473,13 +1564,15 @@ async function plot(){
   let done = 0, okCnt = 0;
   for(let i=0;i<rows.length;i++){
     const r = rows[i]; r._pts = [];
-    for(const p of parsePlace(r.place)){
-      const pt = await geocodePlace(p);
+    const parts = parsePlace(r.place), fixPos = etcRaw(r)._pos || {};
+    for(let pi = 0; pi < parts.length; pi++){
+      const p = parts[pi];
+      const pt = fixPos[p] ? {lat:+fixPos[p][0], lng:+fixPos[p][1], fixed:true} : await geocodePlace(p);
       if(!pt) continue;
       r._pts.push(pt);
       const m = new kakao.maps.Marker({position:new kakao.maps.LatLng(pt.lat,pt.lng), image:markerImage(pinColor(r)), title:r.name});
       m._done = isDone(r);
-      m._i = i; m._pt = pt; m.setMap(map); markers.push(m);
+      m._i = i; m._pt = pt; m._part = p; m._pi = pi; m.setMap(map); markers.push(m);
       m._lab = new kakao.maps.CustomOverlay({position:m.getPosition(), yAnchor:1, zIndex:3, clickable:true, content:''});
       labSet(m);
       // 마커 첫 클릭: 이름표에 사업명·세부사업 펼치기 → 한 번 더(또는 이름표 클릭): 상세 정보창
@@ -1823,7 +1916,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261102141703';
+const APP_VER = '20261102143517';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
