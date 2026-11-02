@@ -610,6 +610,13 @@
   #ldPage .le .ctbar .ctrow .seg{flex-wrap:nowrap;white-space:nowrap}
   #ldPage .le .ctbar .ctrs{position:sticky;align-self:flex-end;bottom:0;margin-top:-18px;width:18px;height:18px;flex:none;cursor:nwse-resize;touch-action:none;z-index:3;
     background:linear-gradient(135deg,transparent 50%,#94a3b8 50%,#94a3b8 58%,transparent 58%,transparent 70%,#94a3b8 70%,#94a3b8 78%,transparent 78%)}
+
+  /* 명단 목록: 동선 포함 체크 */
+  #list .rtck{width:18px;height:18px;margin:0 8px 0 0;vertical-align:middle;accent-color:#1f6feb;cursor:pointer}
+  #list .rtck:disabled{cursor:default;opacity:.45}
+  #rtSel{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 12px;border-top:1px solid var(--ln);background:#f8fafc;font-size:13px;color:#475569}
+  #rtSel label{display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:600;color:#1e3a8a}
+  #rtSel input{width:18px;height:18px;accent-color:#1f6feb}
 </style>
 <script>
 // 앱 설치 정보(manifest)를 파일 안에 내장
@@ -1240,6 +1247,10 @@ function buildColors(){
 }
 const DONE_COLOR = '#9ca3af';
 const isDone = r => !!(window.inspComplete && inspComplete.has(rowKey(r)));
+/* 최적 동선에 넣을 대상 (명단 목록의 체크). 기본은 모두 체크 → 체크를 뺀 것만 기억 */
+const rtEx = new Set(LS.get('rtEx', []));
+const rtSaveEx = () => LS.set('rtEx', [...rtEx]);
+window.rtIncluded = r => !rtEx.has(rowKey(r));
 const pinColor = r => isDone(r) ? DONE_COLOR : colorOf[placeTown(r)];
 const _mkCache = {};
 function markerImage(color){
@@ -1303,18 +1314,41 @@ function fitVisible(){
   if(vis.length === 1){ map.setLevel(4); map.panTo(vis[0].getPosition()); return; }
   const b = new kakao.maps.LatLngBounds(); vis.forEach(m => b.extend(m.getPosition())); map.setBounds(b);
 }
+/* 명단 목록 위: 전체 선택 + 동선에 넣을 곳 수 */
+function rtSelInfo(){
+  let bar = $('rtSel');
+  if(!bar){
+    bar = document.createElement('div'); bar.id = 'rtSel';
+    bar.innerHTML = '<label><input type="checkbox" id="rtAll"> 전체 선택</label><span id="rtSelCnt"></span>';
+    $('list').before(bar);
+    $('rtAll').onchange = e => {
+      rows.filter(r => visible(r) && !isDone(r)).forEach(r => { const k = rowKey(r); if(e.target.checked) rtEx.delete(k); else rtEx.add(k); });
+      rtSaveEx(); renderList();
+    };
+  }
+  const todo = rows.filter(r => visible(r) && !isDone(r)), on = todo.filter(r => !rtEx.has(rowKey(r))).length;
+  bar.style.display = rows.length ? '' : 'none';
+  $('rtAll').checked = todo.length > 0 && on === todo.length;
+  $('rtAll').indeterminate = on > 0 && on < todo.length;
+  $('rtSelCnt').textContent = `동선에 넣을 미완료 ${on}곳 / ${todo.length}곳`;
+}
 function renderList(){
   const ul = $('list'); ul.innerHTML = '';
   rows.forEach((r,i) => {
     if(!visible(r)) return;
     const li = document.createElement('li');
     const ok = r._pts && r._pts.length;
-    li.innerHTML = `<div class="n"><span class="dot" style="background:${pinColor(r)}"></span>${esc(r.name)}${(() => { const jd = window.inspDone && inspDone.get(rowKey(r)); return isDone(r) ? '<span class="stt s-done">완료</span>' : jd ? '<span class="stt s-ing">점검중</span>' : '<span class="stt s-wait">대기</span>'; })()} <span style="font-weight:400;color:#6b7280">${esc(r.item)}${r.detail?' · '+esc(r.detail):''}</span>${(() => { const jd = window.inspDone && inspDone.get(rowKey(r)); return jd && jd !== '점검' ? `<span class="badge ${/보완|부적합/.test(jd)?'warn':''}">${esc(jd)}</span>` : ''; })()}</div>
+    const dn = isDone(r), inc = !rtEx.has(rowKey(r));
+    li.innerHTML = `<div class="n"><input type="checkbox" class="rtck" data-ck="${i}"${inc && !dn ? ' checked' : ''}${dn ? ' disabled title="점검 완료 — 동선에서 빠집니다"' : ' title="체크하면 미완료 최적 동선에 넣습니다"'}><span class="dot" style="background:${pinColor(r)}"></span>${esc(r.name)}${(() => { const jd = window.inspDone && inspDone.get(rowKey(r)); return isDone(r) ? '<span class="stt s-done">완료</span>' : jd ? '<span class="stt s-ing">점검중</span>' : '<span class="stt s-wait">대기</span>'; })()} <span style="font-weight:400;color:#6b7280">${esc(r.item)}${r.detail?' · '+esc(r.detail):''}</span>${(() => { const jd = window.inspDone && inspDone.get(rowKey(r)); return jd && jd !== '점검' ? `<span class="badge ${/보완|부적합/.test(jd)?'warn':''}">${esc(jd)}</span>` : ''; })()}</div>
       <div class="s">${esc(r.place)}</div>${ok?'':'<div class="fail">위치를 찾지 못했습니다</div>'}`;
     li.insertAdjacentHTML('afterbegin', `<button type="button" class="chip" data-insp="${i}" style="float:right;margin-left:6px">점검</button>`);
-    li.onclick = e => { if(e.target.closest('[data-insp]')) return openInspect(i); focusRow(i); };
+    li.onclick = e => {
+      const ck = e.target.closest('.rtck');
+      if(ck){ e.stopPropagation(); const k = rowKey(r); if(ck.checked) rtEx.delete(k); else rtEx.add(k); rtSaveEx(); rtSelInfo(); return; }
+      if(e.target.closest('[data-insp]')) return openInspect(i); focusRow(i); };
     ul.appendChild(li);
   });
+  rtSelInfo();
   markers.forEach(m => {
     const r = rows[m._i], d = isDone(r);
     if(m._done !== d){ m.setImage(markerImage(pinColor(r))); m._done = d; }
@@ -1789,7 +1823,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261101165454';
+const APP_VER = '20261102141703';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -6901,8 +6935,8 @@ $('iHwp').onclick = async () => {
   }
   async function makeRoute(){
     const m = getMap(); if(!m){ toast('지도가 준비되지 않았습니다 (https 주소로 접속해 주세요)'); return; }
-    const cand = rows.map((r, i) => ({r, i})).filter(({r}) => !isDone(r) && visible(r) && r._pts && r._pts.length);
-    if(!cand.length){ toast('동선을 만들 미완료 대상이 없습니다 (지도에 위치가 표시된 대상만 포함)'); return; }
+    const cand = rows.map((r, i) => ({r, i})).filter(({r}) => !isDone(r) && visible(r) && (!window.rtIncluded || rtIncluded(r)) && r._pts && r._pts.length);
+    if(!cand.length){ toast('동선을 만들 대상이 없습니다 — 명단 목록에서 미완료 대상을 체크해 주세요 (지도에 위치가 표시된 대상만 포함)'); return; }
     toast('현재 위치 확인 중…');
     const st = await watchMe(false);
     let start = st, startName = '내 위치';
