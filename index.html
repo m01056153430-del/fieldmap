@@ -631,7 +631,7 @@
   .mewrap .ffglow{position:absolute;inset:-6px;border-radius:50%;z-index:1;
     background:radial-gradient(circle at 42% 40%,#fffbe6 0%,#fef08a 35%,#facc15 62%,rgba(250,204,21,0) 72%);
     box-shadow:0 0 14px 6px rgba(253,224,71,.75);animation:ffpulse 1.4s ease-in-out infinite}
-  .mewrap .ffbug{position:absolute;left:-7.1px;top:-42.9px;width:55.6px;height:80px;z-index:2;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+  .mewrap .ffbug{position:absolute;left:-7.1px;top:-42.9px;width:55.6px;height:80px;transform:rotate(-20deg);transform-origin:22.1px 57.9px;z-index:2;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
   .mewrap .melab{bottom:calc(100% + 50px)!important}
   @keyframes ffpulse{0%,100%{transform:scale(.72);opacity:.85;filter:brightness(.95)}50%{transform:scale(1.22);opacity:1;filter:brightness(1.15)}}
 </style>
@@ -1926,7 +1926,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261102144811';
+const APP_VER = '20261102145535';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
