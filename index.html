@@ -1963,7 +1963,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261103195156';
+const APP_VER = '20261103195526';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -8104,7 +8104,7 @@ $('iHwp').onclick = async () => {
   $('lBack').addEventListener('click', () => { if(armed){ armed = false; label(); tip.textContent = ''; } });
   b.onclick = async () => {
     if(!armed){
-      const seen = new Set(), done = new Set(allRecs.filter(r => { if(seen.has(r.key)) return false; seen.add(r.key); return r.done && !isTripRec(r); }).map(r => r.id));
+      const done = new Set(allRecs.filter(r => r.done && !isTripRec(r)).map(r => r.id));   // '완료' 표시된 기록은 이전 기록이어도 모두 체크
       let n = 0;
       document.querySelectorAll('#lRecs input[type=checkbox][data-id]').forEach(c => { c.checked = done.has(c.dataset.id); if(c.checked) n++; });
       armed = true; label();
