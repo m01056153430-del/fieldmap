@@ -1976,7 +1976,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261104065309';
+const APP_VER = '20261104065538';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -7563,41 +7563,41 @@ $('iHwp').onclick = async () => {
    명단에 없는 곳도 점검 기록을 만들 수 있음 (출장 사진대지 등) */
 (function adhocMod(){
   const css = document.createElement('style');
-  css.textContent = `#adDlg{max-width:440px;width:92vw;position:fixed;margin:0;inset:auto;top:64px;left:50%;transform:translateX(-50%);z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.28);border:1px solid #cbd5e1;border-radius:14px;max-height:calc(100vh - 80px);overflow:auto;padding:12px 16px 14px}
-  #adDlg .adHd{display:flex;align-items:center;gap:6px;cursor:move;touch-action:none;user-select:none;margin:-4px -6px 4px;padding:4px 6px;border-radius:8px}
-  #adDlg .adHd h3{flex:1;margin:0;font-size:17px}#adDlg .adHd .grip{color:#94a3b8;font-size:18px;letter-spacing:-2px}
-  #adDlg .adHd button{border:1px solid var(--ln);background:#fff;border-radius:8px;padding:4px 10px;font-size:13px;color:#334155;cursor:pointer}
-  #adDlg.min .adBody{display:none}#adDlg.min{max-height:none}
-  #adDlg .adBig{width:100%;padding:11px;font-size:15px;border-radius:10px;border:0;background:var(--b);color:#fff;font-weight:700;margin-top:4px}
-  #adDlg .adLine{width:100%;padding:9px;font-size:14px;border-radius:10px;border:1px solid var(--b);background:#fff;color:var(--b);margin-top:6px}
-  #adDlg .adSub{font-size:13px;color:var(--mut);margin:14px 0 4px;font-weight:700}
-  #adDlg .adQ{display:flex;gap:6px}#adDlg .adQ input{flex:1;padding:9px;border:1px solid var(--ln);border-radius:8px;font-size:15px}
-  #adDlg .adQ button{padding:0 14px;border-radius:8px;border:0;background:#334155;color:#fff;font-size:14px}
-  #adRes,#adRec{max-height:38vh;overflow:auto;margin-top:6px}#adRec{max-height:30vh}
-  #adRes .ar,#adRec .ar{display:flex;align-items:center;gap:8px;padding:8px 6px;border-bottom:1px solid var(--ln);cursor:pointer}
-  #adDlg .ar:hover{background:#f1f5f9}#adDlg .ar div{flex:1;min-width:0}#adDlg .ar b{display:block;font-size:14px}
-  #adDlg .ar small{display:block;color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #adDlg .ar button{flex:none;padding:6px 10px;border-radius:8px;border:0;background:var(--b);color:#fff;font-size:13px}
-  #adDlg label{display:block;font-size:13px;color:var(--mut);margin:12px 0 3px}
-  #adDlg select,#adDlg #adName{width:100%;padding:9px;border:1px solid var(--ln);border-radius:8px;font-size:15px;box-sizing:border-box;background:#fff}
-  #adPickTip{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:30;background:#111827;color:#fff;padding:9px 14px;border-radius:999px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;gap:10px;align-items:center}
-  #adPickTip button{border:0;background:#fff;color:#111;border-radius:999px;padding:3px 10px;font-size:13px}`;
+  css.textContent = `#lpDlg{max-width:440px;width:92vw;position:fixed;margin:0;inset:auto;top:64px;left:50%;transform:translateX(-50%);z-index:1000;box-shadow:0 10px 30px rgba(0,0,0,.28);border:1px solid #cbd5e1;border-radius:14px;max-height:calc(100vh - 80px);overflow:auto;padding:12px 16px 14px}
+  #lpDlg .lpHd{display:flex;align-items:center;gap:6px;cursor:move;touch-action:none;user-select:none;margin:-4px -6px 4px;padding:4px 6px;border-radius:8px}
+  #lpDlg .lpHd h3{flex:1;margin:0;font-size:17px}#lpDlg .lpHd .grip{color:#94a3b8;font-size:18px;letter-spacing:-2px}
+  #lpDlg .lpHd button{border:1px solid var(--ln);background:#fff;border-radius:8px;padding:4px 10px;font-size:13px;color:#334155;cursor:pointer}
+  #lpDlg.min .lpBody{display:none}#lpDlg.min{max-height:none}
+  #lpDlg .lpBig{width:100%;padding:11px;font-size:15px;border-radius:10px;border:0;background:var(--b);color:#fff;font-weight:700;margin-top:4px}
+  #lpDlg .lpLine{width:100%;padding:9px;font-size:14px;border-radius:10px;border:1px solid var(--b);background:#fff;color:var(--b);margin-top:6px}
+  #lpDlg .lpSub{font-size:13px;color:var(--mut);margin:14px 0 4px;font-weight:700}
+  #lpDlg .lpQ{display:flex;gap:6px}#lpDlg .lpQ input{flex:1;padding:9px;border:1px solid var(--ln);border-radius:8px;font-size:15px}
+  #lpDlg .lpQ button{padding:0 14px;border-radius:8px;border:0;background:#334155;color:#fff;font-size:14px}
+  #lpRes,#lpRec{max-height:38vh;overflow:auto;margin-top:6px}#lpRec{max-height:30vh}
+  #lpRes .ar,#lpRec .ar{display:flex;align-items:center;gap:8px;padding:8px 6px;border-bottom:1px solid var(--ln);cursor:pointer}
+  #lpDlg .ar:hover{background:#f1f5f9}#lpDlg .ar div{flex:1;min-width:0}#lpDlg .ar b{display:block;font-size:14px}
+  #lpDlg .ar small{display:block;color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #lpDlg .ar button{flex:none;padding:6px 10px;border-radius:8px;border:0;background:var(--b);color:#fff;font-size:13px}
+  #lpDlg label{display:block;font-size:13px;color:var(--mut);margin:12px 0 3px}
+  #lpDlg select,#lpDlg #lpName{width:100%;padding:9px;border:1px solid var(--ln);border-radius:8px;font-size:15px;box-sizing:border-box;background:#fff}
+  #lpPickTip{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:30;background:#111827;color:#fff;padding:9px 14px;border-radius:999px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;gap:10px;align-items:center}
+  #lpPickTip button{border:0;background:#fff;color:#111;border-radius:999px;padding:3px 10px;font-size:13px}`;
   document.head.appendChild(css);
 
-  const dlg = document.createElement('dialog'); dlg.id = 'adDlg';
-  dlg.innerHTML = `<div class="adHd" id="adHd" title="끌어서 옮기기"><span class="grip">⋮⋮</span><h3>위치를 정해 점검</h3><button type="button" id="adMin">접기</button><button type="button" id="adX">✕</button></div><div class="adBody">
+  const dlg = document.createElement('dialog'); dlg.id = 'lpDlg';
+  dlg.innerHTML = `<div class="lpHd" id="lpHd" title="끌어서 옮기기"><span class="grip">⋮⋮</span><h3>위치를 정해 점검</h3><button type="button" id="lpMin">접기</button><button type="button" id="lpX">✕</button></div><div class="lpBody">
     <small style="color:var(--mut);line-height:1.5;display:block">명단에 없는 곳도 점검(출장 사진대지 등)할 수 있습니다.</small>
-    <button type="button" class="adBig" id="adHere">📍 지금 내 위치에서 점검</button>
-    <button type="button" class="adLine" id="adPick">🗺 지도에서 위치 찍어 점검</button>
-    <div class="adSub">장소 · 주소 검색</div>
-    <div class="adQ"><input id="adQ" type="search" placeholder="예) 구례군청, 광의면 연파리 123" enterkeyhint="search"><button type="button" id="adGo">검색</button></div>
-    <div id="adRes"></div>
-    <div id="adRecWrap"><div class="adSub">최근 점검한 위치</div><div id="adRec"></div></div>
-    <label for="adName">점검 대상 이름 <small>(비우면 장소 이름)</small></label>
-    <input id="adName" placeholder="예) ○○농가 출장, 수해 현장">
-    <label for="adTpl">사용할 서식</label>
-    <select id="adTpl"></select>
-    <div style="text-align:right;margin-top:14px"><button type="button" class="bline" id="adClose">닫기</button></div></div>`;
+    <button type="button" class="lpBig" id="lpHere">📍 지금 내 위치에서 점검</button>
+    <button type="button" class="lpLine" id="lpPick">🗺 지도에서 위치 찍어 점검</button>
+    <div class="lpSub">장소 · 주소 검색</div>
+    <div class="lpQ"><input id="lpQ" type="search" placeholder="예) 구례군청, 광의면 연파리 123" enterkeyhint="search"><button type="button" id="lpGo">검색</button></div>
+    <div id="lpRes"></div>
+    <div id="lpRecWrap"><div class="lpSub">최근 점검한 위치</div><div id="lpRec"></div></div>
+    <label for="lpName">점검 대상 이름 <small>(비우면 장소 이름)</small></label>
+    <input id="lpName" placeholder="예) ○○농가 출장, 수해 현장">
+    <label for="lpTpl">사용할 서식</label>
+    <select id="lpTpl"></select>
+    </div>`;
   document.body.appendChild(dlg);
   const $ = id => document.getElementById(id);
   const gm = () => (typeof map !== 'undefined' && map) ? map : null;
@@ -7605,15 +7605,15 @@ $('iHwp').onclick = async () => {
 
   function addBtn(){
     const bar = $('rtBar'); if(!bar){ setTimeout(addBtn, 300); return; }
-    if($('adBtn')) return;
-    const b = document.createElement('button'); b.type = 'button'; b.id = 'adBtn'; b.textContent = '🔎 위치 지정';
+    if($('lpBtn')) return;
+    const b = document.createElement('button'); b.type = 'button'; b.id = 'lpBtn'; b.textContent = '🔎 위치 지정';
     const go = $('rtGo'); go ? go.after(b) : bar.appendChild(b);
     b.onclick = openDlg;
   }
   addBtn();
 
   function fillTpl(){
-    const list = sortedTpls(), sel = $('adTpl');
+    const list = sortedTpls(), sel = $('lpTpl');
     sel.innerHTML = list.map(t => `<option value="${t.id}">${t.hwpx ? '[한글] ' : ''}${esc(t.name)}</option>`).join('');
     const last = LS.get('adTpl', ''), trip = list.find(t => t.id === 't_trip1');
     sel.value = (last && tplById(last)) ? last : (trip ? trip.id : list[0].id);
@@ -7621,25 +7621,24 @@ $('iHwp').onclick = async () => {
   let recList = [];
   function renderRecent(){
     recList = LS.get('adRecent', []);
-    $('adRecWrap').style.display = recList.length ? '' : 'none';
-    $('adRec').innerHTML = recList.map((x, i) => `<div class="ar" data-ri="${i}"><div><b>${esc(x.name)}</b><small>${esc(x.addr || (x.lat.toFixed(5) + ', ' + x.lng.toFixed(5)))}</small></div><button type="button" data-rgo="${i}">점검</button><button type="button" data-rdel="${i}" style="background:#e5e7eb;color:#374151">✕</button></div>`).join('');
-    let d = document.getElementById('dlAdName'); if(!d){ d = document.createElement('datalist'); d.id = 'dlAdName'; document.body.appendChild(d); }
+    $('lpRecWrap').style.display = recList.length ? '' : 'none';
+    $('lpRec').innerHTML = recList.map((x, i) => `<div class="ar" data-ri="${i}"><div><b>${esc(x.name)}</b><small>${esc(x.addr || (x.lat.toFixed(5) + ', ' + x.lng.toFixed(5)))}</small></div><button type="button" data-rgo="${i}">점검</button><button type="button" data-rdel="${i}" style="background:#e5e7eb;color:#374151">✕</button></div>`).join('');
+    let d = document.getElementById('dlLpName'); if(!d){ d = document.createElement('datalist'); d.id = 'dlLpName'; document.body.appendChild(d); }
     d.innerHTML = [...new Set(recList.map(x => x.name))].map(v => `<option value="${esc(v)}">`).join('');
-    $('adName').setAttribute('list', 'dlAdName');
+    $('lpName').setAttribute('list', 'dlLpName');
   }
   function openDlg(){
-    fillTpl(); $('adRes').innerHTML = ''; $('adName').value = ''; renderRecent();
-    dlg.classList.remove('min'); $('adMin').textContent = '접기';
+    fillTpl(); $('lpRes').innerHTML = ''; $('lpName').value = ''; renderRecent();
+    dlg.classList.remove('min'); $('lpMin').textContent = '접기';
     if(!dlg.open) dlg.show();
-    setTimeout(() => $('adQ').focus(), 50);
+    setTimeout(() => $('lpQ').focus(), 50);
   }
-  $('adClose').onclick = () => dlg.close();
-  $('adX').onclick = () => dlg.close();
+  $('lpX').onclick = () => dlg.close();
   /* 지도는 그대로 움직일 수 있음(모달 아님) · 창은 머리줄을 끌어서 옮기고 [접기]로 작게 */
-  $('adMin').onclick = () => { const m = dlg.classList.toggle('min'); $('adMin').textContent = m ? '펴기' : '접기'; };
+  $('lpMin').onclick = () => { const m = dlg.classList.toggle('min'); $('lpMin').textContent = m ? '펴기' : '접기'; };
   document.addEventListener('keydown', e => { if(e.key === 'Escape' && dlg.open) dlg.close(); });
   (function drag(){
-    const hd = $('adHd'); let sx, sy, ox, oy, on = false;
+    const hd = $('lpHd'); let sx, sy, ox, oy, on = false;
     hd.addEventListener('pointerdown', e => {
       if(e.target.closest('button')) return;
       const r = dlg.getBoundingClientRect(); on = true; sx = e.clientX; sy = e.clientY; ox = r.left; oy = r.top;
@@ -7677,10 +7676,10 @@ $('iHwp').onclick = async () => {
 
   /* 점검 기록 열기 */
   async function openAdhoc(p){
-    const name = $('adName').value.trim() || p.name || p.addr || '현장 점검';
+    const name = $('lpName').value.trim() || p.name || p.addr || '현장 점검';
     const place = p.addr || p.name || '';
     const r = {name, place, addr:p.addr || '', town:townOf(p.addr), item:'', area:'', tel:p.tel || '', biz:'', adhoc:true, lat:p.lat, lng:p.lng};
-    const tid = $('adTpl').value; LS.set('adTpl', tid);
+    const tid = $('lpTpl').value; LS.set('adTpl', tid);
     const rc = LS.get('adRecent', []).filter(x => !(x.name === name && x.addr === (p.addr || '')));
     rc.unshift({name, addr:p.addr || '', lat:p.lat, lng:p.lng, tel:p.tel || '', ts:Date.now()}); LS.set('adRecent', rc.slice(0, 10));
     dlg.close();
@@ -7700,9 +7699,9 @@ $('iHwp').onclick = async () => {
   }
 
   /* 1) 내 위치 */
-  $('adHere').onclick = () => {
+  $('lpHere').onclick = () => {
     if(!navigator.geolocation) return toast('이 기기에서는 위치를 확인할 수 없습니다');
-    const b = $('adHere'); b.disabled = true; b.textContent = '📍 위치 확인 중…';
+    const b = $('lpHere'); b.disabled = true; b.textContent = '📍 위치 확인 중…';
     navigator.geolocation.getCurrentPosition(async q => {
       b.disabled = false; b.textContent = '📍 지금 내 위치에서 점검';
       const lat = q.coords.latitude, lng = q.coords.longitude, addr = await addrOf(lat, lng);
@@ -7717,13 +7716,13 @@ $('iHwp').onclick = async () => {
   let pickH = null;
   function endPick(){
     const m = gm(); if(m && pickH) kakao.maps.event.removeListener(m, 'click', pickH);
-    pickH = null; const tip = $('adPickTip'); if(tip) tip.remove();
+    pickH = null; const tip = $('lpPickTip'); if(tip) tip.remove();
   }
-  $('adPick').onclick = () => {
+  $('lpPick').onclick = () => {
     const m = gm(); if(!m) return toast('지도를 불러오는 중입니다');
-    const keepName = $('adName').value, keepTpl = $('adTpl').value;
+    const keepName = $('lpName').value, keepTpl = $('lpTpl').value;
     dlg.close(); endPick();
-    const tip = document.createElement('div'); tip.id = 'adPickTip';
+    const tip = document.createElement('div'); tip.id = 'lpPickTip';
     tip.innerHTML = '점검할 위치를 지도에서 누르세요 <button type="button">취소</button>';
     tip.querySelector('button').onclick = endPick;
     ($('mapwrap') || document.body).appendChild(tip);
@@ -7732,7 +7731,7 @@ $('iHwp').onclick = async () => {
       endPick(); showTmp(lat, lng);
       const addr = await addrOf(lat, lng);
       if(!confirm(`이 위치에서 점검할까요?\n\n${addr || (lat.toFixed(5) + ', ' + lng.toFixed(5))}`)) return;
-      fillTpl(); $('adName').value = keepName; if(tplById(keepTpl)) $('adTpl').value = keepTpl;
+      fillTpl(); $('lpName').value = keepName; if(tplById(keepTpl)) $('lpTpl').value = keepTpl;
       openAdhoc({name: addr ? '' : '지정 위치', addr, lat, lng, acc:0});
     };
     kakao.maps.event.addListener(m, 'click', pickH);
@@ -7740,10 +7739,10 @@ $('iHwp').onclick = async () => {
 
   /* 3) 장소·주소 검색 */
   async function search(){
-    const q = $('adQ').value.trim(); if(!q) return;
+    const q = $('lpQ').value.trim(); if(!q) return;
     if(!window.kakao || !kakao.maps.services) return toast('지도를 불러오는 중입니다');
     if(!places) places = new kakao.maps.services.Places();
-    const box = $('adRes'); box.innerHTML = '<small style="color:var(--mut)">검색 중…</small>';
+    const box = $('lpRes'); box.innerHTML = '<small style="color:var(--mut)">검색 중…</small>';
     const m = gm(), c = m ? m.getCenter() : new kakao.maps.LatLng(35.2025, 127.4627);
     const kw = new Promise(res => places.keywordSearch(q, (d, st) => res(st === kakao.maps.services.Status.OK ? d : []), {location:c, sort:kakao.maps.services.SortBy.ACCURACY, size:15}));
     const ad = new Promise(res => typeof geocoder !== 'undefined' && geocoder ? geocoder.addressSearch(q, (d, st) => res(st === kakao.maps.services.Status.OK ? d : [])) : res([]));
@@ -7759,20 +7758,20 @@ $('iHwp').onclick = async () => {
       const row = e.target.closest('.ar'); if(!row) return;
       const x = out[+row.dataset.i];
       if(e.target.closest('[data-go]')) return openAdhoc(x);
-      showTmp(x.lat, x.lng); dlg.classList.add('min'); $('adMin').textContent = '펴기';
+      showTmp(x.lat, x.lng); dlg.classList.add('min'); $('lpMin').textContent = '펴기';
       toast('지도에 위치를 표시했습니다 — [펴기]를 눌러 [점검]하세요');
     };
   }
-  $('adGo').onclick = search;
-  $('adRec').onclick = e => {
+  $('lpGo').onclick = search;
+  $('lpRec').onclick = e => {
     const d = e.target.closest('[data-rdel]');
     if(d){ const a = LS.get('adRecent', []); a.splice(+d.dataset.rdel, 1); LS.set('adRecent', a); renderRecent(); return; }
     const row = e.target.closest('.ar'); if(!row) return;
     const x = recList[+row.dataset.ri];
-    if(e.target.closest('[data-rgo]')){ if(!$('adName').value.trim()) $('adName').value = x.name; return openAdhoc({...x, name:x.name}); }
+    if(e.target.closest('[data-rgo]')){ if(!$('lpName').value.trim()) $('lpName').value = x.name; return openAdhoc({...x, name:x.name}); }
     showTmp(x.lat, x.lng);
   };
-  $('adQ').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); search(); } });
+  $('lpQ').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); search(); } });
 })();
 </script>
 <script>
