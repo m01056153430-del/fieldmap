@@ -1955,7 +1955,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261103192448';
+const APP_VER = '20261103193254';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -2306,7 +2306,7 @@ function tripBlocks(rec, edit){
       <tr><th>출장장소</th>${cell(/^(출장지|출장장소|방문지|방문장소|출장처)$/, rec.target && !rec.target.adhoc ? rec.target.place : (rec.target || {}).addr)}</tr>
       <tr><th>출 장 자</th>${cell(/^(출장자|출장자성명|동행자|출장인원)$/, rec.inspector)}</tr>
       <tr><th>출장목적</th>${cell(/목적/, '')}</tr>
-      <tr><th>출장내용</th>${cell(/^(출장내용|내용|출장결과|결과)$/, rec.memo, ';height:110px;vertical-align:top')}</tr>
+      <tr><th>출장내용</th>${cell(/^(출장내용|내용|출장결과|결과)$/, rec.memo, ';height:110px;vertical-align:middle')}</tr>
     </table>`];
   // 사진 장수에 맞춰 쪽마다 배치를 자동으로 고름 (첫 쪽은 표 아래 남은 공간을 꽉 채움)
   const n = rec.photos.length; if(!n) return blocks;
@@ -5265,6 +5265,11 @@ function walkHwpx(docs, rec, dry){
   }
   if(dry) res.title = findTitle(docs);
   else if(rec){
+    // 출장내용 칸은 위아래 가운데 정렬
+    for(const doc of docs) for(const tr of kidsNS(doc, 'tr')){
+      const cs = childs(tr, 'tc');
+      for(let i = 0; i < cs.length - 1; i++) if(/^(출장내용|출장결과)$/.test(nz(cleanLab(cText(cs[i]))))){ const sl = childs(cs[i + 1], 'subList')[0]; if(sl) sl.setAttribute('vertAlign', 'CENTER'); }
+    }
     for(const doc of docs) for(const tc of kidsNS(doc, 'tc')){
       const raw = cText(tc); if(!/출장\s*일자/.test(raw) || !/기간/.test(raw) || raw.length > 20) continue;
       const ps = cellParas(tc); if(!ps.length) continue;
@@ -7756,7 +7761,6 @@ $('iHwp').onclick = async () => {
       if(x.value) continue;
       if(/^(출장자|출장자성명)$/.test(k)){   // 점검자 대신 가장 최근에 쓴 출장자
         let last = LS.get('lastX_' + k, '');
-        if(!last && typeof allRecs !== 'undefined'){ const r = [...allRecs].sort((p, q) => (q.savedAt || 0) - (p.savedAt || 0)).find(r => r.id !== cur.id && (r.extra || []).some(e => nz(e.label) === k && String(e.value || '').trim())); if(r) last = r.extra.find(e => nz(e.label) === k).value.trim(); }
         if(last) x.value = last;
       }
       else if(MULTI.test(k) && isPlace(x.label) && cur.target && cur.target.place && !cur.target.adhoc) x.value = cur.target.place;
