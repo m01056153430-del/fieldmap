@@ -1955,7 +1955,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261103193717';
+const APP_VER = '20261103194130';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -2309,8 +2309,9 @@ function tripBlocks(rec, edit){
       <tr><th>출장내용</th>${cell(/^(출장내용|내용|출장결과|결과)$/, rec.memo, ';height:110px;vertical-align:middle')}</tr>
     </table>`];
   // 사진 장수에 맞춰 쪽마다 배치를 자동으로 고름 (첫 쪽은 표 아래 남은 공간을 꽉 채움)
-  const n = rec.photos.length; if(!n) return blocks;
-  const hHead = tripMeasure(blocks[0]);
+  const att = String(rec.attach || '').trim().replace(/^\[?붙임\]?\s*/, '');
+  const n = rec.photos.length; if(!n){ if(att) blocks[0] += `<div style="margin-top:14px;font-size:14px">[붙임] ${esc(att)}</div>`; return blocks; }
+  const hHead = tripMeasure(blocks[0]) + (att ? 34 : 0);
   const CAP = 34, SAFE = 8;
   let H1 = PAGE_INNER - hHead - 12 - CAP - SAFE;
   const all = rec.photos.map((_, i) => i), chunks = [];
@@ -2323,7 +2324,8 @@ function tripBlocks(rec, edit){
     const pages = Math.ceil(rest.length / 6), k = Math.ceil(rest.length / pages);
     chunks.push({idx: rest.slice(0, k), H: HP}); rest = rest.slice(k);
   }
-  chunks.forEach((c, ci) => blocks.push(`<div class="cap" style="text-align:center;font-size:15px;letter-spacing:2px">사 진 대 지${chunks.length > 1 ? ` (${ci + 1}/${chunks.length})` : ''}</div>${tripGrid(rec, c.idx, c.H, E)}`));
+  const attHtml = att ? `<div style="margin-top:14px;font-size:14px">[붙임] ${esc(att)}</div>` : '';
+  chunks.forEach((c, ci) => blocks.push(`<div class="cap" style="text-align:center;font-size:15px;letter-spacing:2px">사 진 대 지${chunks.length > 1 ? ` (${ci + 1}/${chunks.length})` : ''}</div>${tripGrid(rec, c.idx, c.H, E)}${ci === 0 ? attHtml : ''}`));
   return blocks;
 }
 /* 출장 보고서 사진 배치: k장을 높이 H 안에 가장 크게 */
@@ -5265,6 +5267,21 @@ function walkHwpx(docs, rec, dry){
   }
   if(dry) res.title = findTitle(docs);
   else if(rec){
+    // [붙임] 줄: 첫 표 바로 아래에 왼쪽 정렬로
+    const att = String(rec.attach || '').trim();
+    if(att) for(const doc of docs){
+      const root = doc.documentElement, tp = childs(root, 'p').find(p => kidsNS(p, 'tbl').length); if(!tp) continue;
+      const first = childs(root, 'p')[0], run0 = kidsNS(tp, 'run').find(r => childs(r, 'tbl').length);
+      const np = doc.createElementNS(tp.namespaceURI, 'hp:p');
+      [['id', String(Math.floor(Math.random() * 2e9) + 1e8)], ['paraPrIDRef', first ? first.getAttribute('paraPrIDRef') || '0' : '0'], ['styleIDRef', '0'], ['pageBreak', '0'], ['columnBreak', '0'], ['merged', '0']].forEach(([k, v]) => np.setAttribute(k, v));
+      const r = doc.createElementNS(tp.namespaceURI, 'hp:run'); r.setAttribute('charPrIDRef', run0 ? run0.getAttribute('charPrIDRef') || '0' : '0');
+      const t = doc.createElementNS(tp.namespaceURI, 'hp:t'); writeT(t, '[붙임] ' + att.replace(/^\[?붙임\]?\s*/, '')); r.appendChild(t); np.appendChild(r);
+      tp.parentNode.insertBefore(doc.createElementNS(tp.namespaceURI, 'hp:p'), tp.nextSibling);   // 한 줄 띄움
+      const gap = tp.nextSibling; [['id', String(Math.floor(Math.random() * 2e9) + 1e8)], ['paraPrIDRef', np.getAttribute('paraPrIDRef')], ['styleIDRef', '0'], ['pageBreak', '0'], ['columnBreak', '0'], ['merged', '0']].forEach(([k, v]) => gap.setAttribute(k, v));
+      const gr = doc.createElementNS(tp.namespaceURI, 'hp:run'); gr.setAttribute('charPrIDRef', r.getAttribute('charPrIDRef')); gr.appendChild(doc.createElementNS(tp.namespaceURI, 'hp:t')); gap.appendChild(gr);
+      gap.parentNode.insertBefore(np, gap.nextSibling);
+      break;
+    }
     // 출장내용 칸은 위아래 가운데 정렬
     for(const doc of docs) for(const tr of kidsNS(doc, 'tr')){
       const cs = childs(tr, 'tc');
@@ -8096,7 +8113,10 @@ $('iHwp').onclick = async () => {
     try{
       for(const r of recs) if(window.syncMedia && r.photos.some(p => !p)){ try{ await syncMedia(r); }catch(_){} }
       const names = uniq(recs.map(r => r.target.name));
-      const target = {name: names[0] + (names.length > 1 ? ` 외 ${names.length - 1}` : ''), place: uniq(recs.map(r => r.target.place)).join(', '), addr:'', town:'', item:'', area:'', tel:'', biz:'', adhoc:true};
+      // 출장지: 대표 지번 하나 + '등 N개소' (예: 용방면 용강리 417-16 등 4개소)
+      const places = uniq(recs.map(r => String(r.target.place || '').split(/\s*[,，]\s*/)[0]));
+      const placeSum = places.length ? places[0] + (places.length > 1 ? ` 등 ${places.length}개소` : '') : '';
+      const target = {name: names[0] + (names.length > 1 ? ` 외 ${names.length - 1}` : ''), place: placeSum, addr:'', town:'', item:'', area:'', tel:'', biz:'', adhoc:true};
       if(dirty && !$('insp').hidden && !confirm('저장하지 않은 수정 내용이 있습니다. 버리고 새 보고서를 만들까요?')) return;
       cur = newRecord(target); applyTplToCur(t);
       const d0 = (recs[0].date || '').slice(0, 10), d1 = (recs[recs.length - 1].date || '').slice(0, 10);
@@ -8110,7 +8130,7 @@ $('iHwp').onclick = async () => {
       });
       for(const x of cur.extra){
         const k = nz(x.label);
-        if(/^(출장지|출장장소|방문지|방문장소|출장처)$/.test(k)) x.value = uniq(recs.map(r => r.target.place)).join(', ');
+        if(/^(출장지|출장장소|방문지|방문장소|출장처)$/.test(k)) x.value = placeSum;
         else if(/^(출장자|출장자성명)$/.test(k)) x.value = ppl.length ? ppl.join(', ') : (LS.get('lastX_' + k, '') || '');
         else if(/목적/.test(k)) x.value = `${titles.join(', ')} (${recs.length}개소)`;
         else if(/^(출장내용|내용|출장결과)$/.test(k)) x.value = lines.join('\n');
@@ -8118,12 +8138,32 @@ $('iHwp').onclick = async () => {
       // 사진: 기록마다 앞의 2장까지, 설명은 '대상 — 원래 설명'
       cur.photos = []; cur.photoIds = []; cur.capt = []; cur.photoAR = [];
       for(const r of recs) r.photos.slice(0, 2).forEach((p, i) => { if(!p) return; cur.photos.push(p); cur.photoIds.push(null); cur.capt.push(`${r.target.name} — ${r.capt[i] || '현장 사진'}`); });
+      cur.attach = `점검표 ${recs.length}부`;
       dirty = true; curRow = -1;
       $('ilist').hidden = true; $('insp').hidden = false; renderForm();
       toast(`출장결과 보고서를 만들었습니다 (${recs.length}건 · 사진 ${cur.photos.length}장) — 확인 후 [저장]`);
       armed = false; tip.textContent = ''; label();
     }finally{ $('busy').hidden = true; $('busy').textContent = 'PDF 만드는 중…'; }
   };
+})();
+</script>
+<script>
+/* 출장결과 보고서: [붙임] 입력 칸 (예: 점검표 4부) — 비우면 붙임 줄을 넣지 않음 */
+(function attachMod(){
+  const $ = id => document.getElementById(id);
+  function put(){
+    const box = $('iExtra'); if(!box) return;
+    const old = box.querySelector('.attw'); if(old) old.remove();
+    if(!cur || !isTripRec(cur)) return;
+    const w = document.createElement('div'); w.className = 'attw'; w.style.marginTop = '10px';
+    w.innerHTML = `<label class="fl" for="iAttach">[붙임] <small>(비우면 넣지 않음)</small></label><input id="iAttach" class="inp" placeholder="예) 점검표 4부" value="${esc(cur.attach || '')}">`;
+    box.appendChild(w);
+    $('iAttach').addEventListener('input', e => { cur.attach = e.target.value; dirty = true; });
+  }
+  const _rf = window.renderForm || renderForm;
+  window.renderForm = renderForm = function(){ _rf(); put(); };
+  const _ri = renderItems;
+  renderItems = function(){ _ri(); put(); };
 })();
 </script>
 </body>
