@@ -1687,7 +1687,7 @@ function bindUi(){
     const def = () => {
       const W = wrap.clientWidth, H = wrap.clientHeight;
       return innerWidth <= 760 ? {l:6, t:Math.round(H * .45), w:W - 12, h:Math.round(H * .53), min:false}
-                               : {l:10, t:10, w:340, h:Math.max(300, H - 20), min:false};
+                               : {l:8, t:8, w:Math.min(460, W - 16), h:Math.max(300, H - 16), min:false};   // PC: 왼쪽 위, 넓이 460, 화면 높이 가득
     };
     let pos = LS.get(KEY, null);
     function apply(){
@@ -1707,7 +1707,8 @@ function bindUi(){
     $('sideMin').onclick = () => { pos.min = !pos.min; apply(); save(); };
     $('sideReset').onclick = () => { pos = def(); apply(); save(); };
     $('sideClose').onclick = () => { S.classList.add('hide'); apply(); };
-    $('toggle').onclick = () => { S.classList.toggle('hide'); if(!S.classList.contains('hide') && pos && pos.min){ pos.min = false; save(); } apply(); };
+    // [대상]으로 열면 항상 기본 위치·크기(왼쪽 위, 화면 높이 가득)로 펼쳐서 엶
+    $('toggle').onclick = () => { S.classList.toggle('hide'); if(!S.classList.contains('hide')){ pos = def(); save(); } apply(); };
     bar.addEventListener('dblclick', e => { if(!e.target.closest('button')){ pos.min = !pos.min; apply(); save(); } });
     bar.addEventListener('pointerdown', ev => {
       if(ev.target.closest('button')) return;
@@ -1962,7 +1963,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261103194918';
+const APP_VER = '20261103195156';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
