@@ -1929,7 +1929,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261102163740';
+const APP_VER = '20261103172018';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -2077,7 +2077,7 @@ function renderTarget(){
   const t = cur.target;
   const area = t.area !== '' && t.area != null ? (isNaN(t.area) ? t.area : Number(t.area).toLocaleString() + '㎡') : '';
   $('iTarget').innerHTML = `<b>${esc(t.name)}</b> <span style="color:var(--mut)">${esc(t.town||'')}</span><br>
-    ${esc(t.place)}<br>품목 ${esc(t.item||'')}${area ? ' · ' + esc(area) : ''}${t.tel ? ' · ' + esc(t.tel) : ''}`;
+    ${esc(t.place)}${t.adhoc ? (t.place !== t.addr && t.addr ? '<br>' + esc(t.addr) : '') + '<br><small style="color:var(--mut)">📍 위치 지정 점검 (명단 외)</small>' : `<br>품목 ${esc(t.item||'')}${area ? ' · ' + esc(area) : ''}${t.tel ? ' · ' + esc(t.tel) : ''}`}`;
   $('iHead').textContent = (cur.title || '현장 점검') + ' · ' + t.name;
 }
 function segHtml(opts, val, attrs){
@@ -2091,7 +2091,7 @@ function renderItems(){
       <input class="inp" data-note="${i}" placeholder="비고 (선택)" value="${esc(it.note)}">
     </div>`).join('');
   $('iExtra').innerHTML = cur.extra.length ? cur.extra.map((x, i) => `<label class="fl">${esc(x.label)}</label>
-      <input class="inp" data-x="${i}" value="${esc(x.value)}">`).join('') : '<small style="color:var(--mut)">양식 디자인에서 점검 항목을 추가하세요</small>';
+      ${/내용|목적|의견|결과|사항/.test(x.label) ? `<textarea class="inp" data-x="${i}" rows="3">${esc(x.value)}</textarea>` : `<input class="inp" data-x="${i}" value="${esc(x.value)}">`}`).join('') : '<small style="color:var(--mut)">양식 디자인에서 점검 항목을 추가하세요</small>';
   $('iOverall').innerHTML = segHtml(OVERALL, cur.overall, 'data-o="1"');
 }
 function renderThumbs(){
@@ -4903,7 +4903,7 @@ const HF = [
   ['군비', /^(군비|시비|시군비)$/, r => wonTxt(r.target.county)],
   ['자부담', /^(자부담|자부담금|자부담액|자담)$/, r => wonTxt(r.target.self)],
   ['읍면',   /^(읍면|읍면동|읍면명)$/, r => r.target.town],
-  ['점검일시', /^(점검일시|점검일자|점검일|점검기간|확인일자|확인일시|점검날짜|점검년월일|일시|일자)$/, r => r.dateText || fmtDT(r.date)],
+  ['점검일시', /^(출장일자|출장일시|출장기간|출장일|방문일시|점검일시|점검일자|점검일|점검기간|확인일자|확인일시|점검날짜|점검년월일|일시|일자)$/, r => r.dateText || fmtDT(r.date)],
   ['점검자', /^(점검자|확인자|점검공무원|담당자|점검관|점검자성명|담당공무원|점검반|점검자소속성명)$/, r => r.inspector],
   ['종합의견', /^(종합의견|판정|종합판정|최종판정|적합여부|판정결과|종합결과|점검결과판정)$/, r => r.overall],
   ['특이사항', /^(특이사항|보완사항|보완요구사항|지적사항|조치사항|조치내용|점검의견|비고사항|보완내용)$/, r => r.memo],
@@ -5429,6 +5429,29 @@ $('tplHwpIn').onchange = async e => {
     if(window.syncSoon) syncSoon();
   }catch(err){ alert('서식을 읽지 못했습니다: ' + err.message); }
 };
+
+
+/* 기본 제공 서식: 출장결과 보고(사진대지) — 기기마다 한 번만 서식 목록에 추가 (지우면 다시 넣지 않음) */
+const TRIP_HWPX = 'data:application/hwp+zip;base64,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';
+(async function seedTripTpl(){
+  if(LS.get('seedTrip1', false)) return;
+  if(tpls.some(t => t.id === 't_trip1' || t.name === '출장결과 보고(사진대지)')){ LS.set('seedTrip1', true); return; }
+  for(let k = 0; k < 60 && !window.JSZip; k++) await new Promise(r => setTimeout(r, 500));
+  try{
+    const {docs} = await hwpxDocs(TRIP_HWPX);
+    const a = walkHwpx(docs.map(x => x.d), null, true);
+    await fdb.put('h_trip1', TRIP_HWPX);
+    if(tpls.some(t => t.id === 't_trip1')) return;
+    tpls.push(normTpl({
+      id:'t_trip1', name:'출장결과 보고(사진대지)', title:a.title || '출장결과 보고 (사진대지)',
+      items:[], opts:[...DEFAULT_TPL.opts], extra:a.extra, iopts:null,
+      sec:{...DEFAULT_SEC, items:false, overall:false, sign:false, extra:true, photos:true},
+      hwpx:{key:'h_trip1', name:'출장결과보고_사진대지.hwpx', mode:a.mode, driveId:'', v:2}, savedAt:Date.now(), usedAt:1
+    }));
+    saveTpls(); LS.set('seedTrip1', true);
+    if(window.syncSoon) syncSoon();
+  }catch(e){ console.warn('출장 서식 추가 실패', e); }
+})();
 
 /* 엑셀·워드·PDF 서식 → 양식 디자인 서식으로 추가 */
 async function importOtherForm(f){
@@ -7243,6 +7266,277 @@ $('iHwp').onclick = async () => {
     try{ history.pushState({fm:'guard'}, ''); }catch(_){}
     if(typeof toast === 'function') toast('뒤로가기를 한 번 더 누르면 사이트에서 나갑니다');
   });
+})();
+</script>
+<script>
+/* ===================== 위치를 정해 점검 (장소 검색 · 내 위치 · 지도에서 찍기) =====================
+   명단에 없는 곳도 점검 기록을 만들 수 있음 (출장 사진대지 등) */
+(function adhocMod(){
+  const css = document.createElement('style');
+  css.textContent = `#adDlg{max-width:440px;width:92vw}
+  #adDlg .adBig{width:100%;padding:11px;font-size:15px;border-radius:10px;border:0;background:var(--b);color:#fff;font-weight:700;margin-top:4px}
+  #adDlg .adLine{width:100%;padding:9px;font-size:14px;border-radius:10px;border:1px solid var(--b);background:#fff;color:var(--b);margin-top:6px}
+  #adDlg .adSub{font-size:13px;color:var(--mut);margin:14px 0 4px;font-weight:700}
+  #adDlg .adQ{display:flex;gap:6px}#adDlg .adQ input{flex:1;padding:9px;border:1px solid var(--ln);border-radius:8px;font-size:15px}
+  #adDlg .adQ button{padding:0 14px;border-radius:8px;border:0;background:#334155;color:#fff;font-size:14px}
+  #adRes,#adRec{max-height:38vh;overflow:auto;margin-top:6px}#adRec{max-height:30vh}
+  #adRes .ar,#adRec .ar{display:flex;align-items:center;gap:8px;padding:8px 6px;border-bottom:1px solid var(--ln);cursor:pointer}
+  #adDlg .ar:hover{background:#f1f5f9}#adDlg .ar div{flex:1;min-width:0}#adDlg .ar b{display:block;font-size:14px}
+  #adDlg .ar small{display:block;color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #adDlg .ar button{flex:none;padding:6px 10px;border-radius:8px;border:0;background:var(--b);color:#fff;font-size:13px}
+  #adDlg label{display:block;font-size:13px;color:var(--mut);margin:12px 0 3px}
+  #adDlg select,#adDlg #adName{width:100%;padding:9px;border:1px solid var(--ln);border-radius:8px;font-size:15px;box-sizing:border-box;background:#fff}
+  #adPickTip{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:30;background:#111827;color:#fff;padding:9px 14px;border-radius:999px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;gap:10px;align-items:center}
+  #adPickTip button{border:0;background:#fff;color:#111;border-radius:999px;padding:3px 10px;font-size:13px}`;
+  document.head.appendChild(css);
+
+  const dlg = document.createElement('dialog'); dlg.id = 'adDlg';
+  dlg.innerHTML = `<h3 style="margin:0 0 6px">위치를 정해 점검</h3>
+    <small style="color:var(--mut);line-height:1.5;display:block">명단에 없는 곳도 점검(출장 사진대지 등)할 수 있습니다.</small>
+    <button type="button" class="adBig" id="adHere">📍 지금 내 위치에서 점검</button>
+    <button type="button" class="adLine" id="adPick">🗺 지도에서 위치 찍어 점검</button>
+    <div class="adSub">장소 · 주소 검색</div>
+    <div class="adQ"><input id="adQ" type="search" placeholder="예) 구례군청, 광의면 연파리 123" enterkeyhint="search"><button type="button" id="adGo">검색</button></div>
+    <div id="adRes"></div>
+    <div id="adRecWrap"><div class="adSub">최근 점검한 위치</div><div id="adRec"></div></div>
+    <label for="adName">점검 대상 이름 <small>(비우면 장소 이름)</small></label>
+    <input id="adName" placeholder="예) ○○농가 출장, 수해 현장">
+    <label for="adTpl">사용할 서식</label>
+    <select id="adTpl"></select>
+    <div style="text-align:right;margin-top:14px"><button type="button" class="bline" id="adClose">닫기</button></div>`;
+  document.body.appendChild(dlg);
+  const $ = id => document.getElementById(id);
+  const gm = () => (typeof map !== 'undefined' && map) ? map : null;
+  let tmpMk = null, places = null;
+
+  function addBtn(){
+    const bar = $('rtBar'); if(!bar){ setTimeout(addBtn, 300); return; }
+    if($('adBtn')) return;
+    const b = document.createElement('button'); b.type = 'button'; b.id = 'adBtn'; b.textContent = '🔎 위치 지정 점검';
+    const go = $('rtGo'); go ? go.after(b) : bar.appendChild(b);
+    b.onclick = openDlg;
+  }
+  addBtn();
+
+  function fillTpl(){
+    const list = sortedTpls(), sel = $('adTpl');
+    sel.innerHTML = list.map(t => `<option value="${t.id}">${t.hwpx ? '[한글] ' : ''}${esc(t.name)}</option>`).join('');
+    const last = LS.get('adTpl', ''), trip = list.find(t => t.id === 't_trip1');
+    sel.value = (last && tplById(last)) ? last : (trip ? trip.id : list[0].id);
+  }
+  let recList = [];
+  function renderRecent(){
+    recList = LS.get('adRecent', []);
+    $('adRecWrap').style.display = recList.length ? '' : 'none';
+    $('adRec').innerHTML = recList.map((x, i) => `<div class="ar" data-ri="${i}"><div><b>${esc(x.name)}</b><small>${esc(x.addr || (x.lat.toFixed(5) + ', ' + x.lng.toFixed(5)))}</small></div><button type="button" data-rgo="${i}">점검</button><button type="button" data-rdel="${i}" style="background:#e5e7eb;color:#374151">✕</button></div>`).join('');
+    let d = document.getElementById('dlAdName'); if(!d){ d = document.createElement('datalist'); d.id = 'dlAdName'; document.body.appendChild(d); }
+    d.innerHTML = [...new Set(recList.map(x => x.name))].map(v => `<option value="${esc(v)}">`).join('');
+    $('adName').setAttribute('list', 'dlAdName');
+  }
+  function openDlg(){
+    fillTpl(); $('adRes').innerHTML = ''; $('adName').value = ''; renderRecent();
+    if(!dlg.open) dlg.showModal();
+    setTimeout(() => $('adQ').focus(), 50);
+  }
+  $('adClose').onclick = () => dlg.close();
+  dlg.addEventListener('click', e => { if(e.target === dlg) dlg.close(); });
+
+  const townOf = a => { const m = String(a || '').match(/(\S+(?:읍|면|동))(?:\s|$)/); return m ? m[1] : ''; };
+  function addrOf(lat, lng){
+    return new Promise(res => {
+      if(typeof geocoder === 'undefined' || !geocoder) return res('');
+      geocoder.coord2Address(lng, lat, (r, st) => {
+        if(st !== kakao.maps.services.Status.OK || !r[0]) return res('');
+        const x = r[0]; res((x.road_address && x.road_address.address_name) || (x.address && x.address.address_name) || '');
+      });
+    });
+  }
+  function showTmp(lat, lng){
+    const m = gm(); if(!m) return;
+    const pos = new kakao.maps.LatLng(lat, lng);
+    if(!tmpMk) tmpMk = new kakao.maps.Marker({position:pos, zIndex:15});
+    tmpMk.setPosition(pos); tmpMk.setMap(m);
+    m.setLevel(Math.min(m.getLevel(), 4)); m.panTo(pos);
+  }
+
+  /* 점검 기록 열기 */
+  async function openAdhoc(p){
+    const name = $('adName').value.trim() || p.name || p.addr || '현장 점검';
+    const place = p.addr || p.name || '';
+    const r = {name, place, addr:p.addr || '', town:townOf(p.addr), item:'', area:'', tel:p.tel || '', biz:'', adhoc:true, lat:p.lat, lng:p.lng};
+    const tid = $('adTpl').value; LS.set('adTpl', tid);
+    const rc = LS.get('adRecent', []).filter(x => !(x.name === name && x.addr === (p.addr || '')));
+    rc.unshift({name, addr:p.addr || '', lat:p.lat, lng:p.lng, tel:p.tel || '', ts:Date.now()}); LS.set('adRecent', rc.slice(0, 10));
+    dlg.close();
+    if(typeof info !== 'undefined' && info) info.close();
+    await reloadRecs();
+    if(typeof dirty !== 'undefined' && dirty && !$('insp').hidden && !confirm('저장하지 않은 수정 내용이 있습니다. 버리고 새 점검을 시작할까요?')) return;
+    cur = newRecord(r);
+    const t = tplById(tid); if(t) applyTplToCur(t);
+    cur.gps = {lat:p.lat, lng:p.lng, acc:p.acc || 0}; cur.gpsText = '';
+    for(const x of cur.extra){
+      if(!x.value && /^(출장지|출장장소|방문지|방문장소)$/.test(nz(x.label))) x.value = p.addr ? (p.name && p.name !== name ? p.name + ' (' + p.addr + ')' : p.addr) : '';
+    }
+    dirty = true; curRow = -1;
+    $('insp').hidden = false; renderForm();
+    showTmp(p.lat, p.lng);
+    toast(`'${name}' 점검을 시작합니다 — 내용을 적고 [저장]하세요`);
+  }
+
+  /* 1) 내 위치 */
+  $('adHere').onclick = () => {
+    if(!navigator.geolocation) return toast('이 기기에서는 위치를 확인할 수 없습니다');
+    const b = $('adHere'); b.disabled = true; b.textContent = '📍 위치 확인 중…';
+    navigator.geolocation.getCurrentPosition(async q => {
+      b.disabled = false; b.textContent = '📍 지금 내 위치에서 점검';
+      const lat = q.coords.latitude, lng = q.coords.longitude, addr = await addrOf(lat, lng);
+      openAdhoc({name: addr ? '' : '현재 위치', addr, lat, lng, acc:q.coords.accuracy});
+    }, e => {
+      b.disabled = false; b.textContent = '📍 지금 내 위치에서 점검';
+      toast('현재 위치를 가져오지 못했습니다' + (e && e.code === 1 ? ' (위치 권한을 허용해 주세요)' : ''));
+    }, {enableHighAccuracy:true, timeout:15000, maximumAge:10000});
+  };
+
+  /* 2) 지도에서 찍기 */
+  let pickH = null;
+  function endPick(){
+    const m = gm(); if(m && pickH) kakao.maps.event.removeListener(m, 'click', pickH);
+    pickH = null; const tip = $('adPickTip'); if(tip) tip.remove();
+  }
+  $('adPick').onclick = () => {
+    const m = gm(); if(!m) return toast('지도를 불러오는 중입니다');
+    const keepName = $('adName').value, keepTpl = $('adTpl').value;
+    dlg.close(); endPick();
+    const tip = document.createElement('div'); tip.id = 'adPickTip';
+    tip.innerHTML = '점검할 위치를 지도에서 누르세요 <button type="button">취소</button>';
+    tip.querySelector('button').onclick = endPick;
+    ($('mapwrap') || document.body).appendChild(tip);
+    pickH = async ev => {
+      const ll = ev.latLng, lat = ll.getLat(), lng = ll.getLng();
+      endPick(); showTmp(lat, lng);
+      const addr = await addrOf(lat, lng);
+      if(!confirm(`이 위치에서 점검할까요?\n\n${addr || (lat.toFixed(5) + ', ' + lng.toFixed(5))}`)) return;
+      fillTpl(); $('adName').value = keepName; if(tplById(keepTpl)) $('adTpl').value = keepTpl;
+      openAdhoc({name: addr ? '' : '지정 위치', addr, lat, lng, acc:0});
+    };
+    kakao.maps.event.addListener(m, 'click', pickH);
+  };
+
+  /* 3) 장소·주소 검색 */
+  async function search(){
+    const q = $('adQ').value.trim(); if(!q) return;
+    if(!window.kakao || !kakao.maps.services) return toast('지도를 불러오는 중입니다');
+    if(!places) places = new kakao.maps.services.Places();
+    const box = $('adRes'); box.innerHTML = '<small style="color:var(--mut)">검색 중…</small>';
+    const m = gm(), c = m ? m.getCenter() : new kakao.maps.LatLng(35.2025, 127.4627);
+    const kw = new Promise(res => places.keywordSearch(q, (d, st) => res(st === kakao.maps.services.Status.OK ? d : []), {location:c, sort:kakao.maps.services.SortBy.ACCURACY, size:15}));
+    const ad = new Promise(res => typeof geocoder !== 'undefined' && geocoder ? geocoder.addressSearch(q, (d, st) => res(st === kakao.maps.services.Status.OK ? d : [])) : res([]));
+    const qs = /구례/.test(q) ? null : new Promise(res => typeof geocoder !== 'undefined' && geocoder ? geocoder.addressSearch('구례군 ' + q, (d, st) => res(st === kakao.maps.services.Status.OK ? d : [])) : res([]));
+    const [k, a, a2] = await Promise.all([kw, ad, qs || Promise.resolve([])]);
+    const list = [];
+    for(const x of [...a2, ...a]) list.push({name:'', addr:(x.road_address && x.road_address.address_name) || x.address_name, sub:x.address_name, lat:+x.y, lng:+x.x, kind:'주소'});
+    for(const x of k) list.push({name:x.place_name, addr:x.road_address_name || x.address_name, sub:(x.category_name || '').split('>').pop().trim(), lat:+x.y, lng:+x.x, tel:x.phone, kind:'장소'});
+    const seen = new Set(), out = list.filter(x => { const key = x.lat.toFixed(5) + x.lng.toFixed(5) + x.name; if(seen.has(key)) return false; seen.add(key); return true; }).slice(0, 20);
+    if(!out.length){ box.innerHTML = '<small style="color:var(--mut)">찾지 못했습니다. 주소(읍면·리·번지)나 장소 이름으로 다시 검색해 보세요.</small>'; return; }
+    box.innerHTML = out.map((x, i) => `<div class="ar" data-i="${i}"><div><b>${esc(x.name || x.addr)}</b><small>${esc(x.name ? x.addr : (x.sub !== x.addr ? x.sub : x.kind))}${x.name && x.sub ? ' · ' + esc(x.sub) : ''}</small></div><button type="button" data-go="${i}">점검</button></div>`).join('');
+    box.onclick = e => {
+      const row = e.target.closest('.ar'); if(!row) return;
+      const x = out[+row.dataset.i];
+      if(e.target.closest('[data-go]')) return openAdhoc(x);
+      showTmp(x.lat, x.lng); toast('지도에 위치를 표시했습니다 — [점검]을 누르면 시작합니다');
+    };
+  }
+  $('adGo').onclick = search;
+  $('adRec').onclick = e => {
+    const d = e.target.closest('[data-rdel]');
+    if(d){ const a = LS.get('adRecent', []); a.splice(+d.dataset.rdel, 1); LS.set('adRecent', a); renderRecent(); return; }
+    const row = e.target.closest('.ar'); if(!row) return;
+    const x = recList[+row.dataset.ri];
+    if(e.target.closest('[data-rgo]')){ if(!$('adName').value.trim()) $('adName').value = x.name; return openAdhoc({...x, name:x.name}); }
+    showTmp(x.lat, x.lng);
+  };
+  $('adQ').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); search(); } });
+})();
+</script>
+<script>
+/* ===================== 여러 명 · 여러 곳 입력 (출장자 · 출장장소 등) + 최근 입력 기억 ===================== */
+(function multiMod(){
+  const $ = id => document.getElementById(id);
+  const MULTI = /^(출장자|출장자성명|동행자|출장인원|방문자|출장지|출장장소|방문지|방문장소|출장처)$/;
+  const isPlace = l => /지$|장소$|처$/.test(nz(l));
+  const css = document.createElement('style');
+  css.textContent = `.mxw{margin:2px 0 4px}.mxr{display:flex;gap:6px;margin-bottom:6px}.mxr input{flex:1}
+  .mxr .mxd{flex:none;width:38px;border:1px solid var(--ln);background:#fff;border-radius:8px;color:#6b7280;font-size:15px}
+  .mxadd{border:1px dashed var(--b);background:#fff;color:var(--b);border-radius:8px;padding:7px 10px;font-size:13px;width:100%}`;
+  document.head.appendChild(css);
+  const H = k => LS.get('hist_' + k, []);
+  const addH = (k, v, max) => { v = String(v || '').trim(); if(!v || v.length > (max || 80)) return; const a = H(k).filter(x => x !== v); a.unshift(v); LS.set('hist_' + k, a.slice(0, 30)); };
+  const split = v => String(v || '').split(/\s*[,，、\n]\s*/).map(x => x.trim()).filter(Boolean);
+  function dlist(id, vals){
+    let d = document.getElementById(id); if(!d){ d = document.createElement('datalist'); d.id = id; document.body.appendChild(d); }
+    d.innerHTML = [...new Set(vals.map(v => String(v || '').trim()).filter(Boolean))].slice(0, 100).map(v => `<option value="${esc(v)}">`).join('');
+    return id;
+  }
+  function prefill(){
+    if(!cur || cur.savedAt) return;
+    for(const x of cur.extra){
+      const k = nz(x.label);
+      if(x.value) continue;
+      if(/^(출장자|출장자성명)$/.test(k) && (cur.inspector || LS.get('inspector', ''))) x.value = cur.inspector || LS.get('inspector', '');
+      else if(MULTI.test(k) && isPlace(x.label) && cur.target && cur.target.place && !cur.target.adhoc) x.value = cur.target.place;
+    }
+  }
+  function enhance(){
+    if(!cur) return;
+    document.querySelectorAll('#iExtra [data-x]').forEach(el => {
+      const i = +el.dataset.x, x = cur.extra[i]; if(!x || !MULTI.test(nz(x.label))) return;
+      el.style.display = 'none';
+      const rc = el.nextElementSibling; if(rc && rc.classList.contains('rchips')) rc.remove();
+      const old = el.parentNode.querySelector(`.mxw[data-mx="${i}"]`); if(old) old.remove();
+      const place = isPlace(x.label), word = place ? '장소' : '사람';
+      const hk = 'xm_' + nz(x.label);
+      const lid = dlist('dlMx_' + i, place ? [...H(hk), cur.target && cur.target.place] : [...H(hk), ...H('inspector'), LS.get('inspector', '')]);
+      const w = document.createElement('div'); w.className = 'mxw'; w.dataset.mx = i;
+      const vals = split(x.value);
+      const rowH = v => `<div class="mxr"><input class="inp mxi" list="${lid}" value="${esc(v)}" placeholder="${place ? '예) 광의면 연파리 123 농가' : '예) 농업기술센터 주무관 홍길동'}"><button type="button" class="mxd" title="빼기">✕</button></div>`;
+      const recent = H(hk).slice(0, 8);
+      w.innerHTML = `<div class="mxl">${(vals.length ? vals : ['']).map(rowH).join('')}</div>
+        <button type="button" class="mxadd">＋ ${esc(x.label.replace(/\s+/g, ''))} 추가</button>
+        ${recent.length ? `<div class="rchips" style="margin-top:6px"><span>최근</span>${recent.map(v => `<button type="button" class="chip" data-mv="${esc(v)}" title="${esc(v)}">${esc(v.length > 20 ? v.slice(0, 20) + '…' : v)}</button>`).join('')}</div>` : ''}`;
+      el.after(w);
+      const sync = init => {
+        const a = [...w.querySelectorAll('.mxi')].map(n => n.value.trim()).filter(Boolean);
+        el.value = a.join(', '); x.value = el.value; if(init !== true) dirty = true;
+        w.querySelectorAll('[data-mv]').forEach(c => c.classList.toggle('on', a.includes(c.dataset.mv)));
+      };
+      sync(true);
+      w.addEventListener('input', () => sync());
+      w.addEventListener('click', e => {
+        if(e.target.closest('.mxd')){ const r = e.target.closest('.mxr'); if(w.querySelectorAll('.mxr').length > 1) r.remove(); else r.querySelector('input').value = ''; sync(); return; }
+        if(e.target.closest('.mxadd')){ w.querySelector('.mxl').insertAdjacentHTML('beforeend', rowH('')); const ins = w.querySelectorAll('.mxi'); ins[ins.length - 1].focus(); return; }
+        const c = e.target.closest('[data-mv]'); if(c){
+          const v = c.dataset.mv, ins = [...w.querySelectorAll('.mxi')];
+          if(ins.some(n => n.value.trim() === v)){ ins.find(n => n.value.trim() === v).closest('.mxr').remove(); if(!w.querySelector('.mxr')) w.querySelector('.mxl').insertAdjacentHTML('beforeend', rowH('')); }
+          else { const empty = ins.find(n => !n.value.trim()); if(empty) empty.value = v; else w.querySelector('.mxl').insertAdjacentHTML('beforeend', rowH(v)); }
+          sync();
+        }
+      });
+    });
+  }
+  const _rf = window.renderForm || renderForm;
+  window.renderForm = renderForm = function(){ prefill(); _rf(); enhance(); };
+  const _ri = renderItems;
+  renderItems = function(){ _ri(); enhance(); };
+  const _sc = saveCur;
+  saveCur = async function(q){
+    const ok = await _sc(q);
+    if(ok !== false && cur) for(const x of cur.extra){
+      const k = nz(x.label);
+      if(MULTI.test(k)) split(x.value).forEach(v => addH('xm_' + k, v));
+      else if(String(x.value || '').trim().length > 80) addH('x_' + x.label, x.value, 400);   // 긴 내용(출장내용 등)도 최근 입력으로
+    }
+    return ok;
+  };
 })();
 </script>
 </body>
