@@ -1978,7 +1978,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261104070459';
+const APP_VER = '20261104070844';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -7747,16 +7747,22 @@ $('iHwp').onclick = async () => {
     if(!places) places = new kakao.maps.services.Places();
     const box = $('lpRes'); box.innerHTML = '<small style="color:var(--mut)">검색 중…</small>';
     const m = gm(), c = m ? m.getCenter() : new kakao.maps.LatLng(35.2025, 127.4627);
-    const kw = new Promise(res => places.keywordSearch(q, (d, st) => res(st === kakao.maps.services.Status.OK ? d : []), {location:c, sort:kakao.maps.services.SortBy.ACCURACY, size:15}));
+    // 장소: 3쪽(최대 45건)까지 모아서, 이름에 검색어가 들어간 것 → 가까운 순으로
+    const kwPage = pg => new Promise(res => places.keywordSearch(q, (d, st) => res(st === kakao.maps.services.Status.OK ? d : []), {location:c, sort:kakao.maps.services.SortBy.ACCURACY, size:15, page:pg}));
+    const kw = (async () => { const all = []; for(let pg = 1; pg <= 3; pg++){ const d = await kwPage(pg); all.push(...d); if(d.length < 15) break; } return all; })();
     const ad = new Promise(res => typeof geocoder !== 'undefined' && geocoder ? geocoder.addressSearch(q, (d, st) => res(st === kakao.maps.services.Status.OK ? d : [])) : res([]));
     const qs = /구례/.test(q) ? null : new Promise(res => typeof geocoder !== 'undefined' && geocoder ? geocoder.addressSearch('구례군 ' + q, (d, st) => res(st === kakao.maps.services.Status.OK ? d : [])) : res([]));
     const [k, a, a2] = await Promise.all([kw, ad, qs || Promise.resolve([])]);
     const list = [];
     for(const x of [...a2, ...a]) list.push({name:'', addr:(x.road_address && x.road_address.address_name) || x.address_name, sub:x.address_name, lat:+x.y, lng:+x.x, kind:'주소'});
-    for(const x of k) list.push({name:x.place_name, addr:x.road_address_name || x.address_name, sub:(x.category_name || '').split('>').pop().trim(), lat:+x.y, lng:+x.x, tel:x.phone, kind:'장소'});
-    const seen = new Set(), out = list.filter(x => { const key = x.lat.toFixed(5) + x.lng.toFixed(5) + x.name; if(seen.has(key)) return false; seen.add(key); return true; }).slice(0, 20);
+    const qn = q.replace(/\s+/g, '').toLowerCase(), dist = x => Math.hypot((x.lat - c.getLat()) * 111, (x.lng - c.getLng()) * 88);
+    const kk = k.map(x => ({name:x.place_name, addr:x.road_address_name || x.address_name, sub:(x.category_name || '').split('>').pop().trim(), lat:+x.y, lng:+x.x, tel:x.phone, kind:'장소'}))
+      .sort((p, r) => { const mp = p.name.replace(/\s+/g, '').toLowerCase().includes(qn) ? 0 : 1, mr = r.name.replace(/\s+/g, '').toLowerCase().includes(qn) ? 0 : 1; return mp - mr || dist(p) - dist(r); });
+    list.push(...kk);
+    const seen = new Set(), out = list.filter(x => { const key = x.lat.toFixed(5) + x.lng.toFixed(5) + x.name; if(seen.has(key)) return false; seen.add(key); return true; }).slice(0, 45);
     if(!out.length){ box.innerHTML = '<small style="color:var(--mut)">찾지 못했습니다. 주소(읍면·리·번지)나 장소 이름으로 다시 검색해 보세요.</small>'; return; }
-    box.innerHTML = out.map((x, i) => `<div class="ar" data-i="${i}"><div><b>${esc(x.name || x.addr)}</b><small>${esc(x.name ? x.addr : (x.sub !== x.addr ? x.sub : x.kind))}${x.name && x.sub ? ' · ' + esc(x.sub) : ''}</small></div><button type="button" data-go="${i}">점검</button></div>`).join('');
+    const tip = `<small style="display:block;color:var(--mut);margin:4px 0 2px">${out.length}건 · 카카오맵에 없는 곳은 주소로 검색하거나 [지도에서 위치 지정 점검]으로 찍어 주세요</small>`;
+    box.innerHTML = tip + out.map((x, i) => `<div class="ar" data-i="${i}"><div><b>${esc(x.name || x.addr)}</b><small>${esc(x.name ? x.addr : (x.sub !== x.addr ? x.sub : x.kind))}${x.name && x.sub ? ' · ' + esc(x.sub) : ''}</small></div><button type="button" data-go="${i}">점검</button></div>`).join('');
     box.onclick = e => {
       const row = e.target.closest('.ar'); if(!row) return;
       const x = out[+row.dataset.i];
