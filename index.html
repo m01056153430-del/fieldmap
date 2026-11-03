@@ -831,8 +831,8 @@
 
     <div class="card">
       <h3>점검 정보</h3>
-      <label class="fl" for="iDate">점검 일시</label>
-      <input id="iDate" class="inp" type="datetime-local">
+      <label class="fl" for="iDate">점검 일자</label>
+      <input id="iDate" class="inp" type="date">
       <label class="chk" style="margin:6px 0 2px;font-size:14px"><input type="checkbox" id="iRange"> <span>기간으로 입력 (여러 날 출장·점검)</span></label>
       <div id="iRangeRow" hidden><label class="fl" for="iDateEnd">끝나는 날</label><input id="iDateEnd" class="inp" type="date"><small id="iRangeTxt" style="display:block;color:var(--mut);margin-top:4px"></small></div>
       <label class="fl" for="iWho">점검자</label>
@@ -1931,6 +1931,8 @@ const fmtDT = v => { if(!v) return ''; const [d, t] = v.split('T'); const [y, m,
 /* 점검 일시 글자: 기간(시작~끝)이면 '2026. 11. 3.(화) ~ 11. 5.(목) (3일간)' */
 const ymdDay = v => { const d = new Date(String(v).slice(0, 10) + 'T00:00'); if(isNaN(d)) return null; return d; };
 const dayTxt = (d, withYear) => `${withYear ? d.getFullYear() + '. ' : ''}${d.getMonth()+1}. ${d.getDate()}.(${'일월화수목금토'[d.getDay()]})`;
+/* '출장일자 (기간)' 이름칸: 기간을 고르면 '출장기간', 아니면 '출장일자' */
+const tripDateLabel = (t, r) => String(t).replace(/출장\s*일자\s*\n?\s*[(（]\s*기간\s*[)）]/g, r && r.dateEnd ? '출장기간' : '출장일자');
 function recDateText(r, dayOnly){
   if(!r || !r.date) return '';
   const a = ymdDay(r.date), b = r.dateEnd ? ymdDay(r.dateEnd) : null;
@@ -1938,7 +1940,7 @@ function recDateText(r, dayOnly){
     const n = Math.round((b - a) / 86400000) + 1;
     return `${dayTxt(a, true)} ~ ${dayTxt(b, b.getFullYear() !== a.getFullYear())} (${n}일간)`;
   }
-  if(dayOnly && a) return dayTxt(a, true);
+  if(a) return dayTxt(a, true);   // 시간은 넣지 않음 (점검 일자)
   return fmtDT(r.date);
 }
 function fmtTs(ts){ const d = new Date(ts); return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; }
@@ -1953,7 +1955,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261103191632';
+const APP_VER = '20261103192448';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -2134,7 +2136,7 @@ function renderPrev(){
   const mine = allRecs.filter(r => r.key === cur.key);
   $('iPrevWrap').style.display = mine.length ? 'block' : 'none';
   $('iPrev').innerHTML = `<button type="button" class="bline ${cur.savedAt ? '' : 'on'}" data-new="1">+ 새 점검</button>` +
-    mine.map(r => `<button type="button" class="bline ${r.id===cur.id?'on':''}" data-rec="${r.id}">${esc(fmtDT(r.date))}${r.overall?' · '+esc(r.overall):''}</button>`).join('');
+    mine.map(r => `<button type="button" class="bline ${r.id===cur.id?'on':''}" data-rec="${r.id}">${esc(recDateText(r))}${r.overall?' · '+esc(r.overall):''}</button>`).join('');
   $('iDel').style.display = cur.savedAt ? 'inline-block' : 'none';
   $('iNew').style.display = cur.savedAt ? 'inline-block' : 'none';
 }
@@ -2147,7 +2149,7 @@ function renderSecs(){
 }
 function renderForm(){
   fillTplSel(); renderTarget(); renderItems(); renderThumbs(); renderPrev(); renderSecs();
-  $('iDate').value = cur.date || '';
+  $('iDate').value = (cur.date || '').slice(0, 10);
   $('iWho').value = cur.inspector || '';
   $('iMemo').value = cur.memo || '';
   $('iDone').checked = !!cur.done;
@@ -2300,7 +2302,7 @@ function tripBlocks(rec, edit){
   const title = !rec.title || OLD_TRIP_TITLE.test(rec.title) ? '출장결과 보고서' : rec.title;
   const blocks = [`<h1${E('title')} style="margin-bottom:22px">${esc(title)}</h1><table>
       <colgroup><col style="width:17%"><col></colgroup>
-      <tr><th>출장일자</th><td${E('date')}>${esc(rec.dateText || recDateText(rec, true))}</td></tr>
+      <tr><th>${rec.dateEnd ? '출장기간' : '출장일자'}</th><td${E('date')}>${esc(rec.dateText || recDateText(rec, true))}</td></tr>
       <tr><th>출장장소</th>${cell(/^(출장지|출장장소|방문지|방문장소|출장처)$/, rec.target && !rec.target.adhoc ? rec.target.place : (rec.target || {}).addr)}</tr>
       <tr><th>출 장 자</th>${cell(/^(출장자|출장자성명|동행자|출장인원)$/, rec.inspector)}</tr>
       <tr><th>출장목적</th>${cell(/목적/, '')}</tr>
@@ -2582,7 +2584,7 @@ async function openList(){
       <input type="checkbox" data-id="${r.id}">
       <div class="m" data-open="${r.id}">
         <div>${esc(r.target.name)} ${r.done ? '<span class="badge st-done">✔ 완료</span>' : recEmpty(r) ? '<span class="badge st-wait">대기</span>' : '<span class="badge st-ing">작성 중</span>'}${latestOf.get(r.key) === r.id ? '' : '<span class="badge st-old">이전 기록</span>'} <span class="badge ${BAD.test(r.overall)?'warn':''}" ${r.overall?'':'style="background:#eef0f3;color:#555"'}>${esc(r.overall || '판정 없음')}</span></div>
-        <div>${esc(r.title)} · ${esc(fmtDT(r.date))} · ${esc(r.target.place)}</div>
+        <div>${esc(r.title)} · ${esc(recDateText(r))} · ${esc(r.target.place)}</div>
       </div></div>`).join('')
     : listTown ? `<div style="color:var(--mut);text-align:center;padding:20px">${esc(listTown)}에는 아직 점검 기록이 없습니다.</div>`
     : '<div style="color:var(--mut);text-align:center;padding:20px">아직 저장된 점검 기록이 없습니다.<br>목록의 <b>점검</b> 버튼이나 지도 마커에서 시작하세요.</div>';
@@ -2929,6 +2931,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   const INSP_F = [
     ['서식제목', ['문서제목','제목'], r => r.title],
     ['점검일시', [], r => r.dateText || recDateText(r)],
+    ['출장일자', ['출장기간', '출장일자 (기간)', '출장일자(기간)', '출장일', '출장일시', '방문일자'], r => r.dateText || recDateText(r, true)],
     ['점검일자', ['점검일'], r => { const d = (r.date || '').slice(0, 10).split('-'); return d.length === 3 ? `${d[0]}. ${+d[1]}. ${+d[2]}.` : ''; }],
     ['점검자', [], r => r.inspector],
     ['점검위치', ['GPS'], r => r.gpsText || gpsStr(r.gps)],
@@ -2959,7 +2962,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     return null;
   }
   const fill = (text, rec, design) => String(text ?? '').split(/(\{[^{}]+\})/g).map(part => {
-    const m = /^\{([^{}]+)\}$/.exec(part); if(!m) return esc(part);
+    const m = /^\{([^{}]+)\}$/.exec(part); if(!m) return esc(tripDateLabel(part, rec));
     const v = fieldValue(rec, m[1]);
     if(design && (v === null || v === '')) return `<span style="color:#9ca3af">${/^사진\d+설명$/.test(nk(m[1])) ? '사진설명' : /^\s*비고\s*:/.test(m[1]) ? '(비고)' : /^\s*체크\s*:/.test(m[1]) ? '(결과 선택)' : esc(part)}</span>`;
     return esc(v === null ? part : v);
@@ -5105,7 +5108,7 @@ function fillVal(tc, v){
 
 /* ---------- 양식 분석·채우기 (dry=true 이면 분석만) ---------- */
 function walkHwpx(docs, rec, dry){
-  const res = {mode:'auto', ph:[], items:[], extra:[], found:[], filled:0, slots:{sign:[], photo:[], photoCell:null, signCell:null, satCell:null, photoCells:[]}};
+  const res = {mode:'auto', ph:[], items:[], extra:[], found:[], filled:0, slots:{sign:[], photo:[], photoCell:null, signCell:null, satCell:null, photoCells:[], photoCaps:[]}};
   const ext = new Map(rec ? rec.extra.map(x => [nz(x.label), x.value]) : []);
   const resolve = raw => {
     const key = nz(raw);
@@ -5173,7 +5176,7 @@ function walkHwpx(docs, rec, dry){
       else {
         if(dry) res.found.push('사진');
         else {
-          res.slots.photoCells.push(up);
+          res.slots.photoCells.push(up); res.slots.photoCaps.push(c);
           const ci = res.slots.photoCells.length - 1, cp = rec && rec.capt && String(rec.capt[ci] || '').trim();
           if(cp){ const ps = cellParas(c); if(ps[0]) setParaText(ps[0], cp); }
         }
@@ -5261,6 +5264,13 @@ function walkHwpx(docs, rec, dry){
     }
   }
   if(dry) res.title = findTitle(docs);
+  else if(rec){
+    for(const doc of docs) for(const tc of kidsNS(doc, 'tc')){
+      const raw = cText(tc); if(!/출장\s*일자/.test(raw) || !/기간/.test(raw) || raw.length > 20) continue;
+      const ps = cellParas(tc); if(!ps.length) continue;
+      setParaText(ps[0], rec.dateEnd ? '출장기간' : '출장일자'); ps.slice(1).forEach(p => p.parentNode.removeChild(p));
+    }
+  }
   return res;
 }
 
@@ -5292,6 +5302,60 @@ function picXml(binId, dim, maxW, maxH){
     + `<hp:sz width="${w}" widthRelTo="ABSOLUTE" height="${h}" heightRelTo="ABSOLUTE" protect="0"/>`
     + `<hp:pos treatAsChar="1" affectLSpacing="0" flowWithText="1" allowOverlap="0" holdAnchorAndSO="0" vertRelTo="PARA" horzRelTo="COLUMN" vertAlign="TOP" horzAlign="LEFT" vertOffset="0" horzOffset="0"/>`
     + `<hp:outMargin left="0" right="0" top="0" bottom="0"/><hp:shapeComment>현장지도 앱에서 넣은 그림</hp:shapeComment></hp:pic>`;
+}
+
+/* 사진 칸이 모자라면 같은 표 모양(사진대지 머리줄 + 사진·설명 줄)을 복제해 다음 쪽으로 붙임
+   돌려주는 값: [{cell, cap}] (사진 넣을 칸, 설명 칸) — 표 구조가 다르면 null */
+function clonePhotoPages(slots, n){
+  const cells = (slots && slots.photoCells) || [], caps = slots.photoCaps || [];
+  if(!cells.length || !n) return null;
+  const up = (el, name) => { while(el && el.localName !== name) el = el.parentNode; return el; };
+  const tbl = up(cells[0], 'tbl'), pr = up(cells[0], 'tr'); if(!tbl || !pr) return null;
+  const pPar = up(tbl, 'p'); if(!pPar || pPar.parentNode !== pPar.ownerDocument.documentElement) return null;
+  const trs = childs(tbl, 'tr'), pi = trs.indexOf(pr);
+  const cr = caps[0] ? up(caps[0], 'tr') : null;
+  const hr = pi > 0 && childs(trs[pi - 1], 'tc').length === 1 ? trs[pi - 1] : null;
+  const prCells = childs(pr, 'tc'), slotIdx = prCells.map((tc, j) => cells.includes(tc) ? j : -1).filter(j => j >= 0);
+  if(!slotIdx.length) return null;
+  const crCells = cr ? childs(cr, 'tc') : [];
+  const rowH = tr => { const z = childs(childs(tr, 'tc')[0] || tr, 'cellSz')[0]; return z ? +z.getAttribute('height') || 0 : 0; };
+  // 한 쪽에 들어갈 사진 줄 수 (쪽 높이 − 여백 − 머리줄)
+  const doc = tbl.ownerDocument, sec = doc.documentElement;
+  const pp = kidsNS(sec, 'pagePr')[0], mg = pp && childs(pp, 'margin')[0];
+  const usable = pp ? (+pp.getAttribute('height') - (mg ? (+mg.getAttribute('top') + +mg.getAttribute('bottom') + +mg.getAttribute('header') + +mg.getAttribute('footer')) : 15000)) : 70000;
+  const pairH = rowH(pr) + (cr ? rowH(cr) : 0) || 20000;
+  const perPage = Math.max(1, Math.floor((usable - (hr ? rowH(hr) : 0) - 1500) / pairH));
+  const rid = () => String(Math.floor(Math.random() * 2e9) + 1e8);
+  const clear = tc => {
+    const ps = cellParas(tc);
+    ps.forEach((p, q) => { if(q){ p.parentNode.removeChild(p); return; } childs(p, 'run').forEach(r => { if(kidsNS(r, 'pic').length) r.parentNode.removeChild(r); }); setParaText(p, ''); });
+  };
+  const out = []; let left = n;
+  while(left > 0){
+    const nt = tbl.cloneNode(false);
+    for(const c of tbl.childNodes) if(c.localName !== 'tr') nt.appendChild(c.cloneNode(true));
+    let r = 0, H = 0;
+    const addRow = src => { const t = src.cloneNode(true); childs(t, 'tc').forEach(tc => { const a = childs(tc, 'cellAddr')[0]; if(a) a.setAttribute('rowAddr', String(r)); }); nt.appendChild(t); r++; H += rowH(src); return t; };
+    if(hr){ const t = addRow(hr), p0 = cellParas(childs(t, 'tc')[0])[0]; if(p0){ const tx = paraText(p0).trim(); setParaText(p0, /계속/.test(tx) ? tx : tx + ' (계속)'); } }
+    const pairs = Math.min(perPage, Math.ceil(left / slotIdx.length));
+    for(let k = 0; k < pairs; k++){
+      const tp = addRow(pr), tcp = cr ? addRow(cr) : null, pcs = childs(tp, 'tc'), ccs = tcp ? childs(tcp, 'tc') : [];
+      slotIdx.forEach(j => {
+        clear(pcs[j]);
+        const ci = cr ? crCells.findIndex(c => c === caps[cells.indexOf(prCells[j])]) : -1, cap = ci >= 0 ? ccs[ci] : null;
+        if(cap){ const p0 = cellParas(cap)[0]; if(p0) setParaText(p0, ''); }
+        if(left > 0){ out.push({cell:pcs[j], cap}); left--; }
+      });
+    }
+    nt.setAttribute('rowCnt', String(r)); nt.setAttribute('id', rid());
+    const sz = childs(nt, 'sz')[0]; if(sz) sz.setAttribute('height', String(H));
+    const np = pPar.cloneNode(false); np.setAttribute('pageBreak', '1'); np.setAttribute('id', rid());
+    const run0 = childs(pPar, 'run').find(x => childs(x, 'tbl').length) || childs(pPar, 'run')[0];
+    const run = doc.createElementNS(HP_NS, 'hp:run'); run.setAttribute('charPrIDRef', run0 ? run0.getAttribute('charPrIDRef') || '0' : '0');
+    run.appendChild(nt); run.appendChild(doc.createElementNS(HP_NS, 'hp:t')); np.appendChild(run);
+    sec.appendChild(np);
+  }
+  return out;
 }
 async function placeImages(zip, docs, rec, slots){
   const hpfName = Object.keys(zip.files).find(n => /content\.hpf$/i.test(n));
@@ -5340,8 +5404,20 @@ async function placeImages(zip, docs, rec, slots){
     const cells = slots.photoCells;
     for(let k = 0; k < cells.length && photos.length; k++){
       const ps = cellParas(cells[k]); if(!ps[0]) continue;
-      const take = k === cells.length - 1 && photos.length === 2 ? photos.splice(0, 2) : photos.splice(0, 1);   // 칸마다 1장 (남으면 뒤쪽 사진 쪽으로)
+      const take = photos.splice(0, 1);   // 칸마다 1장 (남으면 같은 표 모양으로 다음 쪽)
       for(const ph of take) await putPic(ps[0], ph, take.length > 1 ? cellW(cells[k]) / 2 - MM : cellW(cells[k]), cellH(cells[k]));
+    }
+    if(photos.length){
+      const base = rec.photos.filter(Boolean).length - photos.length;
+      const ext = clonePhotoPages(slots, photos.length);
+      if(ext){
+        for(let k = 0; k < ext.length; k++){
+          const {cell, cap} = ext[k], ps = cellParas(cell);
+          if(ps[0]) await putPic(ps[0], photos[k], cellW(cell), cellH(cell));
+          if(cap){ const p0 = cellParas(cap)[0]; if(p0) setParaText(p0, rec.capt[base + k] || ('사진 ' + (base + k + 1))); }
+        }
+        photos = [];
+      }
     }
     slots = {...slots, photo:[], photoCell:null};
   }
@@ -5733,7 +5809,11 @@ async function renderHwpxPreview(){
     _hwpPics = new Map(); let morePics = 0;
     { const ph = (cur.photos || []).filter(Boolean), sl = wr.slots || {};
       if(cur.sec.photos !== false && sl.photoCells && sl.photoCells.length){
-        sl.photoCells.forEach((tc, k) => { if(!ph.length) return; _hwpPics.set(tc, k === sl.photoCells.length - 1 && ph.length === 2 ? ph.splice(0, 2) : ph.splice(0, 1)); });
+        sl.photoCells.forEach(tc => { if(ph.length) _hwpPics.set(tc, ph.splice(0, 1)); });
+        if(ph.length){
+          const base = (cur.photos || []).filter(Boolean).length - ph.length, ext = clonePhotoPages(sl, ph.length);
+          if(ext){ ext.forEach(({cell, cap}, k) => { _hwpPics.set(cell, [ph[k]]); if(cap){ const p0 = cellParas(cap)[0]; if(p0) setParaText(p0, cur.capt[base + k] || ('사진 ' + (base + k + 1))); } }); ph.length = 0; }
+        }
       } else if(cur.sec.photos !== false && sl.photoCell && ph.length){ _hwpPics.set(sl.photoCell, ph.splice(0, 2)); }
       morePics = ph;
       if(sl.signCell && cur.sign) _hwpPics.set(sl.signCell, [cur.sign]);
@@ -7674,7 +7754,11 @@ $('iHwp').onclick = async () => {
     for(const x of cur.extra){
       const k = nz(x.label);
       if(x.value) continue;
-      if(/^(출장자|출장자성명)$/.test(k) && (cur.inspector || LS.get('inspector', ''))) x.value = cur.inspector || LS.get('inspector', '');
+      if(/^(출장자|출장자성명)$/.test(k)){   // 점검자 대신 가장 최근에 쓴 출장자
+        let last = LS.get('lastX_' + k, '');
+        if(!last && typeof allRecs !== 'undefined'){ const r = [...allRecs].sort((p, q) => (q.savedAt || 0) - (p.savedAt || 0)).find(r => r.id !== cur.id && (r.extra || []).some(e => nz(e.label) === k && String(e.value || '').trim())); if(r) last = r.extra.find(e => nz(e.label) === k).value.trim(); }
+        if(last) x.value = last;
+      }
       else if(MULTI.test(k) && isPlace(x.label) && cur.target && cur.target.place && !cur.target.adhoc) x.value = cur.target.place;
     }
   }
@@ -7724,7 +7808,7 @@ $('iHwp').onclick = async () => {
     const ok = await _sc(q);
     if(ok !== false && cur) for(const x of cur.extra){
       const k = nz(x.label);
-      if(MULTI.test(k)) split(x.value).forEach(v => addH('xm_' + k, v));
+      if(MULTI.test(k)){ split(x.value).forEach(v => addH('xm_' + k, v)); if(/^(출장자|출장자성명)$/.test(k) && String(x.value || '').trim()) LS.set('lastX_' + k, String(x.value).trim()); }
       else if(String(x.value || '').trim().length > 80) addH('x_' + x.label, x.value, 400);   // 긴 내용(출장내용 등)도 최근 입력으로
     }
     return ok;
@@ -7818,8 +7902,8 @@ $('iHwp').onclick = async () => {
     $('iRangeRow').hidden = !on;
     const d = $('iDate'), v = d.value;
     if(on && d.type !== 'date'){ d.type = 'date'; d.value = (v || '').slice(0, 10); }
-    else if(!on && d.type !== 'datetime-local'){ d.type = 'datetime-local'; d.value = v ? (v.length === 10 ? v + 'T' + (cur && cur.date && cur.date.slice(11, 16) || '09:00') : v) : ''; }
-    $('iDate').previousElementSibling && ($('iDate').previousElementSibling.textContent = on ? '시작하는 날' : '점검 일시');
+    else if(!on && d.type !== 'date'){ d.type = 'date'; d.value = (v || '').slice(0, 10); }
+    $('iDate').previousElementSibling && ($('iDate').previousElementSibling.textContent = on ? '시작하는 날' : '점검 일자');
     txt();
   };
   const txt = () => { if(!cur) return; const r = {date:$('iDate').value, dateEnd:$('iRange').checked ? $('iDateEnd').value : ''}; $('iRangeTxt').textContent = r.dateEnd ? '→ ' + recDateText(r) : ''; };
@@ -7832,15 +7916,15 @@ $('iHwp').onclick = async () => {
   const _cf = collectForm;
   collectForm = function(){
     _cf();
-    if($('iRange').checked){ cur.dateEnd = $('iDateEnd').value || ''; if(cur.date && cur.date.length === 10) cur.date += 'T00:00'; }
-    else cur.dateEnd = '';
+    if(cur.date && cur.date.length === 10) cur.date += 'T00:00';
+    cur.dateEnd = $('iRange').checked ? ($('iDateEnd').value || '') : '';
   };
   const _rf = window.renderForm || renderForm;
   window.renderForm = renderForm = function(){
     _rf();
     if(!cur) return;
     $('iRange').checked = !!cur.dateEnd; $('iDateEnd').value = cur.dateEnd || '';
-    $('iDate').type = 'datetime-local'; $('iDate').value = cur.date || '';
+    $('iDate').type = 'date'; $('iDate').value = (cur.date || '').slice(0, 10);
     show();
   };
 })();
@@ -7892,6 +7976,76 @@ $('iHwp').onclick = async () => {
   // 점검 정보 쪽에서 날짜를 바꾸면 이 칸도 맞춤
   ['iDate', 'iDateEnd'].forEach(id => $(id).addEventListener('change', () => put()));
   $('iRange').addEventListener('change', () => setTimeout(put, 0));
+})();
+</script>
+<script>
+/* 출장내용: 한 줄씩 추가 · 줄마다 '∙ '로 시작 (한글·PDF에 줄바꿈으로 들어감) */
+(function lineMod(){
+  const $ = id => document.getElementById(id);
+  const LINES = /^(출장내용|내용|출장결과|추진내용|조치내용)$/;
+  const BUL = '∙ ';
+  const css = document.createElement('style');
+  css.textContent = `.lnw .lnr{display:flex;gap:6px;align-items:center;margin-bottom:6px}.lnw .lnr b{flex:none;width:14px;text-align:center;color:#334155}
+  .lnw .lnr input{flex:1;min-width:0}.lnw .lnd{flex:none;width:38px;height:38px;border:1px solid var(--ln);background:#fff;border-radius:8px;color:#6b7280;font-size:15px}
+  .lnw .lnadd{border:1px dashed var(--b);background:#fff;color:var(--b);border-radius:8px;padding:7px 10px;font-size:13px;width:100%}`;
+  document.head.appendChild(css);
+  const H = k => LS.get('hist_' + k, []);
+  const addH = (k, v) => { v = String(v || '').trim(); if(!v || v.length > 120) return; const a = H(k).filter(x => x !== v); a.unshift(v); LS.set('hist_' + k, a.slice(0, 30)); };
+  const strip = l => String(l).replace(/^\s*[∙·•●○\-–*]\s*/, '').trim();
+  const parse = v => String(v || '').split('\n').map(strip).filter(Boolean);
+  function enhance(){
+    if(!cur || !isTripRec(cur)) return;
+    document.querySelectorAll('#iExtra [data-x]').forEach(el => {
+      const i = +el.dataset.x, x = cur.extra[i]; if(!x || !LINES.test(nz(x.label))) return;
+      el.style.display = 'none';
+      const rc = el.nextElementSibling; if(rc && rc.classList.contains('rchips')) rc.remove();
+      const old = el.parentNode.querySelector(`.lnw[data-ln="${i}"]`); if(old) old.remove();
+      const hk = 'xl_' + nz(x.label), lid = 'dlLn_' + i;
+      let d = document.getElementById(lid); if(!d){ d = document.createElement('datalist'); d.id = lid; document.body.appendChild(d); }
+      d.innerHTML = H(hk).map(v => `<option value="${esc(v)}">`).join('');
+      const w = document.createElement('div'); w.className = 'lnw'; w.dataset.ln = i;
+      const row = v => `<div class="lnr"><b>∙</b><input class="inp lni" list="${lid}" value="${esc(v)}" placeholder="예) 세척·가공·포장 작업장 위생상태 확인" enterkeyhint="next"><button type="button" class="lnd" title="이 줄 빼기">✕</button></div>`;
+      const vals = parse(x.value), recent = H(hk).slice(0, 8);
+      w.innerHTML = `<div class="lnl">${(vals.length ? vals : ['']).map(row).join('')}</div>
+        <button type="button" class="lnadd">＋ 내용 한 줄 추가</button>
+        ${recent.length ? `<div class="rchips" style="margin-top:6px"><span>최근</span>${recent.map(v => `<button type="button" class="chip" data-lv="${esc(v)}" title="${esc(v)}">${esc(v.length > 20 ? v.slice(0, 20) + '…' : v)}<span class="hx" data-hk="${esc(hk)}" data-hv="${esc(v)}" title="최근 목록에서 지우기">✕</span></button>`).join('')}</div>` : ''}`;
+      el.after(w);
+      const sync = init => {
+        const a = [...w.querySelectorAll('.lni')].map(n => n.value.trim()).filter(Boolean);
+        el.value = a.map(l => BUL + l).join('\n'); x.value = el.value; if(init !== true) dirty = true;
+      };
+      sync(true);
+      const addRow = (v, after) => {
+        const r = document.createElement('div'); r.innerHTML = row(v || ''); const nr = r.firstChild;
+        if(after) after.after(nr); else w.querySelector('.lnl').appendChild(nr);
+        nr.querySelector('input').focus(); return nr;
+      };
+      w.addEventListener('input', () => sync());
+      w.addEventListener('keydown', e => {
+        const inp = e.target.closest('.lni'); if(!inp || e.key !== 'Enter' || e.isComposing) return;
+        e.preventDefault(); addRow('', inp.closest('.lnr'));
+      });
+      w.addEventListener('click', e => {
+        if(e.target.closest('.lnd')){ const r = e.target.closest('.lnr'); if(w.querySelectorAll('.lnr').length > 1) r.remove(); else r.querySelector('input').value = ''; sync(); return; }
+        if(e.target.closest('.lnadd')){ addRow(''); return; }
+        const c = e.target.closest('[data-lv]'); if(c){
+          const ins = [...w.querySelectorAll('.lni')], empty = ins.find(n => !n.value.trim());
+          if(empty) empty.value = c.dataset.lv; else addRow(c.dataset.lv);
+          sync();
+        }
+      });
+    });
+  }
+  const _rf = window.renderForm || renderForm;
+  window.renderForm = renderForm = function(){ _rf(); enhance(); };
+  const _ri = renderItems;
+  renderItems = function(){ _ri(); enhance(); };
+  const _sc = saveCur;
+  saveCur = async function(q){
+    const ok = await _sc(q);
+    if(ok !== false && cur && isTripRec(cur)) for(const x of cur.extra){ const k = nz(x.label); if(LINES.test(k)) parse(x.value).forEach(v => addH('xl_' + k, v)); }
+    return ok;
+  };
 })();
 </script>
 </body>
