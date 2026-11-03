@@ -1974,7 +1974,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261103201202';
+const APP_VER = '20261103201754';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -4728,7 +4728,7 @@ const who = () => ({
   name: LS.get('syncUser', '') || LS.get('inspector', ''),
   device: LS.get('syncDev', '') || autoDevice(),
   devId: devId(), ua: navigator.userAgent,
-  loc: LS.get('locConsent', '') === 'Y' ? LS.get('whoLoc', '') : ''   // 동의한 기기만: 접속 위치(주소)
+  loc: LS.get('locConsent', '') !== 'N' ? LS.get('whoLoc', '') : ''   // 접속 위치(주소) — 기본으로 기록 (관리자가 기기별로 끌 수 있음)
 });
 function hashStr(s){ let h = 5381; for(let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + '_' + s.length; }
 const blobToDataUrl = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
@@ -8217,12 +8217,12 @@ $('iHwp').onclick = async () => {
       if(!vis){ box.innerHTML = '<div style="color:var(--mut);padding:10px 0">불러오는 중…</div>'; return; }
       const vs = vis.filter(v => !q || (v.name + ' ' + v.device + ' ' + (v.loc || '')).toLowerCase().includes(q));
       let h = `<div style="margin:0 0 6px;font-weight:700">기기별 접속 ${vs.length}대 <small style="font-weight:400;color:var(--mut)">· 마지막 접속 순</small></div><table><tr><th>사용자</th><th>기기 · 위치</th><th>마지막 접속</th><th>처음 접속</th><th>횟수</th></tr>`
-        + vs.map(v => `<tr><td><b>${esc(v.name || '(이름 없음)')}</b></td><td><small>${esc(v.device || '')}</small>${v.loc ? `<br><small style="color:#0f766e">📍 ${esc(v.loc)}</small>` : ''}</td><td>${esc(T(v.last))}<br><small>${ago(v.last)}</small></td><td><small>${esc(T(v.first))}</small></td><td>${v.count || 0}회</td></tr>`).join('')
+        + vs.map(v => `<tr><td><b>${esc(v.name || '(이름 없음)')}</b></td><td><small>${esc(v.device || '')}${v.loc ? ` · <span style="color:#0f766e">📍 ${esc(v.loc)}</span>` : ''}</small></td><td>${esc(T(v.last))}<br><small>${ago(v.last)}</small></td><td><small>${esc(T(v.first))}</small></td><td>${v.count || 0}회</td></tr>`).join('')
         + '</table>' + (vs.length ? '' : '<div style="color:var(--mut);padding:8px 0">접속 기록이 없습니다.</div>');
       if(logs){
         const ls = logs.filter(l => !q || [l.name, l.device, l.act, l.target, l.loc].join(' ').toLowerCase().includes(q));
         h += `<div style="margin:14px 0 6px;font-weight:700">지난 기록 전체 ${ls.length}건 <small style="font-weight:400;color:var(--mut)">· 접속·동기화, 점검 저장·삭제, 명단·서식 올리기 등 (최근 순)</small></div><table><tr><th>시각</th><th>사용자 · 기기 · 위치</th><th>작업</th><th>대상</th></tr>`
-          + ls.map(l => `<tr><td>${esc(T(l.t))}</td><td><b>${esc(l.name || '')}</b><br><small>${esc(l.device || '')}</small>${l.loc ? `<br><small style="color:#0f766e">📍 ${esc(l.loc)}</small>` : ''}</td><td>${esc(l.act || '')}</td><td><small>${esc(l.target || '')}${l.result ? ' · ' + esc(String(l.result).slice(0, 40)) : ''}</small></td></tr>`).join('') + '</table>';
+          + ls.map(l => `<tr><td>${esc(T(l.t))}</td><td><b>${esc(l.name || '')}</b><br><small>${esc(l.device || '')}${l.loc ? ` · <span style="color:#0f766e">📍 ${esc(l.loc)}</span>` : ''}</small></td><td>${esc(l.act || '')}</td><td><small>${esc(l.target || '')}${l.result ? ' · ' + esc(String(l.result).slice(0, 40)) : ''}</small></td></tr>`).join('') + '</table>';
       } else h += `<div style="margin:14px 0 0;padding:10px;border:1px dashed var(--ln);border-radius:8px;color:var(--mut);line-height:1.6">${lerr === 'old' ? '지난 접속·사용 기록 전체를 보려면 동기화 서버(Code.gs)를 새 버전으로 바꿔야 합니다. (설정 담당자에게 요청)' : '지난 기록을 불러오지 못했습니다' + (lerr ? ': ' + esc(lerr) : '')}</div>`;
       box.innerHTML = h;
       return;
@@ -8257,12 +8257,11 @@ $('iHwp').onclick = async () => {
 /* ===================== 접속 위치(주소) 기록 — 동의한 기기만 =====================
    동기화 서버로 보내는 사용자 정보(who.loc)에 현재 위치의 주소를 함께 넣음 (10분마다 갱신) */
 (function locMod(){
+  // 동의 창 없이 기본으로 기록 — 처음 한 번만 안내 (브라우저 위치 권한은 기기에서 따로 허용해야 함)
   const ask = () => {
-    if(LS.get('locConsent', '')) return;
-    if(typeof SY === 'undefined' || !SY.on()) return;   // 동기화를 쓰는 기기만 물어봄
-    const ok = confirm('[위치 기록 동의]\n앱에 접속하거나 점검을 저장할 때, 현재 위치(주소)를 접속 기록에 함께 남길까요?\n\n· 목적: 현장 출장·점검 관리 (관리자만 설정 › 접속·점검 기록에서 확인)\n· 거부해도 앱은 그대로 쓸 수 있습니다\n· 설정 › 접속·점검 기록에서 언제든 바꿀 수 있습니다');
-    LS.set('locConsent', ok ? 'Y' : 'N');
-    if(ok) update();
+    if(LS.get('locNotice', false)) return;
+    LS.set('locNotice', true);
+    setTimeout(() => toast('안내: 이 앱은 업무 관리를 위해 접속 위치(주소)를 접속 기록에 남깁니다'), 1500);
   };
   const addrOf = (lat, lng) => new Promise(res => {
     try{
@@ -8271,7 +8270,7 @@ $('iHwp').onclick = async () => {
     }catch(_){ res(''); }
   });
   async function update(){
-    if(LS.get('locConsent', '') !== 'Y' || !navigator.geolocation) return;
+    if(LS.get('locConsent', '') === 'N' || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(async p => {
       const lat = p.coords.latitude, lng = p.coords.longitude, a = await addrOf(lat, lng);
       LS.set('whoLoc', (a ? a + ' ' : '') + `(${lat.toFixed(5)}, ${lng.toFixed(5)})`);
@@ -8285,8 +8284,8 @@ $('iHwp').onclick = async () => {
   if(dlg){
     const row = dlg.querySelector('.row');
     const b = document.createElement('button'); b.type = 'button'; b.id = 'lgLoc'; b.style.marginRight = 'auto';
-    const lab = () => { b.textContent = LS.get('locConsent', '') === 'Y' ? '📍 이 기기 위치 기록: 켜짐' : '📍 이 기기 위치 기록: 꺼짐'; };
-    b.onclick = () => { const on = LS.get('locConsent', '') !== 'Y'; if(on && !confirm('이 기기의 접속 위치(주소)를 접속 기록에 함께 남길까요?')) return; LS.set('locConsent', on ? 'Y' : 'N'); if(on) update(); else LS.del ? LS.del('whoLoc') : LS.set('whoLoc', ''); lab(); };
+    const lab = () => { b.textContent = LS.get('locConsent', '') !== 'N' ? '📍 이 기기 위치 기록: 켜짐' : '📍 이 기기 위치 기록: 꺼짐'; };
+    b.onclick = () => { const on = LS.get('locConsent', '') === 'N'; LS.set('locConsent', on ? 'Y' : 'N'); if(on) update(); else LS.del ? LS.del('whoLoc') : LS.set('whoLoc', ''); lab(); };
     lab(); row.prepend(b);
   }
 })();
