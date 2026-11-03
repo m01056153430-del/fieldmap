@@ -1955,7 +1955,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261103193254';
+const APP_VER = '20261103193717';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -8049,6 +8049,80 @@ $('iHwp').onclick = async () => {
     const ok = await _sc(q);
     if(ok !== false && cur && isTripRec(cur)) for(const x of cur.extra){ const k = nz(x.label); if(LINES.test(k)) parse(x.value).forEach(v => addH('xl_' + k, v)); }
     return ok;
+  };
+})();
+</script>
+<script>
+/* ===================== 결과 목록 → 출장결과 보고서 만들기 =====================
+   체크한 기록(없으면 '완료' 기록)을 모아 출장결과 보고서(사진대지) 새 기록을 만들어 엶 */
+(function tripFromRecs(){
+  const $ = id => document.getElementById(id);
+  const host = $('lAll') && $('lAll').closest('.card'); if(!host) return;
+  const b = document.createElement('button'); b.type = 'button'; b.id = 'lTrip'; b.className = 'bline';
+  b.style.cssText = 'width:100%;margin-top:8px;color:#0f766e!important;border-color:#5eead4!important;font-weight:700';
+  b.textContent = '📝 출장결과 보고서 만들기';
+  host.querySelector('div').after(b);
+  const uniq = a => [...new Set(a.map(x => String(x || '').trim()).filter(Boolean))];
+  // 1번 누름: 완료된 기록을 자동 체크(더 체크·해제 가능) → 2번 누름: 체크한 기록으로 보고서 만들기
+  let armed = false;
+  const cnt = () => checkedRecs().filter(r => !isTripRec(r)).length;
+  const label = () => {
+    b.textContent = armed ? `✅ 체크한 ${cnt()}건으로 출장결과 보고서 만들기` : '📝 출장결과 보고서 만들기';
+    can.hidden = !armed;
+  };
+  const can = document.createElement('button'); can.type = 'button'; can.className = 'bline'; can.hidden = true;
+  can.style.cssText = 'width:100%;margin-top:6px;font-size:13px'; can.textContent = '선택 취소';
+  b.after(can);
+  const tip = document.createElement('small'); tip.style.cssText = 'display:block;color:var(--mut);margin-top:6px'; b.before(tip);
+  can.onclick = () => { armed = false; document.querySelectorAll('#lRecs input[type=checkbox]').forEach(c => c.checked = false); tip.textContent = ''; label(); };
+  $('lRecs').addEventListener('change', () => { if(armed) label(); });
+  $('lBack').addEventListener('click', () => { if(armed){ armed = false; label(); tip.textContent = ''; } });
+  b.onclick = async () => {
+    if(!armed){
+      const seen = new Set(), done = new Set(allRecs.filter(r => { if(seen.has(r.key)) return false; seen.add(r.key); return r.done && !isTripRec(r); }).map(r => r.id));
+      let n = 0;
+      document.querySelectorAll('#lRecs input[type=checkbox][data-id]').forEach(c => { c.checked = done.has(c.dataset.id); if(c.checked) n++; });
+      armed = true; label();
+      tip.textContent = n ? `완료된 기록 ${n}건을 체크했습니다 — 더 넣거나 뺄 기록을 체크한 뒤 아래 버튼을 다시 누르세요` : '완료된 기록이 없습니다 — 보고서에 넣을 기록을 체크한 뒤 아래 버튼을 다시 누르세요';
+      return;
+    }
+    let recs = checkedRecs().filter(r => !isTripRec(r)), how = '체크한';
+    if(!recs.length) return toast('보고서에 넣을 점검 기록을 체크해 주세요');
+    const t = tplById('t_trip1') || tpls.find(x => /출장결과/.test(x.name || x.title));
+    if(!t) return toast('출장결과 보고서 서식이 없습니다 (새로고침 후 다시 시도)');
+    if(!confirm(`${how} 점검 기록 ${recs.length}건으로 출장결과 보고서를 만들까요?\n(출장일자·출장지·출장자·내용·사진을 채운 새 기록이 열립니다. 고친 뒤 [저장]하세요)`)) return;
+    recs = [...recs].sort((a, c) => (a.date || '').localeCompare(c.date || ''));
+    $('busy').textContent = '출장결과 보고서 만드는 중…'; $('busy').hidden = false;
+    try{
+      for(const r of recs) if(window.syncMedia && r.photos.some(p => !p)){ try{ await syncMedia(r); }catch(_){} }
+      const names = uniq(recs.map(r => r.target.name));
+      const target = {name: names[0] + (names.length > 1 ? ` 외 ${names.length - 1}` : ''), place: uniq(recs.map(r => r.target.place)).join(', '), addr:'', town:'', item:'', area:'', tel:'', biz:'', adhoc:true};
+      if(dirty && !$('insp').hidden && !confirm('저장하지 않은 수정 내용이 있습니다. 버리고 새 보고서를 만들까요?')) return;
+      cur = newRecord(target); applyTplToCur(t);
+      const d0 = (recs[0].date || '').slice(0, 10), d1 = (recs[recs.length - 1].date || '').slice(0, 10);
+      if(d0) cur.date = d0 + 'T00:00'; cur.dateEnd = d1 && d1 > d0 ? d1 : '';
+      const g = recs.find(r => r.gps); if(g) cur.gps = {...g.gps};
+      const ppl = uniq(recs.flatMap(r => String(r.inspector || '').split(/\s*[,，]\s*/)));
+      const titles = uniq(recs.map(r => (tplById(r.tplId) || {}).title || r.title));
+      const lines = recs.map(r => {
+        const memo = String(r.memo || '').split('\n').map(s => s.trim()).filter(Boolean)[0] || '';
+        return `∙ ${r.target.name}${r.target.town ? '(' + r.target.town + ')' : ''} ${r.overall || (r.done ? '점검 완료' : '점검')}${memo ? ' — ' + memo : ''}`;
+      });
+      for(const x of cur.extra){
+        const k = nz(x.label);
+        if(/^(출장지|출장장소|방문지|방문장소|출장처)$/.test(k)) x.value = uniq(recs.map(r => r.target.place)).join(', ');
+        else if(/^(출장자|출장자성명)$/.test(k)) x.value = ppl.length ? ppl.join(', ') : (LS.get('lastX_' + k, '') || '');
+        else if(/목적/.test(k)) x.value = `${titles.join(', ')} (${recs.length}개소)`;
+        else if(/^(출장내용|내용|출장결과)$/.test(k)) x.value = lines.join('\n');
+      }
+      // 사진: 기록마다 앞의 2장까지, 설명은 '대상 — 원래 설명'
+      cur.photos = []; cur.photoIds = []; cur.capt = []; cur.photoAR = [];
+      for(const r of recs) r.photos.slice(0, 2).forEach((p, i) => { if(!p) return; cur.photos.push(p); cur.photoIds.push(null); cur.capt.push(`${r.target.name} — ${r.capt[i] || '현장 사진'}`); });
+      dirty = true; curRow = -1;
+      $('ilist').hidden = true; $('insp').hidden = false; renderForm();
+      toast(`출장결과 보고서를 만들었습니다 (${recs.length}건 · 사진 ${cur.photos.length}장) — 확인 후 [저장]`);
+      armed = false; tip.textContent = ''; label();
+    }finally{ $('busy').hidden = true; $('busy').textContent = 'PDF 만드는 중…'; }
   };
 })();
 </script>
