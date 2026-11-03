@@ -720,6 +720,7 @@
       <button type="button" class="setcard" id="setList"><span class="si">📊</span><span class="tx"><b>엑셀 명단 관리</b><small id="setListSub">명단 올리기 · 이름 바꾸기 · 삭제</small></span><span class="go">›</span></button>
       <button type="button" class="setcard" id="setTplMgr"><span class="si">📝</span><span class="tx"><b>점검 서식 관리</b><small>서식 업로드 · 편집 · 디자인</small></span><span class="go">›</span></button>
       <button type="button" class="setcard" id="setOps"><span class="si">🛡</span><span class="tx"><b>운영 관리</b><small id="setOpsSub">운영 중단 · 접속자 · 차단</small></span><span class="go">›</span></button>
+      <button type="button" class="setcard" id="setLog"><span class="si">🕒</span><span class="tx"><b>접속 · 점검 기록</b><small>접속 시각 · 사용자별 점검 기록</small></span><span class="go">›</span></button>
     </div>
     <div class="setbox">
       <label for="region" class="setlab">🗺 지번 앞에 붙일 시·군</label>
@@ -760,6 +761,16 @@
 </dialog>
 
 
+<dialog id="logDlg" style="max-width:640px;width:94vw">
+  <form method="dialog">
+    <div class="lgTabs" style="display:flex;gap:6px;margin-bottom:8px">
+      <button type="button" data-lt="v" class="on">🕒 접속 기록</button><button type="button" data-lt="r">📋 점검 기록</button><button type="button" data-lt="u">👤 사용자별</button>
+    </div>
+    <input id="lgFind" type="search" placeholder="찾기 (이름·기기·대상)" style="margin:0 0 8px">
+    <div id="lgList" style="max-height:58vh;overflow:auto;font-size:13px"></div>
+    <div class="row"><button type="button" id="lgReload">새로고침</button><button value="close" type="submit">닫기</button></div>
+  </form>
+</dialog>
 <dialog id="admDlg" style="max-width:520px">
   <form method="dialog">
     <div class="sec">접속자 목록 · 차단 관리</div>
@@ -1963,7 +1974,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261103195526';
+const APP_VER = '20261103200636';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -5996,6 +6007,7 @@ $('iHwp').onclick = async () => {
 
   /* ---------- 관리자 기능 ---------- */
   const admin = (op, extra) => gatePost({action:'admin', op, pw:ADMIN_PW, ...(extra || {})}, 30000);
+  window.adminCall = admin;
   // 비밀번호 확인: 서버에 물어봄 (코드에는 비밀번호가 없음)
   window.checkAdminPw = async pw => {
     if(!gateUrl()) return {ok:false, error:'동기화 서버 주소가 없어 확인할 수 없습니다'};
@@ -6137,7 +6149,7 @@ $('iHwp').onclick = async () => {
   }
 
   /* ---------- 팝업(dialog) ---------- */
-  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', hwpDlg:'한글 양식 미리보기', dlg:'설정', listDlg:'엑셀 명단 관리', opsDlg:'운영 관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리'};
+  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', hwpDlg:'한글 양식 미리보기', dlg:'설정', listDlg:'엑셀 명단 관리', opsDlg:'운영 관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리', logDlg:'접속 · 점검 기록'};
   function winDialog(d){
     if(d._win) return; d._win = true;
     const bar = document.createElement('div');
@@ -8172,6 +8184,72 @@ $('iHwp').onclick = async () => {
   window.renderForm = renderForm = function(){ _rf(); put(); };
   const _ri = renderItems;
   renderItems = function(){ _ri(); put(); };
+})();
+</script>
+<script>
+/* ===================== 설정 › 접속 · 점검 기록 ===================== */
+(function logMod(){
+  const $ = id => document.getElementById(id);
+  const css = document.createElement('style');
+  css.textContent = `#logDlg .lgTabs button{flex:1;padding:8px;border:1px solid var(--ln);border-radius:8px;background:#fff;font-size:14px;color:#334155}
+  #logDlg .lgTabs button.on{background:var(--b);border-color:var(--b);color:#fff;font-weight:700}
+  #logDlg table{width:100%;border-collapse:collapse}#logDlg th,#logDlg td{padding:6px 5px;border-bottom:1px solid var(--ln);text-align:left;vertical-align:top}
+  #logDlg th{position:sticky;top:0;background:#f8fafc;font-size:12px;color:#475569;z-index:1}#logDlg td small{color:var(--mut)}
+  #logDlg .st{display:inline-block;padding:0 6px;border-radius:6px;font-size:11px;background:#eef2f7;color:#334155}#logDlg .st.ok{background:#dcfce7;color:#166534}`;
+  document.head.appendChild(css);
+  let tab = 'v', vis = null, verr = '', logs = null, lerr = '';
+  const ago = ts => { if(!ts) return ''; const m = Math.round((Date.now() - ts) / 60000); return m < 1 ? '방금' : m < 60 ? m + '분 전' : m < 1440 ? Math.round(m / 60) + '시간 전' : Math.round(m / 1440) + '일 전'; };
+  const T = ts => ts ? fmtTs(ts) : '';
+  async function loadVis(){
+    vis = null; verr = '';
+    if(typeof SY === 'undefined' || !SY.on()){ verr = '☁ 동기화를 켜야 다른 사용자의 접속 기록을 볼 수 있습니다.'; return; }
+    try{ const j = await window.adminCall('state'); vis = j.visitors || []; }catch(e){ verr = '접속 기록을 불러오지 못했습니다: ' + e.message; }
+    // 지난 접속·사용 기록 전체 (서버 '사용기록' 시트) — 서버(Code.gs)가 새 버전이어야 함
+    logs = null; lerr = '';
+    try{ const j = await window.adminCall('logs', {limit:3000}); if(Array.isArray(j.logs)) logs = j.logs; else lerr = 'old'; }catch(e){ lerr = e.message; }
+  }
+  function render(){
+    const q = $('lgFind').value.trim().toLowerCase(), box = $('lgList');
+    document.querySelectorAll('#logDlg [data-lt]').forEach(b => b.classList.toggle('on', b.dataset.lt === tab));
+    if(tab === 'v'){
+      if(verr){ box.innerHTML = `<div style="color:var(--mut);padding:10px 0">${esc(verr)}</div>`; return; }
+      if(!vis){ box.innerHTML = '<div style="color:var(--mut);padding:10px 0">불러오는 중…</div>'; return; }
+      const vs = vis.filter(v => !q || (v.name + ' ' + v.device).toLowerCase().includes(q));
+      let h = `<div style="margin:0 0 6px;font-weight:700">기기별 접속 ${vs.length}대 <small style="font-weight:400;color:var(--mut)">· 마지막 접속 순</small></div><table><tr><th>사용자</th><th>기기</th><th>마지막 접속</th><th>처음 접속</th><th>횟수</th></tr>`
+        + vs.map(v => `<tr><td><b>${esc(v.name || '(이름 없음)')}</b></td><td><small>${esc(v.device || '')}</small></td><td>${esc(T(v.last))}<br><small>${ago(v.last)}</small></td><td><small>${esc(T(v.first))}</small></td><td>${v.count || 0}회</td></tr>`).join('')
+        + '</table>' + (vs.length ? '' : '<div style="color:var(--mut);padding:8px 0">접속 기록이 없습니다.</div>');
+      if(logs){
+        const ls = logs.filter(l => !q || [l.name, l.device, l.act, l.target].join(' ').toLowerCase().includes(q));
+        h += `<div style="margin:14px 0 6px;font-weight:700">지난 기록 전체 ${ls.length}건 <small style="font-weight:400;color:var(--mut)">· 접속·동기화, 점검 저장·삭제, 명단·서식 올리기 등 (최근 순)</small></div><table><tr><th>시각</th><th>사용자 · 기기</th><th>작업</th><th>대상</th></tr>`
+          + ls.map(l => `<tr><td>${esc(T(l.t))}</td><td><b>${esc(l.name || '')}</b><br><small>${esc(l.device || '')}</small></td><td>${esc(l.act || '')}</td><td><small>${esc(l.target || '')}${l.result ? ' · ' + esc(String(l.result).slice(0, 40)) : ''}</small></td></tr>`).join('') + '</table>';
+      } else h += `<div style="margin:14px 0 0;padding:10px;border:1px dashed var(--ln);border-radius:8px;color:var(--mut);line-height:1.6">${lerr === 'old' ? '지난 접속·사용 기록 전체를 보려면 동기화 서버(Code.gs)를 새 버전으로 바꿔야 합니다. (설정 담당자에게 요청)' : '지난 기록을 불러오지 못했습니다' + (lerr ? ': ' + esc(lerr) : '')}</div>`;
+      box.innerHTML = h;
+      return;
+    }
+    const recs = (typeof allRecs !== 'undefined' ? allRecs : []);   // 이전 기록까지 모두
+    if(tab === 'r'){
+      const rs = [...recs].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0)).filter(r => !q || [r.inspector, r.target.name, r.target.place, r.title].join(' ').toLowerCase().includes(q));
+      box.innerHTML = `<div style="margin:0 0 6px;color:var(--mut)">점검 기록 ${rs.length}건 · 최근 저장 순</div><table><tr><th>저장 시각</th><th>점검자</th><th>대상</th><th>서식 · 판정</th></tr>`
+        + rs.map(r => `<tr><td>${esc(T(r.savedAt))}<br><small>${ago(r.savedAt)}</small></td><td>${esc(r.inspector || '')}</td><td><b>${esc(r.target.name || '')}</b><br><small>${esc(r.target.place || '')}</small></td><td><small>${esc((tplById(r.tplId) || {}).name || r.title || '')}</small><br>${r.done ? '<span class="st ok">완료</span> ' : ''}${r.overall ? `<span class="st">${esc(r.overall)}</span>` : ''}${recEmpty(r) ? '<span class="st">열어만 봄</span>' : ''}</td></tr>`).join('') + '</table>';
+      return;
+    }
+    // 사용자별: 점검자마다 건수 · 완료 · 최근 저장 · 최근 접속
+    const by = new Map();
+    for(const r of recs){ const k = (r.inspector || '(점검자 없음)').trim(); const o = by.get(k) || {n:0, done:0, last:0, lastT:''}; o.n++; if(r.done) o.done++; if((r.savedAt || 0) > o.last){ o.last = r.savedAt; o.lastT = r.target.name; } by.set(k, o); }
+    const lastSeen = name => { if(!vis) return 0; const tail = String(name).split(/\s+/).pop(); return Math.max(0, ...vis.filter(v => v.name && (v.name === name || v.name.includes(tail) || name.includes(v.name))).map(v => v.last || 0)); };
+    const us = [...by].sort((a, b) => b[1].last - a[1].last).filter(([k]) => !q || k.toLowerCase().includes(q));
+    box.innerHTML = `<div style="margin:0 0 6px;color:var(--mut)">점검자 ${us.length}명</div><table><tr><th>점검자</th><th>점검</th><th>완료</th><th>최근 점검 저장</th><th>최근 접속</th></tr>`
+      + us.map(([k, o]) => { const ls = lastSeen(k); return `<tr><td><b>${esc(k)}</b></td><td>${o.n}건</td><td>${o.done}건</td><td>${esc(T(o.last))}<br><small>${esc(o.lastT || '')}</small></td><td>${ls ? esc(T(ls)) + `<br><small>${ago(ls)}</small>` : '<small>—</small>'}</td></tr>`; }).join('') + '</table>';
+  }
+  async function open(){
+    if(!$('logDlg').open) $('logDlg').showModal();
+    try{ await reloadRecs(); }catch(_){}
+    render(); await loadVis(); render();
+  }
+  $('setLog').onclick = open;
+  $('lgReload').onclick = async () => { $('lgList').innerHTML = '<div style="color:var(--mut);padding:10px 0">불러오는 중…</div>'; try{ if(window.syncNow) await syncNow(); }catch(_){} await reloadRecs(); await loadVis(); render(); };
+  document.querySelectorAll('#logDlg [data-lt]').forEach(b => b.onclick = () => { tab = b.dataset.lt; render(); });
+  $('lgFind').addEventListener('input', render);
 })();
 </script>
 </body>
