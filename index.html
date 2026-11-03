@@ -1953,7 +1953,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261103182339';
+const APP_VER = '20261103191632';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -5340,7 +5340,7 @@ async function placeImages(zip, docs, rec, slots){
     const cells = slots.photoCells;
     for(let k = 0; k < cells.length && photos.length; k++){
       const ps = cellParas(cells[k]); if(!ps[0]) continue;
-      const take = k === cells.length - 1 ? photos.splice(0, Math.min(2, photos.length)) : photos.splice(0, 1);
+      const take = k === cells.length - 1 && photos.length === 2 ? photos.splice(0, 2) : photos.splice(0, 1);   // 칸마다 1장 (남으면 뒤쪽 사진 쪽으로)
       for(const ph of take) await putPic(ps[0], ph, take.length > 1 ? cellW(cells[k]) / 2 - MM : cellW(cells[k]), cellH(cells[k]));
     }
     slots = {...slots, photo:[], photoCell:null};
@@ -5364,12 +5364,13 @@ async function placeImages(zip, docs, rec, slots){
         if(text != null){ const r = doc.createElementNS(HP_NS, 'hp:run'); r.setAttribute('charPrIDRef', '0'); const t = doc.createElementNS(HP_NS, 'hp:t'); writeT(t, text); r.appendChild(t); p.appendChild(r); }
         sec.appendChild(p); return p;
       };
-      const head = newP(`현장 사진 — ${rec.target.name || ''}`); head.setAttribute('pageBreak', '1');
+      const base = rec.photos.filter(Boolean).length - photos.length;
+      const head = newP(isTripRec(rec) ? '사 진 대 지 (계속)' : `현장 사진 — ${rec.target.name || ''}`); head.setAttribute('pageBreak', '1');
       for(let i = 0; i < photos.length; i += 2){
         const p = newP(null);
         await putPic(p, photos[i], 82 * MM, 62 * MM);
         if(photos[i + 1]) await putPic(p, photos[i + 1], 82 * MM, 62 * MM);
-        newP([i, i + 1].filter(j => photos[j]).map(j => rec.capt[j] || ('사진 ' + (j + 1))).join('   /   '));
+        newP([i, i + 1].filter(j => photos[j]).map(j => rec.capt[base + j] || ('사진 ' + (base + j + 1))).join('   /   '));
       }
     }
   }
@@ -5732,9 +5733,9 @@ async function renderHwpxPreview(){
     _hwpPics = new Map(); let morePics = 0;
     { const ph = (cur.photos || []).filter(Boolean), sl = wr.slots || {};
       if(cur.sec.photos !== false && sl.photoCells && sl.photoCells.length){
-        sl.photoCells.forEach((tc, k) => { if(!ph.length) return; _hwpPics.set(tc, k === sl.photoCells.length - 1 ? ph.splice(0, Math.min(2, ph.length)) : ph.splice(0, 1)); });
+        sl.photoCells.forEach((tc, k) => { if(!ph.length) return; _hwpPics.set(tc, k === sl.photoCells.length - 1 && ph.length === 2 ? ph.splice(0, 2) : ph.splice(0, 1)); });
       } else if(cur.sec.photos !== false && sl.photoCell && ph.length){ _hwpPics.set(sl.photoCell, ph.splice(0, 2)); }
-      morePics = ph.length;
+      morePics = ph;
       if(sl.signCell && cur.sign) _hwpPics.set(sl.signCell, [cur.sign]);
     }
     _hwpKeys = window.hwpxCellKeys ? hwpxCellKeys(docs.map(x => x.d)) : new Map();
@@ -5742,7 +5743,23 @@ async function renderHwpxPreview(){
     if(window.applyHwpxMap) applyHwpxMap(docs.map(x => x.d), cur);
     const filled = new Set([...before].filter(([tc, t]) => cText(tc) !== t).map(([tc]) => tc));
     if(seq !== _hwpPrevSeq) return;
-    box.innerHTML = `<div class="hwpZoom">${hwpxPagesHtml(docs, filled)}</div>` + (morePics ? `<small style="display:block;color:var(--mut);margin-top:6px">사진 ${morePics}장은 [한글 저장] 파일의 뒤쪽 '현장 사진' 쪽에 들어갑니다.</small>` : '');
+    // 칸에 다 못 넣은 사진: [한글 저장]처럼 뒤쪽에 '사진대지 (계속)' 쪽을 붙여 보여 줌 (한 쪽에 6장)
+    let more = '';
+    if(morePics.length){
+      const all = (cur.photos || []).filter(Boolean), base = all.length - morePics.length, per = 6, pgN = Math.ceil(morePics.length / per);
+      const head = isTripRec(cur) ? '사 진 대 지 (계속)' : `현장 사진 — ${esc(cur.target.name || '')}`;
+      for(let g = 0; g < pgN; g++){
+        const part = morePics.slice(g * per, g * per + per);
+        let rowsH = '';
+        for(let i = 0; i < part.length; i += 2){
+          const ids = [i, i + 1].filter(j => part[j]);
+          rowsH += `<div style="display:flex;gap:12px;justify-content:center;margin:10px 0 2px">${ids.map(j => `<img src="${part[j]}" alt="" style="width:310px;height:234px;object-fit:contain;background:#f3f4f6">`).join('')}</div>`
+            + `<p style="text-align:center;margin:0 0 6px">${ids.map(j => { const n = base + g * per + j; return esc(cur.capt[n] || '사진 ' + (n + 1)); }).join('&emsp;/&emsp;')}</p>`;
+        }
+        more += `<div class="hwpPgNo">사진 추가 쪽 ${g + 1} / ${pgN}</div><div class="hwpPg" style="width:794px;padding:56px 70px"><p style="font-weight:700">${head}</p>${rowsH}</div>`;
+      }
+    }
+    box.innerHTML = `<div class="hwpZoom">${hwpxPagesHtml(docs, filled)}${more}</div>`;
     const fit = () => { const z = box.querySelector('.hwpZoom'), pg = box.querySelector('.hwpPg'); if(!z || !pg) return; const k = Math.min(1, (box.clientWidth - 4) / pg.offsetWidth); z.style.zoom = k; };
     fit(); requestAnimationFrame(fit);
     if(window.afterHwpPrev) afterHwpPrev();
@@ -7773,7 +7790,7 @@ $('iHwp').onclick = async () => {
       const lab = (trip ? xval(/^(출장지|출장장소|방문지|방문장소|출장처)$/) : '') || t.addr || t.place || '';
       const url = await buildSat(pt.lat, pt.lng, 18, 1000, 750, lab);
       if(!url) return toast('위성사진을 불러오지 못했습니다 (인터넷 연결 확인)');
-      const cap = (trip ? '출장지' : '사업장') + ' 위성사진';
+      const cap = '위치도';
       cur.photoAR = Array.isArray(cur.photoAR) ? cur.photoAR : [];
       const old = cur.capt.findIndex((c, i) => cur.photoSat === i);
       if(old >= 0 && cur.photos[old] && confirm('이미 넣은 위성사진을 새로 만든 것으로 바꿀까요?')){
