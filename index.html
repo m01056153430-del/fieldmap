@@ -669,7 +669,7 @@
     <h1 aria-label="보조사업 현장지도"></h1>
     <button id="openTop" style="display:none">엑셀 열기</button>
     <input type="file" id="file" accept=".xlsx,.xls,.csv" style="display:none">
-    <button id="install" style="display:none">설치</button>
+    <button id="install" style="display:none">앱설치</button>
     <button id="syncBtn" title="구글 동기화">☁ 동기화</button>
     <button id="toggle">대상</button>
     <button id="inspAll">결과</button>
@@ -1296,8 +1296,9 @@ const DONE_COLOR = '#9ca3af';
 const isDone = r => !!(window.inspComplete && inspComplete.has(rowKey(r)));
 /* 최적 동선에 넣을 대상 (명단 목록의 체크). 기본은 모두 체크 → 체크를 뺀 것만 기억 */
 const rtEx = new Set(LS.get('rtEx', []));
-const rtSaveEx = () => LS.set('rtEx', [...rtEx]);
-window.rtIncluded = r => !rtEx.has(rowKey(r));
+const rtInc = new Set(LS.get('rtInc', []));   // 완료된 곳 중 사용자가 동선에 넣기로 체크한 곳 (기본은 빠짐)
+const rtSaveEx = () => { LS.set('rtEx', [...rtEx]); LS.set('rtInc', [...rtInc]); };
+window.rtIncluded = r => isDone(r) ? rtInc.has(rowKey(r)) : !rtEx.has(rowKey(r));
 const pinColor = r => isDone(r) ? DONE_COLOR : colorOf[placeTown(r)];
 const _mkCache = {};
 function markerImage(color){
@@ -1374,10 +1375,11 @@ function rtSelInfo(){
     };
   }
   const todo = rows.filter(r => visible(r) && !isDone(r)), on = todo.filter(r => !rtEx.has(rowKey(r))).length;
+  const doneOn = rows.filter(r => visible(r) && isDone(r) && rtInc.has(rowKey(r))).length;
   bar.style.display = rows.length ? '' : 'none';
   $('rtAll').checked = todo.length > 0 && on === todo.length;
   $('rtAll').indeterminate = on > 0 && on < todo.length;
-  $('rtSelCnt').textContent = `동선에 넣을 미완료 ${on}곳 / ${todo.length}곳`;
+  $('rtSelCnt').textContent = `동선에 넣을 미완료 ${on}곳 / ${todo.length}곳` + (doneOn ? ` + 완료 ${doneOn}곳` : '');
 }
 function renderList(){
   const ul = $('list'); ul.innerHTML = '';
@@ -1385,13 +1387,13 @@ function renderList(){
     if(!visible(r)) return;
     const li = document.createElement('li');
     const ok = r._pts && r._pts.length;
-    const dn = isDone(r), inc = !rtEx.has(rowKey(r));
-    li.innerHTML = `<div class="n"><input type="checkbox" class="rtck" data-ck="${i}"${inc && !dn ? ' checked' : ''}${dn ? ' disabled title="점검 완료 — 동선에서 빠집니다"' : ' title="체크하면 미완료 최적 동선에 넣습니다"'}><span class="dot" style="background:${pinColor(r)}"></span>${esc(r.name)}${(() => { const jd = window.inspDone && inspDone.get(rowKey(r)); return isDone(r) ? '<span class="stt s-done">완료</span>' : jd ? '<span class="stt s-ing">점검중</span>' : '<span class="stt s-wait">대기</span>'; })()} <span style="font-weight:400;color:#6b7280">${esc(r.item)}${r.detail?' · '+esc(r.detail):''}</span>${(() => { const jd = window.inspDone && inspDone.get(rowKey(r)); return jd && jd !== '점검' ? `<span class="badge ${/보완|부적합/.test(jd)?'warn':''}">${esc(jd)}</span>` : ''; })()}</div>
+    const dn = isDone(r), inc = dn ? rtInc.has(rowKey(r)) : !rtEx.has(rowKey(r));
+    li.innerHTML = `<div class="n"><input type="checkbox" class="rtck" data-ck="${i}"${inc ? ' checked' : ''}${dn ? ' title="점검 완료 — 체크하면 동선에 넣습니다"' : ' title="체크하면 동선에 넣습니다"'}><span class="dot" style="background:${pinColor(r)}"></span>${esc(r.name)}${(() => { const jd = window.inspDone && inspDone.get(rowKey(r)); return isDone(r) ? '<span class="stt s-done">완료</span>' : jd ? '<span class="stt s-ing">점검중</span>' : '<span class="stt s-wait">대기</span>'; })()} <span style="font-weight:400;color:#6b7280">${esc(r.item)}${r.detail?' · '+esc(r.detail):''}</span>${(() => { const jd = window.inspDone && inspDone.get(rowKey(r)); return jd && jd !== '점검' ? `<span class="badge ${/보완|부적합/.test(jd)?'warn':''}">${esc(jd)}</span>` : ''; })()}</div>
       <div class="s">${esc(r.place)}</div>${ok?'':'<div class="fail">위치를 찾지 못했습니다</div>'}`;
     li.insertAdjacentHTML('afterbegin', `<button type="button" class="chip" data-insp="${i}" style="float:right;margin-left:6px">점검</button>`);
     li.onclick = e => {
       const ck = e.target.closest('.rtck');
-      if(ck){ e.stopPropagation(); const k = rowKey(r); if(ck.checked) rtEx.delete(k); else rtEx.add(k); rtSaveEx(); rtSelInfo(); return; }
+      if(ck){ e.stopPropagation(); const k = rowKey(r); if(isDone(r)){ if(ck.checked) rtInc.add(k); else rtInc.delete(k); } else { if(ck.checked) rtEx.delete(k); else rtEx.add(k); } rtSaveEx(); rtSelInfo(); return; }
       if(e.target.closest('[data-insp]')) return openInspect(i); focusRow(i); };
     ul.appendChild(li);
   });
@@ -1974,7 +1976,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261104063228';
+const APP_VER = '20261104064747';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -7352,7 +7354,7 @@ $('iHwp').onclick = async () => {
   }
   async function makeRoute(){
     const m = getMap(); if(!m){ toast('지도가 준비되지 않았습니다 (https 주소로 접속해 주세요)'); return; }
-    const cand = rows.map((r, i) => ({r, i})).filter(({r}) => !isDone(r) && visible(r) && (!window.rtIncluded || rtIncluded(r)) && r._pts && r._pts.length);
+    const cand = rows.map((r, i) => ({r, i})).filter(({r}) => visible(r) && (!window.rtIncluded || rtIncluded(r)) && r._pts && r._pts.length);   // 완료된 곳도 체크했으면 포함
     if(!cand.length){ toast('동선을 만들 대상이 없습니다 — 명단 목록에서 미완료 대상을 체크해 주세요 (지도에 위치가 표시된 대상만 포함)'); return; }
     toast('현재 위치 확인 중…');
     const st = await watchMe(false);
@@ -7384,7 +7386,7 @@ $('iHwp').onclick = async () => {
   const telPdfUrl = (t, name) => `${SITE}call.html?t=${encodeURIComponent(String(t || '').replace(/[^0-9+]/g, ''))}&n=${encodeURIComponent(name || '')}`;
   function renderPanel(){
     const r = route; if(!r) return;
-    pn.innerHTML = `<div class="rth"><b>🚗 ${r.town ? esc(r.town) + ' ' : ''}미완료 ${r.stops.length}곳 동선</b><span>약 ${r.km.toFixed(1)}km (직선거리×1.3 추정)</span><button type="button" data-rt="min" title="접기 / 펼치기">${rtPos && rtPos.min ? '▢' : '—'}</button><button type="button" data-rt="x" title="동선 지우기">✕</button></div>
+    pn.innerHTML = `<div class="rth"><b>🚗 ${r.town ? esc(r.town) + ' ' : ''}${r.stops.some(x => isDone(x.r)) ? '' : '미완료 '}${r.stops.length}곳 동선</b><span>약 ${r.km.toFixed(1)}km (직선거리×1.3 추정)</span><button type="button" data-rt="min" title="접기 / 펼치기">${rtPos && rtPos.min ? '▢' : '—'}</button><button type="button" data-rt="x" title="동선 지우기">✕</button></div>
       <div class="rtb">${r.stops.map((s, k) => `<div class="rti"><i>${k + 1}</i><div style="flex:1;min-width:0"><b>${esc(s.r.name)}</b> <small>${s.leg.toFixed(1)}km</small>${isDone(s.r) ? ' <small style="color:#16a34a">✔완료</small>' : ''}<br>
         <a href="${navUrl(s)}" target="_blank" rel="noopener">🧭 ${esc(s.r.place || '길찾기')}</a>${s.r.tel ? `<br><a href="${telUrl(s.r.tel)}" style="white-space:nowrap">📞 ${esc(s.r.tel)}</a>` : ''}</div><button type="button" class="rtInsp" data-rt="insp" data-i="${s.i}">점검</button></div>`).join('')}</div>
       <div class="rtf"><button type="button" data-rt="pdf">PDF 저장</button><button type="button" data-rt="share">팀원과 공유</button></div><div class="wrh" title="끌어서 크기 조절"></div>`;
