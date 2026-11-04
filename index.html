@@ -1978,7 +1978,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261104075315';
+const APP_VER = '20261105074907';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -7760,7 +7760,7 @@ $('iHwp').onclick = async () => {
       .sort((p, r) => { const mp = p.name.replace(/\s+/g, '').toLowerCase().includes(qn) ? 0 : 1, mr = r.name.replace(/\s+/g, '').toLowerCase().includes(qn) ? 0 : 1; return mp - mr || dist(p) - dist(r); });
     list.push(...kk);
     const seen = new Set(), out = list.filter(x => { const key = x.lat.toFixed(5) + x.lng.toFixed(5) + x.name; if(seen.has(key)) return false; seen.add(key); return true; }).slice(0, 45);
-    if(!out.length){ box.innerHTML = '<small style="color:var(--mut)">찾지 못했습니다. 주소(읍면·리·번지)나 장소 이름으로 다시 검색해 보세요.</small>'; return; }
+    if(!out.length){ box.innerHTML = '<small style="color:var(--mut)">카카오맵에서 찾지 못했습니다. 주소(읍면·리·번지)나 장소 이름으로 다시 검색해 보세요.</small>'; naverExtra(q, out, box); return; }
     const tip = `<small style="display:block;color:var(--mut);margin:4px 0 2px">${out.length}건 · 카카오맵에 없는 곳은 주소로 검색하거나 [지도에서 위치 지정 점검]으로 찍어 주세요</small>`;
     box.innerHTML = tip + out.map((x, i) => `<div class="ar" data-i="${i}"><div><b>${esc(x.name || x.addr)}</b><small>${esc(x.name ? x.addr : (x.sub !== x.addr ? x.sub : x.kind))}${x.name && x.sub ? ' · ' + esc(x.sub) : ''}</small></div><button type="button" data-go="${i}">점검</button></div>`).join('');
     box.onclick = e => {
