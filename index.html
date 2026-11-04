@@ -1978,7 +1978,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261104070844';
+const APP_VER = '20261104075315';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -7769,6 +7769,32 @@ $('iHwp').onclick = async () => {
       if(e.target.closest('[data-go]')) return openAdhoc(x);
       showTmp(x.lat, x.lng); dlg.classList.add('min'); $('lpMin').textContent = '펴기';
       toast('지도에 위치를 표시했습니다 — [펴기]를 눌러 [점검]하세요');
+    };
+    naverExtra(q, out, box);
+  }
+  /* 네이버 지역검색: 카카오맵에 없는 곳만 추가로 (동기화 서버 Code.gs에 네이버 API 키가 있어야 함) */
+  async function naverExtra(q, out, box){
+    if(typeof SY === 'undefined' || !SY.on()) return;
+    let items = [];
+    try{ const j = await api('naver', {q}, 15000); items = j.items || []; }catch(e){ if(/알 수 없는 요청|NAVER/.test(e.message)) return; return; }
+    const norm = t => String(t || '').replace(/<[^>]+>/g, '').replace(/\s+/g, '').toLowerCase();
+    const have = new Set(out.flatMap(x => [norm(x.name), norm(x.addr)]).filter(Boolean));
+    const extra = items.map(it => ({name:String(it.title || '').replace(/<[^>]+>/g, ''), addr:it.roadAddress || it.address || '', jibun:it.address || '', tel:it.telephone || '', cat:it.category || '',
+        lat: it.mapy ? +it.mapy / 1e7 : 0, lng: it.mapx ? +it.mapx / 1e7 : 0}))
+      .filter(it => it.name && !have.has(norm(it.name)) && !(it.addr && have.has(norm(it.addr))));
+    if(!extra.length || box.querySelector('.nvw')) return;
+    const w = document.createElement('div'); w.className = 'nvw';
+    w.innerHTML = `<small style="display:block;color:#0f766e;margin:10px 0 2px;font-weight:700">네이버에서만 찾은 곳 ${extra.length}건 <span style="font-weight:400;color:var(--mut)">· 누르면 주소를 검색칸에 넣습니다</span></small>`
+      + extra.map((x, i) => `<div class="ar" data-n="${i}"><div><b>${esc(x.name)}</b><small>${esc(x.addr)}${x.cat ? ' · ' + esc(x.cat.split('>').pop().trim()) : ''}</small></div><button type="button" data-ngo="${i}" style="background:#0f766e">주소 넣기</button></div>`).join('');
+    box.appendChild(w);
+    w.onclick = e => {
+      const row = e.target.closest('.ar'); if(!row) return; e.stopPropagation();
+      const x = extra[+row.dataset.n];
+      $('lpQ').value = x.addr || x.jibun || x.name;
+      if(!$('lpName').value.trim()) $('lpName').value = x.name;
+      if(x.lat && x.lng && x.lat > 30 && x.lat < 40) showTmp(x.lat, x.lng);
+      toast(`'${x.name}' 주소를 검색칸에 넣었습니다 — [검색]을 눌러 위치를 확인하세요`);
+      search();
     };
   }
   $('lpGo').onclick = search;
