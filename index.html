@@ -8342,61 +8342,106 @@ $('iHwp').onclick = async () => {
      (동기화 서버 Code.gs의 parcel 동작 → 브이월드. 키는 서버 스크립트 속성 VWORLD_KEY에만 있음)
    · 「지적도」 버튼: 카카오 지적편집도(모든 필지선) 겹쳐 보기 — 기기에 기억 */
 (function parcelMod(){
-  const SHOW_MAX = 6;   // 이 레벨보다 축소하면 숨김
-  let polys = [], lab = null, curKey = null, owner = null, off = false, cache = null;
+  const SHOW_MAX = 5;   // 이 레벨 이하(확대)일 때 화면 안 모든 대상의 필지 표시
+  const LAB_MAX = 3;    // 이 레벨 이하에서는 지번 표도 모두 표시
+  const shown = new Map();   // pnu → {polys, lab}
+  let off = false, cache = null, sel = null, busy = 0, gen = 0;
+  const pend = new Map();    // 좌표키 → Promise
   const gmap = () => (typeof map !== 'undefined' && map) ? map : null;
   const kOf = (lat, lng) => (+lat).toFixed(5) + '_' + (+lng).toFixed(5);
   const loadC = () => { if(!cache){ try{ cache = LS.get('parcelCache', {}) || {}; }catch(_){ cache = {}; } } return cache; };
-  const saveC = () => { try{ const ks = Object.keys(cache); if(ks.length > 300) ks.slice(0, ks.length - 300).forEach(k => delete cache[k]); LS.set('parcelCache', cache); }catch(_){} };
-  function clear(){ polys.forEach(p => p.setMap(null)); polys = []; if(lab){ lab.setMap(null); lab = null; } }
-  function vis(){ const m = gmap(); if(!m) return; const on = m.getLevel() <= SHOW_MAX; polys.forEach(p => p.setMap(on ? m : null)); if(lab) lab.setMap(on ? m : null); }
-  // 점이 고리 안에 있는지 (이미 받은 필지 재사용)
+  let saveT = null;
+  const saveC = () => { clearTimeout(saveT); saveT = setTimeout(() => { try{ const ks = Object.keys(cache); if(ks.length > 600) ks.slice(0, ks.length - 600).forEach(k => delete cache[k]); LS.set('parcelCache', cache); }catch(_){} }, 800); };
   function inRing(x, y, r){ let c = false; for(let i = 0, j = r.length - 1; i < r.length; j = i++){ const a = r[i], b = r[j]; if(((a[1] > y) !== (b[1] > y)) && (x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0])) c = !c; } return c; }
   function findCached(lat, lng){ const c = loadC(); for(const k in c){ const p = c[k]; if(p && p.rings && p.rings.some(r => inRing(lng, lat, r))) return p; } return undefined; }
   function name(p){
     const a = String(p.addr || '').trim().split(/\s+/);
-    if(a.length >= 2) return a.slice(-2).join(' ').replace(/^(\S+?(리|동|가))\s/, '$1 ');
+    if(a.length >= 2) return a.slice(-2).join(' ');
     return String(p.jibun || '').replace(/[^\d\-산]/g, '') || '필지';
   }
+  const pid = p => p.pnu || JSON.stringify(p.rings[0][0]);
+  /* 좌표 → 필지 (기기 저장 → 서버 순, 같은 좌표 동시 요청은 하나로) */
+  function get(lat, lng){
+    const k = kOf(lat, lng), c = loadC();
+    if(k in c) return Promise.resolve(c[k]);
+    const f = findCached(lat, lng); if(f !== undefined) return Promise.resolve(f);
+    if(off || typeof SY === 'undefined' || !SY.on() || typeof api !== 'function') return Promise.resolve(undefined);
+    if(pend.has(k)) return pend.get(k);
+    const pr = (async () => {
+      while(busy >= 3) await new Promise(r => setTimeout(r, 150));
+      busy++;
+      try{ const j = await api('parcel', {lat, lng}, 20000); const p = j.parcel || null; c[k] = p; saveC(); return p; }
+      catch(e){
+        if(/알 수 없는 요청|VWORLD|브이월드 키/.test(e.message || '')){ if(!off && typeof toast === 'function') toast('필지 경계: ' + e.message); off = true; }
+        return undefined;
+      }
+      finally{ busy--; pend.delete(k); }
+    })();
+    pend.set(k, pr); return pr;
+  }
+  function style(o, on){
+    o.polys.forEach(pl => pl.setOptions({strokeWeight:on ? 4 : 2.5, strokeColor:'#e53935', strokeOpacity:1, fillColor:'#e53935', fillOpacity:on ? .22 : .12}));
+  }
   function draw(p){
-    const m = gmap(); if(!m || !p || !p.rings || !p.rings.length) return;
-    clear();
-    let top = null;
-    p.rings.forEach(r => {
-      const path = r.map(pt => { if(!top || pt[1] > top[1]) top = pt; return new kakao.maps.LatLng(pt[1], pt[0]); });
-      polys.push(new kakao.maps.Polygon({path, strokeWeight:3, strokeColor:'#e53935', strokeOpacity:1, fillColor:'#e53935', fillOpacity:.15, zIndex:2}));
-    });
-    const el = document.createElement('div'); el.className = 'pclab'; el.textContent = name(p);
-    lab = new kakao.maps.CustomOverlay({position:new kakao.maps.LatLng(top[1], top[0]), content:el, yAnchor:1.3, zIndex:4, clickable:false});
-    vis();
-  }
-  async function at(lat, lng, who){
-    lat = +lat; lng = +lng; if(!isFinite(lat) || !isFinite(lng)) return;
-    const k = kOf(lat, lng); owner = who || null;
-    if(k === curKey && polys.length) return;   // 이미 그려져 있음
-    curKey = k; clear();
-    const c = loadC();
-    let p = (k in c) ? c[k] : findCached(lat, lng);
-    if(p === undefined){
-      if(off || typeof SY === 'undefined' || !SY.on() || typeof api !== 'function') return;
-      try{ const j = await api('parcel', {lat, lng}, 15000); p = j.parcel || null; }
-      catch(e){ if(/알 수 없는 요청|VWORLD|브이월드 키/.test(e.message || '')) off = true; return; }   // 서버에 기능·키가 없으면 조용히 끔
-      c[k] = p; saveC();
+    const m = gmap(); if(!m || !p || !p.rings || !p.rings.length) return null;
+    const id = pid(p); let o = shown.get(id);
+    if(!o){
+      let top = null;
+      const polys = p.rings.map(r => new kakao.maps.Polygon({path:r.map(pt => { if(!top || pt[1] > top[1]) top = pt; return new kakao.maps.LatLng(pt[1], pt[0]); }), zIndex:2}));
+      const el = document.createElement('div'); el.className = 'pclab'; el.textContent = name(p);
+      const lab = new kakao.maps.CustomOverlay({position:new kakao.maps.LatLng(top[1], top[0]), content:el, yAnchor:1.3, zIndex:4, clickable:false});
+      o = {polys, lab, p}; shown.set(id, o); style(o, false);
     }
-    if(curKey !== k || !p) return;
-    draw(p);
+    return o;
   }
-  function hide(){ curKey = null; owner = null; clear(); }
-  function onLab(m){
-    if(!m || !m.getPosition) return;
-    if(m._open){ const pos = m.getPosition(); at(pos.getLat(), pos.getLng(), m); }
-    else if(owner === m) hide();
+  function apply(){
+    const m = gmap(); if(!m) return;
+    const lv = m.getLevel(), on = lv <= SHOW_MAX;
+    shown.forEach((o, id) => {
+      const isSel = sel && sel === id;
+      const vis = on || isSel;
+      o.polys.forEach(pl => pl.setMap(vis ? m : null));
+      o.lab.setMap(vis && (isSel || lv <= LAB_MAX) ? m : null);
+      style(o, isSel);
+    });
   }
+  /* 화면 안의 모든 대상 마커(+검색 위치 표시) 필지 불러와 그리기 */
+  let rT = null;
+  function refresh(){ clearTimeout(rT); rT = setTimeout(run, 250); }
+  async function run(){
+    const m = gmap(); if(!m) return;
+    const my = ++gen;
+    apply();
+    if(m.getLevel() > SHOW_MAX) return;
+    const bd = m.getBounds();
+    const pts = [];
+    (typeof markers !== 'undefined' ? markers : []).forEach(mk => { if(mk.getMap && mk.getMap()){ const ps = mk.getPosition(); if(bd.contain(ps)) pts.push(ps); } });
+    if(typeof tmpMk !== 'undefined' && tmpMk && tmpMk.getMap && tmpMk.getMap()) pts.push(tmpMk.getPosition());
+    for(const ps of pts.slice(0, 60)){
+      get(ps.getLat(), ps.getLng()).then(p => { if(p && my === gen){ draw(p); apply(); } });
+    }
+  }
+  async function at(lat, lng){
+    const p = await get(+lat, +lng);
+    if(p){ const o = draw(p); if(o){ sel = pid(p); apply(); } }
+  }
+  function hide(){ sel = null; apply(); }
+  function onLab(mk){
+    if(!mk || !mk.getPosition) return;
+    const ps = mk.getPosition();
+    if(mk._open){ mk._pcSel = true; at(ps.getLat(), ps.getLng()); }
+    else if(mk._pcSel){ mk._pcSel = false; hide(); }
+  }
+  (function hook(n){
+    const m = gmap();
+    if(!m || typeof kakao === 'undefined'){ if(n < 120) setTimeout(() => hook(n + 1), 500); return; }
+    kakao.maps.event.addListener(m, 'idle', refresh);
+    refresh();
+  })(0);
   /* 지적편집도 버튼 */
   function cadInit(n){
     const m = gmap(), wrap = document.getElementById('mapwrap');
     if(!m || !wrap || typeof kakao === 'undefined'){ if(n < 120) setTimeout(() => cadInit(n + 1), 500); return; }
-    kakao.maps.event.addListener(m, 'zoom_changed', vis);
     if(document.getElementById('cadBtn')) return;
     const b = document.createElement('button'); b.id = 'cadBtn'; b.type = 'button'; b.textContent = '지적도';
     let on = false;
@@ -8412,7 +8457,7 @@ $('iHwp').onclick = async () => {
     (function align(k){ const t = wrap.querySelector('.mtBox'); if(!t){ if(k < 40) setTimeout(() => align(k + 1), 250); return; } const w = wrap.getBoundingClientRect(), q = t.getBoundingClientRect(); b.style.right = Math.round(w.right - q.left + 6) + 'px'; b.style.top = Math.round(q.top - w.top + (q.height - b.offsetHeight) / 2) + 'px'; })(0);
     if(LS.get('cadOn', false)) set(true, true);
   }
-  window.PARCEL = {at, hide, onLab};
+  window.PARCEL = {at, hide, onLab, refresh};
   cadInit(0);
 })();
 </script>
