@@ -133,7 +133,10 @@
   #mtGrp button{border:0;background:transparent;color:#111;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
   #mtGrp button.on{background:#1f6feb;color:#fff}
   #mtGrp button[data-t=cad].on{background:#e53935;color:#fff}
-  .pclab{background:#e53935;color:#fff;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);pointer-events:none}
+  .mlab .mjb{display:block;font-size:11px;font-weight:600;color:#111;line-height:1.35}
+  .pclab{background:#fff;color:#111;border:1px solid #e53935;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.25);pointer-events:none}
+  #mtGrp .pcchk{display:flex;align-items:center;gap:4px;padding:0 8px 0 10px;font-size:13px;font-weight:600;color:#111;cursor:pointer;white-space:nowrap;border-right:1px solid #e2e8f0;margin-right:2px;user-select:none}
+  #mtGrp .pcchk input{width:16px;height:16px;margin:0;accent-color:#1f6feb;cursor:pointer}
   #map .mtBox{border-radius:999px!important;box-shadow:0 2px 8px rgba(0,0,0,.18)!important;overflow:hidden;box-sizing:content-box}
   .rpP{width:794px;min-height:1123px;padding:34px 30px;box-sizing:border-box;background:#fff;color:#111;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
   .rpH{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;border-bottom:2px solid #1f6feb;padding-bottom:8px}
@@ -1561,7 +1564,7 @@ function labSet(m){
   const el = document.createElement('div');
   el.className = 'mlab' + (m._open || auto ? ' open' : '') + (auto ? ' auto' : '') + (m._open && m._det ? ' det' : '');
   const info2 = `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}`;
-  el.innerHTML = `<b>${esc(r.name)}</b>` + (auto ? info2 : m._open ? info2
+  el.innerHTML = `<b>${esc(r.name)}</b>` + (window.PARCEL ? PARCEL.jbHtml(m) : '') + (auto ? info2 : m._open ? info2
     + (m._det ? labDetail(r, m._pt)   // 상세: 점검·완료는 맨 아래
       : `<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '수정' : '점검'}</button><button type="button" data-ml="info">상세</button><button type="button" data-ml="move" class="mvb">📍 조정</button></div>`) : '');
   el.onclick = ev => {
@@ -8345,7 +8348,6 @@ $('iHwp').onclick = async () => {
    · 「지적도」 버튼: 카카오 지적편집도(모든 필지선) 겹쳐 보기 — 기기에 기억 */
 (function parcelMod(){
   const SHOW_MAX = 5;   // 이 레벨 이하(확대)일 때 화면 안 모든 대상의 필지 표시
-  const LAB_MAX = 3;    // 이 레벨 이하에서는 지번 표도 모두 표시
   const shown = new Map();   // pnu → {polys, lab}
   let off = false, cache = null, sel = null, busy = 0, gen = 0;
   const pend = new Map();    // 좌표키 → Promise
@@ -8356,10 +8358,17 @@ $('iHwp').onclick = async () => {
   const saveC = () => { clearTimeout(saveT); saveT = setTimeout(() => { try{ const ks = Object.keys(cache); if(ks.length > 600) ks.slice(0, ks.length - 600).forEach(k => delete cache[k]); LS.set('parcelCache', cache); }catch(_){} }, 800); };
   function inRing(x, y, r){ let c = false; for(let i = 0, j = r.length - 1; i < r.length; j = i++){ const a = r[i], b = r[j]; if(((a[1] > y) !== (b[1] > y)) && (x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0])) c = !c; } return c; }
   function findCached(lat, lng){ const c = loadC(); for(const k in c){ const p = c[k]; if(p && p.rings && p.rings.some(r => inRing(lng, lat, r))) return p; } return undefined; }
+  /* 지번 표: 군 단위부터 (예: 구례군 냉천리 200) — 읍·면은 뺌 */
   function name(p){
-    const a = String(p.addr || '').trim().split(/\s+/);
-    if(a.length >= 2) return a.slice(-2).join(' ');
-    return String(p.jibun || '').replace(/[^\d\-산]/g, '') || '필지';
+    const a = String(p.addr || '').trim().split(/\s+/).filter(Boolean);
+    const no = String(p.jibun || '').replace(/\s*[가-힣]+$/, '').trim();
+    if(a.length >= 2){
+      const gi = a.findIndex(t => /(군|구)$/.test(t) || (/시$/.test(t) && !/(특별시|광역시|특별자치시)$/.test(t)));
+      const tail = a.slice(-2);
+      const gun = gi >= 0 && gi < a.length - 2 ? a[gi] : '';
+      return (gun ? gun + ' ' : '') + tail.join(' ');
+    }
+    return no || '필지';
   }
   const pid = p => p.pnu || JSON.stringify(p.rings[0][0]);
   /* 좌표 → 필지 (기기 저장 → 서버 순, 같은 좌표 동시 요청은 하나로) */
@@ -8396,6 +8405,7 @@ $('iHwp').onclick = async () => {
     }
     return o;
   }
+  const labOn = () => !!LS.get('pcLab', false);
   function apply(){
     const m = gmap(); if(!m) return;
     const lv = m.getLevel(), on = lv <= SHOW_MAX;
@@ -8403,7 +8413,7 @@ $('iHwp').onclick = async () => {
       const isSel = sel && sel === id;
       const vis = on || isSel;
       o.polys.forEach(pl => pl.setMap(vis ? m : null));
-      o.lab.setMap(vis && (isSel || lv <= LAB_MAX) ? m : null);
+      o.lab.setMap(null);   // 지번은 지도 위가 아니라 대상 이름표 안(이름 아래 줄)에 표시
       style(o, isSel);
     });
   }
@@ -8417,10 +8427,13 @@ $('iHwp').onclick = async () => {
     if(m.getLevel() > SHOW_MAX) return;
     const bd = m.getBounds();
     const pts = [];
-    (typeof markers !== 'undefined' ? markers : []).forEach(mk => { if(mk.getMap && mk.getMap()){ const ps = mk.getPosition(); if(bd.contain(ps)) pts.push(ps); } });
-    if(typeof tmpMk !== 'undefined' && tmpMk && tmpMk.getMap && tmpMk.getMap()) pts.push(tmpMk.getPosition());
-    for(const ps of pts.slice(0, 60)){
-      get(ps.getLat(), ps.getLng()).then(p => { if(p && my === gen){ draw(p); apply(); } });
+    (typeof markers !== 'undefined' ? markers : []).forEach(mk => { if(mk.getMap && mk.getMap()){ const ps = mk.getPosition(); if(bd.contain(ps)) pts.push([ps, mk]); } });
+    for(const [ps, mk] of pts.slice(0, 60)){
+      get(ps.getLat(), ps.getLng()).then(p => {
+        if(!p) return;
+        if(my === gen){ draw(p); apply(); }
+        if(labOn() && !mk._jb && typeof labSet === 'function') labSet(mk);   // 이름표에 지번 줄 채우기
+      });
     }
   }
   async function at(lat, lng){
@@ -8428,6 +8441,18 @@ $('iHwp').onclick = async () => {
     if(p){ const o = draw(p); if(o){ sel = pid(p); apply(); } }
   }
   function hide(){ sel = null; apply(); }
+  /* 대상 이름표의 이름 아래 줄: 군 단위부터 지번 ([지번] 체크했을 때만) */
+  function jbHtml(mk){
+    mk._jb = false;
+    if(!labOn() || !mk || !mk.getPosition) return '';
+    const ps = mk.getPosition(), c = loadC(), k = kOf(ps.getLat(), ps.getLng());
+    const p = (k in c) ? c[k] : findCached(ps.getLat(), ps.getLng());
+    if(!p) return '';
+    mk._jb = true;
+    const t = name(p);
+    return '<span class="mjb">' + t.replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])) + '</span>';
+  }
+  const relabel = () => { (typeof markers !== 'undefined' ? markers : []).forEach(mk => { if(mk._lab && typeof labSet === 'function') labSet(mk); }); if(typeof updateLabels === 'function') updateLabels(); };
   function onLab(mk){
     if(!mk || !mk.getPosition) return;
     const ps = mk.getPosition();
@@ -8447,7 +8472,7 @@ $('iHwp').onclick = async () => {
     if(document.getElementById('mtGrp')) return;
     const T = kakao.maps.MapTypeId;
     const g = document.createElement('div'); g.id = 'mtGrp';
-    g.innerHTML = '<button type="button" data-t="road">일반도</button><button type="button" data-t="sky">위성도</button><button type="button" data-t="cad">지적도</button>';
+    g.innerHTML = '<label class="pcchk" title="필지 지번 표시"><input type="checkbox" data-t="lab">지번</label><button type="button" data-t="road">일반도</button><button type="button" data-t="sky">위성도</button><button type="button" data-t="cad">지적도</button>';
     const bt = t => g.querySelector('[data-t="' + t + '"]');
     let cad = false;
     const setBase = (t) => {
@@ -8465,11 +8490,13 @@ $('iHwp').onclick = async () => {
       if(b.dataset.t === 'cad') setCad(!cad); else setBase(b.dataset.t);
     };
     ['pointerdown', 'mousedown', 'touchstart', 'dblclick'].forEach(t => g.addEventListener(t, e => e.stopPropagation()));
+    const ck = g.querySelector('[data-t="lab"]'); ck.checked = labOn();
+    ck.onchange = () => { LS.set('pcLab', ck.checked); relabel(); refresh(); };
     wrap.appendChild(g);
     setBase(LS.get('mapBase', 'road') === 'sky' ? 'sky' : 'road');
     if(LS.get('cadOn', false)) setCad(true, true);
   }
-  window.PARCEL = {at, hide, onLab, refresh};
+  window.PARCEL = {at, hide, onLab, refresh, jbHtml};
   cadInit(0);
 })();
 </script>
