@@ -129,8 +129,10 @@
   #rtPanel .rtf{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--ln)}
   #rtPanel .rtf button{flex:1;border:1px solid var(--b);color:var(--b)}
   #rtPanel .rtf button:last-child{background:var(--b);color:#fff}
-  #cadBtn{position:absolute;top:3px;right:120px;z-index:5;padding:7px 14px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;color:#111;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.18);cursor:pointer}
-  #cadBtn.on{background:#e53935;border-color:#e53935;color:#fff}
+  #mtGrp{position:absolute;top:6px;right:6px;z-index:5;display:flex;background:#fff;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.18);padding:3px;gap:2px}
+  #mtGrp button{border:0;background:transparent;color:#111;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
+  #mtGrp button.on{background:#1f6feb;color:#fff}
+  #mtGrp button[data-t=cad].on{background:#e53935;color:#fff}
   .pclab{background:#e53935;color:#fff;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);pointer-events:none}
   #map .mtBox{border-radius:999px!important;box-shadow:0 2px 8px rgba(0,0,0,.18)!important;overflow:hidden;box-sizing:content-box}
   .rpP{width:794px;min-height:1123px;padding:34px 30px;box-sizing:border-box;background:#fff;color:#111;font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif}
@@ -1803,7 +1805,7 @@ if(!window.kakao || !kakao.maps){
     kakao.maps.event.addListener(map, 'zoom_changed', () => updateLabels());
     kakao.maps.event.addListener(map, 'click', () => { markers.forEach(m => { if(m._open){ m._open = false; m._det = false; labSet(m); } }); updateLabels(); });
     map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-    map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
+    // 지도 종류(일반도·위성도·지적도) 버튼은 아래 parcelMod에서 직접 만듦
     // 지도/스카이뷰 버튼 상자: 둥근 알약 모양
     (function roundTypeBox(n){
       const b = [...$('map').querySelectorAll('button')].find(x => /스카이뷰/.test(x.textContent || x.title || ''));
@@ -8438,24 +8440,34 @@ $('iHwp').onclick = async () => {
     kakao.maps.event.addListener(m, 'idle', refresh);
     refresh();
   })(0);
-  /* 지적편집도 버튼 */
+  /* 지도 종류 버튼 한 묶음: 일반도 | 위성도 | 지적도(겹쳐 보기, 따로 켜고 끔) — 기기에 기억 */
   function cadInit(n){
     const m = gmap(), wrap = document.getElementById('mapwrap');
     if(!m || !wrap || typeof kakao === 'undefined'){ if(n < 120) setTimeout(() => cadInit(n + 1), 500); return; }
-    if(document.getElementById('cadBtn')) return;
-    const b = document.createElement('button'); b.id = 'cadBtn'; b.type = 'button'; b.textContent = '지적도';
-    let on = false;
-    const set = (v, quiet) => {
-      on = !!v; b.classList.toggle('on', on); LS.set('cadOn', on);
-      if(on) m.addOverlayMapTypeId(kakao.maps.MapTypeId.USE_DISTRICT); else m.removeOverlayMapTypeId(kakao.maps.MapTypeId.USE_DISTRICT);
-      if(!quiet && typeof toast === 'function') toast(on ? '지적편집도를 켰습니다 (확대하면 필지 경계선이 보입니다)' : '지적편집도를 껐습니다');
+    if(document.getElementById('mtGrp')) return;
+    const T = kakao.maps.MapTypeId;
+    const g = document.createElement('div'); g.id = 'mtGrp';
+    g.innerHTML = '<button type="button" data-t="road">일반도</button><button type="button" data-t="sky">위성도</button><button type="button" data-t="cad">지적도</button>';
+    const bt = t => g.querySelector('[data-t="' + t + '"]');
+    let cad = false;
+    const setBase = (t) => {
+      m.setMapTypeId(t === 'sky' ? T.HYBRID : T.ROADMAP); LS.set('mapBase', t);
+      bt('road').classList.toggle('on', t !== 'sky'); bt('sky').classList.toggle('on', t === 'sky');
     };
-    b.onclick = e => { e.stopPropagation(); set(!on); };
-    ['pointerdown', 'mousedown', 'touchstart', 'dblclick'].forEach(t => b.addEventListener(t, e => e.stopPropagation()));
-    wrap.appendChild(b);
-    // 지도/스카이뷰 상자 바로 왼쪽에 맞춤 (확대 버튼과 겹치지 않게)
-    (function align(k){ const t = wrap.querySelector('.mtBox'); if(!t){ if(k < 40) setTimeout(() => align(k + 1), 250); return; } const w = wrap.getBoundingClientRect(), q = t.getBoundingClientRect(); b.style.right = Math.round(w.right - q.left + 6) + 'px'; b.style.top = Math.round(q.top - w.top + (q.height - b.offsetHeight) / 2) + 'px'; })(0);
-    if(LS.get('cadOn', false)) set(true, true);
+    const setCad = (v, quiet) => {
+      cad = !!v; bt('cad').classList.toggle('on', cad); LS.set('cadOn', cad);
+      if(cad) m.addOverlayMapTypeId(T.USE_DISTRICT); else m.removeOverlayMapTypeId(T.USE_DISTRICT);
+      if(!quiet && typeof toast === 'function') toast(cad ? '지적도를 켰습니다 (확대하면 필지 경계선이 보입니다)' : '지적도를 껐습니다');
+    };
+    g.onclick = e => {
+      e.stopPropagation();
+      const b = e.target.closest('button'); if(!b) return;
+      if(b.dataset.t === 'cad') setCad(!cad); else setBase(b.dataset.t);
+    };
+    ['pointerdown', 'mousedown', 'touchstart', 'dblclick'].forEach(t => g.addEventListener(t, e => e.stopPropagation()));
+    wrap.appendChild(g);
+    setBase(LS.get('mapBase', 'road') === 'sky' ? 'sky' : 'road');
+    if(LS.get('cadOn', false)) setCad(true, true);
   }
   window.PARCEL = {at, hide, onLab, refresh};
   cadInit(0);
