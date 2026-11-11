@@ -129,7 +129,7 @@
   #rtPanel .rtf{display:flex;gap:6px;padding:8px 10px;border-top:1px solid var(--ln)}
   #rtPanel .rtf button{flex:1;border:1px solid var(--b);color:var(--b)}
   #rtPanel .rtf button:last-child{background:var(--b);color:#fff}
-  #cadBtn{position:absolute;top:48px;right:6px;z-index:5;padding:7px 14px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;color:#111;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.18);cursor:pointer}
+  #cadBtn{position:absolute;top:3px;right:120px;z-index:5;padding:7px 14px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;color:#111;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.18);cursor:pointer}
   #cadBtn.on{background:#e53935;border-color:#e53935;color:#fff}
   .pclab{background:#e53935;color:#fff;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);pointer-events:none}
   #map .mtBox{border-radius:999px!important;box-shadow:0 2px 8px rgba(0,0,0,.18)!important;overflow:hidden;box-sizing:content-box}
@@ -8408,6 +8408,8 @@ $('iHwp').onclick = async () => {
     b.onclick = e => { e.stopPropagation(); set(!on); };
     ['pointerdown', 'mousedown', 'touchstart', 'dblclick'].forEach(t => b.addEventListener(t, e => e.stopPropagation()));
     wrap.appendChild(b);
+    // 지도/스카이뷰 상자 바로 왼쪽에 맞춤 (확대 버튼과 겹치지 않게)
+    (function align(k){ const t = wrap.querySelector('.mtBox'); if(!t){ if(k < 40) setTimeout(() => align(k + 1), 250); return; } const w = wrap.getBoundingClientRect(), q = t.getBoundingClientRect(); b.style.right = Math.round(w.right - q.left + 6) + 'px'; b.style.top = Math.round(q.top - w.top + (q.height - b.offsetHeight) / 2) + 'px'; })(0);
     if(LS.get('cadOn', false)) set(true, true);
   }
   window.PARCEL = {at, hide, onLab};
