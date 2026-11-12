@@ -554,6 +554,18 @@
   .setchk small{display:block;font-size:12px;color:var(--mut);margin-top:2px}
   .setnote{display:block;font-size:12px!important;color:var(--mut);margin-top:8px;line-height:1.5}
   #opsDlg #admMsg{margin-top:8px}
+  /* 엑셀 열 · 팝업 항목 설정 */
+  #colDlg .colsel{display:flex;align-items:center;gap:8px;margin-top:6px}
+  #colDlg .colsel>span{width:110px;flex:none;font-size:13px;color:#334155}
+  #colDlg .colsel select{flex:1;min-width:0;padding:7px 8px;font-size:14px}
+  #colDlg .coltb{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  #colDlg .coltb th{background:#f1f5f9;color:#475569;font-weight:600;padding:6px 4px;border-bottom:1px solid #e2e8f0;text-align:center}
+  #colDlg .coltb td{padding:6px 4px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+  #colDlg .coltb td:first-child{font-weight:600;color:#1e293b;word-break:keep-all}
+  #colDlg .coltb td.cex{color:#64748b;font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #colDlg .coltb td:nth-child(3),#colDlg .coltb td:nth-child(4){text-align:center;width:52px}
+  #colDlg .coltb input{width:18px;height:18px;margin:0}
+  #colDlg .coltb tr.cnm td{color:#94a3b8}
 
   /* ===== 칸 도구줄: 디자인 도구와 같은 밝은 카드 모양 ===== */
   #ldPage .le .ctbar{background:#fff!important;color:#334155!important;border:1px solid #cbd5e1;border-radius:14px!important;padding:0!important;gap:0!important;overflow:hidden;box-shadow:0 12px 30px rgba(15,23,42,.22)!important;font-family:var(--f-body)}
@@ -750,11 +762,29 @@
     <div class="setinfo"><span class="si">📊</span><small id="listNow"></small></div>
     <button type="button" id="openInSet" class="sbp">엑셀 올리기 (명단 추가·교체)</button>
     <div class="sg2"><button type="button" id="listRen" class="sbo">명단 이름 바꾸기</button><button type="button" id="listDel" class="sbo sbw">명단 삭제</button></div>
+    <button type="button" id="listPop" class="sbo" style="width:100%;margin-top:8px">팝업 표시 항목 설정 (간단 · 상세)</button>
     <div class="setsub">엑셀 서식 받기</div>
     <div class="sg2"><button type="button" id="tplXlsBtn" class="sbo">빈 서식</button><button type="button" id="curXlsBtn" class="sbo">현재 명단 (추가·수정용)</button></div>
     <label class="setchk"><input type="checkbox" id="allowTop"><span>상단에 '엑셀 열기' 버튼 표시<small>켜면 비밀번호 없이 누구나 명단을 바꿀 수 있습니다</small></span></label>
     <small class="setnote">☁ 동기화가 연결된 상태에서 올리면 모든 사용자에게 같은 명단이 공유됩니다.</small>
     <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">닫기</button></div>
+  </form>
+</dialog>
+
+<dialog id="colDlg" class="setdlg" style="max-width:600px;width:94vw">
+  <form method="dialog">
+    <div id="colBase" class="setbox" style="margin-top:0">
+      <div class="setlab">지도 표시 기준</div>
+      <label class="colsel"><span>이름 (제목)</span><select id="colName"></select></label>
+      <label class="colsel"><span>위치 (지번·주소)</span><select id="colPlace"></select></label>
+      <label class="colsel"><span>읍면</span><select id="colTown"></select></label>
+    </div>
+    <div class="setbox">
+      <div class="setlab">팝업에 보일 항목</div>
+      <small class="setnote" style="margin-top:0">간단 = 마커를 눌렀을 때 이름 아래 · 상세 = [상세]를 눌렀을 때. 체크한 순서는 엑셀 열 순서를 따릅니다.</small>
+      <table class="coltb"><thead><tr><th>엑셀 열</th><th>예시</th><th>간단</th><th>상세</th></tr></thead><tbody id="colBody"></tbody></table>
+    </div>
+    <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">취소</button><button type="button" id="colOk" class="sgp">확인</button></div>
   </form>
 </dialog>
 
@@ -1169,11 +1199,19 @@ function geocodeOne(addr){
     });
   });
 }
+/* 설정 지역 + 지번 (지번이 이미 '구례군 …'이나 '전라남도 …'로 시작하면 겹치지 않게) */
+function regionJoin(rg, p){
+  const t = String(rg || '').trim().split(/\s+/).filter(Boolean), q = String(p || '').trim();
+  if(!t.length) return q;
+  if(/^[가-힣]+(도|특별시|광역시|특별자치시|특별자치도)\s/.test(q)) return q;
+  const i = t.findIndex(x => q.startsWith(x + ' '));
+  return i >= 0 ? [...t.slice(0, i), q].join(' ') : `${rg} ${q}`.trim();
+}
 async function geocodePlace(place){
   const key = region + '|' + place;
   if(geoCache[key] !== undefined) return geoCache[key];
   const cands = [];
-  const full = `${region} ${place}`.trim();
+  const full = regionJoin(region, place);
   cands.push(full);
   const noSub = full.replace(/(\d+)-\d+$/, '$1');
   if(noSub !== full) cands.push(noSub);
@@ -1244,14 +1282,26 @@ function mapHeaders(heads){
   }
   return map;
 }
-function readWorkbook(buf){
+/* 엑셀 첫 시트(작성요령 제외)를 제목 + 행으로 읽기 */
+function readSheetRaw(buf){
   const wb = XLSX.read(buf, {type:'array'});
   const ws = wb.Sheets[wb.SheetNames.find(n => !/작성요령|작성방법|안내/.test(n)) || wb.SheetNames[0]];
   const json = XLSX.utils.sheet_to_json(ws, {defval:''});
-  if(!json.length) return [];
-  const heads = Object.keys(json[0]).filter(h => !/^__EMPTY/.test(h));
+  const heads = json.length ? Object.keys(json[0]).filter(h => !/^__EMPTY/.test(h)) : [];
+  return {heads, json};
+}
+/* 행 만들기. cfg(열 설정)가 있으면 이름·위치·읍면 열은 사용자가 고른 열을 씀 → {rows, map(엑셀 제목→명단 키)} */
+function buildRows({heads, json}, cfg){
+  if(!json.length) return {rows:[], map:{}};
   const map = mapHeaders(heads);
-  return json.map(r => {
+  if(cfg){
+    for(const [k, h] of [['name', cfg.name], ['place', cfg.place], ['town', cfg.town]]){
+      if(!h || !heads.includes(h)) continue;
+      for(const x of Object.keys(map)) if(map[x] === k) delete map[x];
+      map[h] = k;
+    }
+  }
+  const rows = json.map(r => {
     const o = {}, etc = {};
     XLS_COLS.forEach(([k, , , isNum]) => o[k] = '');
     for(const h of heads){
@@ -1266,6 +1316,89 @@ function readWorkbook(buf){
     o.etc = Object.keys(etc).length ? JSON.stringify(etc) : '';
     return o;
   }).filter(r => r.name || r.place);
+  return {rows, map};
+}
+function readWorkbook(buf, cfg){ return buildRows(readSheetRaw(buf), cfg).rows; }
+
+/* ---------- 팝업 표시 항목 (명단별: 명단 첫 행의 etc._pop = {a:모든 열, h:열→키, s:간단, d:상세}) ---------- */
+let _popRef = null, _popC = {};
+function popOf(r){
+  if(_popRef !== ROSTER){ _popRef = ROSTER; _popC = {}; for(const x of ROSTER){ const n = listOf(x); if(n in _popC) continue; const e = etcRaw(x); if(e._pop) _popC[n] = e._pop; } }
+  return _popC[listOf(r)] || null;
+}
+const colVal = (r, pc, h) => { const k = (pc.h || {})[h]; const v = k ? r[k] : etcOf(r)[h]; return v == null ? '' : v; };
+const POP_WON = ['total','subsidy','self','national','province','county'];
+const telDigits = v => { const t = String(v || '').replace(/[^\d]/g, ''); return /^0\d{8,10}$/.test(t) ? t : ''; };
+function popFmt(k, v, pt){
+  if(v === '' || v == null) return '';
+  if(POP_WON.includes(k)){ const n = Number(String(v).replace(/,/g, '')); return isNaN(n) ? esc(v) : n.toLocaleString() + '원'; }
+  if(k === 'area'){ const n = Number(String(v).replace(/,/g, '')); return isNaN(n) ? esc(v) : n.toLocaleString() + '㎡'; }
+  const t = String(v).trim();
+  if(telDigits(t) && /^[\d\s\-()]+$/.test(t)) return `<a href="tel:${telDigits(t)}">${esc(t)}</a>`;
+  if(/^https?:\/\/\S+$/i.test(t)) return `<a href="${esc(t)}" target="_blank" rel="noopener">링크 열기</a>`;
+  return esc(t) + (k === 'place' && pt && pt.approx ? ' <span class="fail">(근사 위치)</span>' : '');
+}
+/* 처음 정하는 기본값: 보조사업 서식이면 사업명·세부사업, 아니면 이름·위치 말고 앞의 두 열 */
+function defaultPop(heads, map, nameH){
+  const std = heads.some(h => map[h] === 'biz');
+  const s = std ? heads.filter(h => ['biz', 'detail'].includes(map[h]))
+    : heads.filter(h => h !== nameH && !['name', 'place', 'addr', 'tel', 'town'].includes(map[h])).slice(0, 2);
+  const d = heads.filter(h => h !== nameH && map[h] !== 'name');
+  return {s, d};
+}
+/* 열 설정 창. mode 'upload' = 이름·위치·읍면 열도 고름, 'edit' = 팝업 항목만 */
+function colDialog(o){
+  return new Promise(res => {
+    const d = $('colDlg'), heads = o.heads, base = o.mode === 'upload', pv = o.prev || {};
+    $('colBase').style.display = base ? '' : 'none';
+    const pick = (k, re) => (pv[k] && heads.includes(pv[k])) ? pv[k] : (heads.find(h => o.map[h] === k) || (re ? heads.find(h => re.test(normHead(h))) : '') || '');
+    let nm = '';
+    if(base){
+      const opts = (sel, none) => (none ? `<option value="">${none}</option>` : '') + heads.map(h => `<option value="${esc(h)}"${h === sel ? ' selected' : ''}>${esc(h)}</option>`).join('');
+      nm = pick('name', /타이틀|제목|명칭|상호|업체|시설|농가|대표|이름|성명/) || heads[0];
+      const pl = pick('place', /지번|소재지|사업장|주소|위치|장소/);
+      const tw = pick('town', /^읍면|읍·면|읍면동/);
+      $('colName').innerHTML = opts(nm); $('colPlace').innerHTML = opts(pl, '(선택하세요)'); $('colTown').innerHTML = opts(tw, '(위치에서 자동으로)');
+    } else nm = o.nameH || '';
+    const df = defaultPop(heads, o.map, nm);
+    const S = pv.s || df.s, D = pv.d || df.d;
+    const ex = h => { for(const r of o.sample || []){ const v = r[h]; if(String(v ?? '').trim()) return String(v).trim(); } return ''; };
+    $('colBody').innerHTML = heads.map((h, i) => `<tr><td>${esc(h)}</td><td class="cex" title="${esc(ex(h))}">${esc(ex(h))}</td><td><input type="checkbox" data-s="${i}"${S.includes(h) ? ' checked' : ''}></td><td><input type="checkbox" data-d="${i}"${D.includes(h) ? ' checked' : ''}></td></tr>`).join('');
+    const onClose = () => { d.removeEventListener('close', onClose); res(null); };
+    d.addEventListener('close', onClose);
+    $('colOk').onclick = () => {
+      const cfg = {s:heads.filter((h, i) => d.querySelector(`[data-s="${i}"]`).checked), d:heads.filter((h, i) => d.querySelector(`[data-d="${i}"]`).checked)};
+      if(base){
+        cfg.name = $('colName').value; cfg.place = $('colPlace').value; cfg.town = $('colTown').value;
+        if(!cfg.place){ alert('지도에 위치를 찍을 열(지번 또는 주소)을 골라 주세요.'); return; }
+        if(!cfg.name){ alert('이름(제목)으로 쓸 열을 골라 주세요.'); return; }
+      }
+      d.removeEventListener('close', onClose); d.close(); res(cfg);
+    };
+    d.showModal();
+  });
+}
+/* 지금 명단의 열 목록 (설정이 없던 명단은 기본 서식 항목 + 추가 열) */
+function listCols(listRows){
+  const pc = listRows.length ? popOf(listRows[0]) : null;
+  const extra = [...new Set(listRows.flatMap(r => Object.keys(etcOf(r))))];
+  if(pc && pc.a){ const h = {...(pc.h || {})}; return {heads:[...pc.a, ...extra.filter(x => !pc.a.includes(x))], map:h, pc}; }
+  const map = {}, heads = [];
+  for(const [k, label] of XLS_COLS){ if(listRows.some(r => r[k] !== '' && r[k] != null)){ heads.push(label); map[label] = k; } }
+  return {heads:[...heads, ...extra.filter(x => !heads.includes(x))], map, pc};
+}
+/* 명단의 팝업 설정 저장 (명단 첫 행에만 두고 동기화) */
+function savePop(name, pop){
+  let first = true;
+  ROSTER = ROSTER.map(r => {
+    if(listOf(r) !== name) return r;
+    const e = {...etcRaw(r)};
+    if(first){ e._pop = pop; first = false; } else delete e._pop;
+    return {...r, etc:JSON.stringify(e)};
+  });
+  saveRoster(); rows = pickRows();
+  queueListOp({op:'set', name, rows:ROSTER.filter(x => listOf(x) === name).map(({_pts, ...x}) => x)});
+  if(window.syncSoon) syncSoon();
 }
 const etcOf = r => { const o = {...etcRaw(r)}; Object.keys(o).forEach(k => { if(k[0] === '_') delete o[k]; }); return o; };
 /* ---------- 업로드용 엑셀 서식 ---------- */
@@ -1447,7 +1580,9 @@ const LABEL_LEVEL = 5;
 function labDetail(r, pt){
   const won = v => { if(v === '' || v == null) return ''; const n = Number(String(v).replace(/,/g, '')); return isNaN(n) ? esc(v) : n.toLocaleString() + '원'; };
   const areaN = Number(String(r.area ?? '').replace(/,/g, '')), area = r.area === '' || r.area == null ? '' : (isNaN(areaN) ? String(r.area) : areaN.toLocaleString() + '㎡');
-  const tel = String(r.tel || '').replace(/[^\d+]/g, '');
+  const pc = popOf(r);
+  let tel = String(r.tel || '').replace(/[^\d+]/g, '');
+  if(!tel && pc) tel = pc.d.map(h => telDigits(colVal(r, pc, h))).find(Boolean) || '';
   const to = `https://map.kakao.com/link/to/${encodeURIComponent(r.name + ' 사업장')},${pt.lat},${pt.lng}`;
   const view = `https://map.kakao.com/link/map/${encodeURIComponent(r.name + ' 사업장')},${pt.lat},${pt.lng}`;
   const row = (k, v) => v ? `<div class="md"><em>${k}</em><span>${v}</span></div>` : '';
@@ -1457,7 +1592,7 @@ function labDetail(r, pt){
   const when = last ? fmtDT(last.date).replace(/\s\d{1,2}:\d{2}$/, '') : '';
   const st = done ? `<span class="st ok">✔ 점검 완료 · ${esc(when)}${last.overall ? ' · ' + esc(last.overall) : ''}</span>`
     : has ? `<span class="st ing">점검 중 (미완료) · ${esc(when)}</span>` : '<span class="st no">미점검</span>';
-  return `<div class="mdet">`
+  const fields = pc ? pc.d.map(h => row(esc(h), popFmt((pc.h || {})[h], colVal(r, pc, h), pt))).join('') : (''
     + row('읍면', esc(placeTown(r)))
     + row('사업장', esc(r.place) + (pt.approx ? ' <span class="fail">(근사 위치)</span>' : ''))
     + row('품목', esc(r.item || ''))
@@ -1468,7 +1603,8 @@ function labDetail(r, pt){
     + row('재원', gov)
     + row('주소', esc(r.addr || ''))
     + row('연락처', tel ? `<a href="tel:${tel}">${esc(r.tel)}</a>` : '')
-    + row('비고', esc(r.note || ''))
+    + row('비고', esc(r.note || '')));
+  return `<div class="mdet">` + fields
     + `<div class="mlinks">${tel ? `<a href="tel:${tel}">📞 전화</a>` : ''}<a href="${to}" target="_blank" rel="noopener">🧭 길찾기</a><a href="${view}" target="_blank" rel="noopener"><img class="gico" src="'+GLOBE_IMG+'" alt=""> 카카오맵</a></div>`
     + `<div class="mst">${st}</div>`
     + `<div class="mbot"><button type="button" data-ml="insp">${last ? '수정' : '점검'}</button><button type="button" data-ml="move" class="mvb">📍 조정</button>${has ? `<label><input type="checkbox" ${done ? 'checked' : ''} data-ml="done"> 점검 완료</label>` : ''}</div></div>`;
@@ -1563,7 +1699,9 @@ function labSet(m){
   m._auto = auto;
   const el = document.createElement('div');
   el.className = 'mlab' + (m._open || auto ? ' open' : '') + (auto ? ' auto' : '') + (m._open && m._det ? ' det' : '');
-  const info2 = `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}`;
+  const pc = popOf(r);
+  const info2 = pc ? pc.s.map(h => String(colVal(r, pc, h)).trim()).filter(Boolean).map((v, j) => `<span${j ? ' class="dt"' : ''}>${esc(v)}</span>`).join('')
+    : `${r.biz ? `<span>${esc(r.biz)}</span>` : ''}${r.detail ? `<span class="dt">${esc(r.detail)}</span>` : ''}`;
   el.innerHTML = `<b>${esc(r.name)}</b>` + (window.PARCEL ? PARCEL.jbHtml(m) : '') + (auto ? info2 : m._open ? info2
     + (m._det ? labDetail(r, m._pt)   // 상세: 점검·완료는 맨 아래
       : `<div class="mlb"><button type="button" data-ml="insp">${isDone(r) ? '수정' : '점검'}</button><button type="button" data-ml="info">상세</button><button type="button" data-ml="move" class="mvb">📍 조정</button></div>`) : '');
@@ -1650,8 +1788,16 @@ function bindUi(){
   $('file').onchange = async e => {
     const f = e.target.files[0]; if(!f) return;
     try{
-      const parsed = readWorkbook(await f.arrayBuffer());
-      if(!parsed.length){ alert('엑셀에서 명단을 찾지 못했습니다.'); e.target.value = ''; return; }
+      const raw = readSheetRaw(await f.arrayBuffer());
+      if(!raw.json.length){ alert('엑셀에서 명단을 찾지 못했습니다.'); e.target.value = ''; return; }
+      // 열 설정: 이름·위치·읍면 열과 팝업(간단·상세)에 보일 항목 고르기 (같은 서식은 지난 선택을 기억)
+      const sig = raw.heads.join('|'), mem = LS.get('colMem', {});
+      const cfg = await colDialog({mode:'upload', heads:raw.heads, sample:raw.json.slice(0, 5), map:mapHeaders(raw.heads), prev:mem[sig]});
+      if(!cfg){ e.target.value = ''; return; }
+      mem[sig] = cfg; LS.set('colMem', mem);
+      const built = buildRows(raw, cfg), parsed = built.rows;
+      if(!parsed.length){ alert('고른 이름·위치 열에 값이 있는 행이 없습니다.'); e.target.value = ''; return; }
+      const pop = {a:raw.heads, h:built.map, s:cfg.s, d:cfg.d};
       const base = f.name.replace(/\.[^.]+$/, '').trim() || '새 명단', ns = listNames();
       let name = prompt(`명단 이름을 정해 주세요 (${parsed.length}명).\n· 새 이름 → 명단이 하나 더 추가됩니다\n· 같은 이름 → 그 명단을 새 내용으로 바꿉니다` + (ns.length ? `\n\n지금 있는 명단: ${ns.join(', ')}` : ''), base);
       if(name === null){ e.target.value = ''; return; }
@@ -1659,6 +1805,7 @@ function bindUi(){
       const old = ROSTER.find(r => listOf(r) === name);
       const lid = old ? listIdOf(old) : (name === LIST_DEF ? '' : 'L' + Date.now().toString(36));
       const newRows = parsed.map(r => withList(r, name, lid));
+      setEtc(newRows[0], x => { x._pop = pop; });
       ROSTER = [...ROSTER.filter(r => listOf(r) !== name), ...newRows];
       curList = name; LS.set('curList', name); saveRoster(); rows = pickRows();
       queueListOp({op:'set', name, rows:newRows});
@@ -1694,6 +1841,17 @@ function bindUi(){
     ROSTER = ROSTER.filter(r => listOf(r) !== name);
     queueListOp({op:'del', name}); saveRoster(); rows = pickRows(); LS.set('curList', curList); plot();
     if(window.syncSoon) syncSoon(); toast(`'${name}' 명단을 삭제했습니다`);
+  };
+  $('listPop').onclick = async () => {
+    if(!rows.length) return toast('불러온 명단이 없습니다');
+    const name = curList, {heads, map, pc} = listCols(rows);
+    const nameH = heads.find(h => map[h] === 'name') || '';
+    const sample = rows.slice(0, 5).map(r => Object.fromEntries(heads.map(h => [h, colVal(r, {h:map}, h)])));
+    const cfg = await colDialog({mode:'edit', heads, sample, map, nameH, prev:pc ? {s:pc.s, d:pc.d} : null});
+    if(!cfg) return;
+    savePop(name, {a:heads, h:map, s:cfg.s, d:cfg.d});
+    markers.forEach(m => { if(m._lab) labSet(m); }); updateLabels();
+    toast(`'${name}' 명단의 팝업 표시 항목을 저장했습니다`);
   };
   $('tplXlsBtn').onclick = () => downloadRosterXlsx(false);
   $('curXlsBtn').onclick = () => { if(!rows.length){ alert('불러온 명단이 없어 빈 서식을 내려받습니다.'); } downloadRosterXlsx(true); };
@@ -6163,7 +6321,7 @@ $('iHwp').onclick = async () => {
   }
 
   /* ---------- 팝업(dialog) ---------- */
-  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', hwpDlg:'한글 양식 미리보기', dlg:'설정', listDlg:'엑셀 명단 관리', opsDlg:'운영 관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리', logDlg:'접속 · 점검 기록'};
+  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', hwpDlg:'한글 양식 미리보기', dlg:'설정', listDlg:'엑셀 명단 관리', colDlg:'엑셀 열 · 팝업 항목 설정', opsDlg:'운영 관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리', logDlg:'접속 · 점검 기록'};
   function winDialog(d){
     if(d._win) return; d._win = true;
     const bar = document.createElement('div');
