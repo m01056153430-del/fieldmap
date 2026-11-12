@@ -764,7 +764,8 @@
     <div class="sg2"><button type="button" id="listRen" class="sbo">명단 이름 바꾸기</button><button type="button" id="listDel" class="sbo sbw">명단 삭제</button></div>
     <button type="button" id="listPop" class="sbo" style="width:100%;margin-top:8px">팝업 표시 항목 설정 (간단 · 상세)</button>
     <div class="setsub">엑셀 서식 받기</div>
-    <div class="sg2"><button type="button" id="tplXlsBtn" class="sbo">빈 서식</button><button type="button" id="curXlsBtn" class="sbo">현재 명단 (추가·수정용)</button></div>
+    <div class="sg2"><button type="button" id="cmnXlsBtn" class="sbo">빈 서식 (공통)</button><button type="button" id="tplXlsBtn" class="sbo">보조사업 서식</button></div>
+    <button type="button" id="curXlsBtn" class="sbo" style="width:100%;margin-top:8px">현재 명단 (추가·수정용)</button>
     <label class="setchk"><input type="checkbox" id="allowTop"><span>상단에 '엑셀 열기' 버튼 표시<small>켜면 비밀번호 없이 누구나 명단을 바꿀 수 있습니다</small></span></label>
     <small class="setnote">☁ 동기화가 연결된 상태에서 올리면 모든 사용자에게 같은 명단이 공유됩니다.</small>
     <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">닫기</button></div>
@@ -1257,7 +1258,8 @@ const XLS_GUIDE = [
   ['· 보조금 계 = 국비 + 도비 + 군비 (국·도·군비를 모두 적으면 보조금 계는 비워도 앱이 합계를 계산합니다)'],
   ['· 자부담은 환급대상 부가세를 포함한 자부담 소계를 적습니다.'],
   ['· 열을 더 추가해도 됩니다. 추가한 열 제목은 점검 서식 디자인에서 {제목} 으로 불러 쓸 수 있습니다.'],
-  ['· 이 「작성요령」 시트는 올릴 때 자동으로 무시됩니다.']
+  ['· 이 「작성요령」 시트는 올릴 때 자동으로 무시됩니다.'],
+  ['· 올릴 때 [엑셀 열 · 팝업 항목 설정] 창에서 팝업(간단·상세)에 보일 열을 고를 수 있습니다.']
 ];
 const normHead = h => String(h ?? '').replace(/\s|\(.*?\)|（.*?）/g, '');
 /* 숫자로 바꿀 수 있으면 숫자, 아니면 원래 글자 */
@@ -1402,6 +1404,45 @@ function savePop(name, pop){
 }
 const etcOf = r => { const o = {...etcRaw(r)}; Object.keys(o).forEach(k => { if(k[0] === '_') delete o[k]; }); return o; };
 /* ---------- 업로드용 엑셀 서식 ---------- */
+/* 공통 빈 서식: 어떤 명단이든 이 조건만 맞추면 올릴 수 있음 */
+const XLS_COMMON_GUIDE = [
+  ['명단 엑셀 작성요령 (모든 명단 공통)'],
+  [''],
+  ['1. 첫 줄(1행)은 열 제목, 2행부터 한 줄에 한 곳씩 적습니다. 제목 위에 표 제목·날짜·빈 줄을 넣지 마세요.'],
+  ['2. 명단은 첫 번째 시트에 둡니다. 이 「작성요령」 시트는 올릴 때 자동으로 무시됩니다 (지워도 됩니다).'],
+  ['3. 셀 병합을 하지 마세요. 같은 값이라도 행마다 모두 적습니다. (병합하면 첫 행만 값이 읽힙니다)'],
+  ['4. 꼭 있어야 하는 열은 두 가지입니다.'],
+  ['    · 이름(제목): 지도 마커 위에 보일 이름 — 사람 이름, 업체·시설명 등'],
+  ['    · 위치: 지번 또는 주소 — 이 값으로 지도에 위치를 찍습니다'],
+  ['    열 제목은 자유입니다. 올릴 때 [엑셀 열 · 팝업 항목 설정] 창에서 어느 열이 이름·위치인지 고릅니다.'],
+  ['5. 위치는 지번을 권장합니다. 예) 구례읍 봉동리 89-1 / 산은 「산」을 붙임: 산동면 좌사리 산 12'],
+  ['    · 도로명 주소도 됩니다. 예) 구례읍 동산1길 12'],
+  ['    · 앱 설정의 시·군(예: 전라남도 구례군)이 앞에 자동으로 붙습니다. 다른 시·군이면 시·군부터 적습니다.'],
+  ['    · 한 곳에 필지가 여럿이면 쉼표로 구분합니다. 예) 구례읍 봉동리 89-1, 구례읍 봉동리 90-5'],
+  ['6. 읍면 열은 있어도 되고 없어도 됩니다. 없으면 위치에서 읍·면을 자동으로 찾습니다.'],
+  ['7. 그 밖의 열은 얼마든지 추가·삭제할 수 있습니다. 올릴 때 열마다 「간단」(마커를 누르면 이름 아래) · 「상세」([상세]를 누르면) 팝업에 보일지 체크합니다.'],
+  ['8. 전화번호(예: 010-1234-5678)는 팝업에서 누르면 전화가 걸리고, 인터넷 주소(http로 시작)는 링크로 열립니다.'],
+  ['9. 금액·면적은 숫자로 적습니다 (쉼표는 있어도 됨).'],
+  ['10. 파일은 .xlsx · .xls · .csv 모두 됩니다. 비밀번호를 건 파일은 읽지 못합니다.'],
+  ['11. 올릴 때 명단 이름을 정합니다. 같은 이름이면 그 명단을 새 내용으로 바꾸고, 새 이름이면 명단이 하나 더 추가됩니다.'],
+  ['12. 처음 올리면 위치를 찾느라 시간이 걸립니다 (수백 곳이면 몇 분). 한 번 찾은 위치는 저장되어 다음부터 빠릅니다.'],
+  ['13. 점검 서식(한글 양식)에서 추가한 열은 {열 제목} 으로 불러 쓸 수 있습니다.']
+];
+function downloadCommonXlsx(){
+  const head = ['이름', '지번·주소', '읍면', '연락처', '구분', '내용', '비고'];
+  const body = [
+    ['홍길동', '구례읍 봉동리 89-1', '구례읍', '010-0000-0000', '예시 구분', '팝업에 보일 내용', '예시 행 - 지우고 작성'],
+    ['○○관광농원(대표 김○○)', '구례군 산동면 탑정리 442-1', '산동면', '061-000-0000', '관광농원', '체험농장, 숙박시설', '열은 자유롭게 추가·삭제']
+  ];
+  const ws = XLSX.utils.aoa_to_sheet([head, ...body]);
+  ws['!cols'] = [18, 30, 9, 15, 14, 30, 22].map(w => ({wch:w}));
+  const g = XLSX.utils.aoa_to_sheet(XLS_COMMON_GUIDE); g['!cols'] = [{wch:120}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '명단');
+  XLSX.utils.book_append_sheet(wb, g, '작성요령');
+  const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  saveBlob(new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}), '명단_업로드용_공통서식.xlsx');
+}
 function downloadRosterXlsx(withData){
   const extraHeads = withData ? [...new Set(rows.flatMap(r => Object.keys(etcOf(r))))] : [];
   const head = [...XLS_COLS.map(c => c[1]), ...extraHeads];
@@ -1853,6 +1894,7 @@ function bindUi(){
     markers.forEach(m => { if(m._lab) labSet(m); }); updateLabels();
     toast(`'${name}' 명단의 팝업 표시 항목을 저장했습니다`);
   };
+  $('cmnXlsBtn').onclick = () => downloadCommonXlsx();
   $('tplXlsBtn').onclick = () => downloadRosterXlsx(false);
   $('curXlsBtn').onclick = () => { if(!rows.length){ alert('불러온 명단이 없어 빈 서식을 내려받습니다.'); } downloadRosterXlsx(true); };
   /* 명단 목록 창: 끌어서 이동, 오른쪽 아래 모서리로 크기 조절, — 최소화, ✕ 닫기, [목록] 버튼으로 열기/닫기 */
