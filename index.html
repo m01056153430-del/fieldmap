@@ -2252,7 +2252,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261113103832';
+const APP_VER = '20261113104054';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -4140,10 +4140,12 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     // 기존 내용은 어느 것도 다른 쪽으로 옮기지 않음 — 쪽 끝을 넘는 부분은 화면에 빨간 점선 아래로 보이고, PDF·한글에서 자동으로 다음 쪽으로 넘어감
     if(els.some(x => x.y + x.h > PH)) toast('쪽 끝(빨간 점선)을 넘는 내용은 PDF·한글에서 자동으로 다음 쪽에 이어집니다');
   }
+  /* 새로 넣는 표는 A4(가로 794px) 좌우에 1cm(약 38px)씩 여백을 두고 꽉 차게 */
+  const TBL_X = 38, TBL_W = PW - 2 * 38;
   /* 사진 여러 장: 한 쪽에 최대 4장(2×2, 사진 + 설명 칸). 넘치면 다음 쪽을 새로 만든다 */
   function addPhotos(cnt){
     let n = usedPhotoMax(L) + 1;
-    const PHH = 330, CAPH = 34, W = 682, X = 56;
+    const PHH = 330, CAPH = 34, W = TBL_W, X = TBL_X;
     let at = pg;
     for(let k = 0; k < cnt; k += 4){
       const m = Math.min(4, cnt - k), rows = Math.ceil(m / 2), cells = [], rowH = {}, ca = {}, cst = {};
@@ -4184,25 +4186,25 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(type === 'table'){
       const [R, C] = ask; LS.set('ldTbR', R); LS.set('ldTbC', C);
       const cells = Array.from({length:R}, () => Array.from({length:C}, (_, c) => (c === 0 && C > 1) ? '항목' : ''));
-      e = mk({type, ...base, x:56, w:682, h:32 * R, cols:C === 2 ? [25, 75] : Array(C).fill(1), shadeR:[], shadeC:C > 1 ? [0] : [], cells});
+      e = mk({type, ...base, x:TBL_X, w:TBL_W, h:32 * R, cols:C === 2 ? [25, 75] : Array(C).fill(1), shadeR:[], shadeC:C > 1 ? [0] : [], cells});
     }
     if(type === 'checklist'){
       const N = ask[0];
       if(N < cur.items.length) cur.items.splice(N);
       for(let k = cur.items.length; k < N; k++) cur.items.push({label:`점검 항목 ${k + 1}`, result:'', note:''});
       dirty = true;
-      e = mk({type, ...base, x:56, w:682, h:31 * (N + 1), cols:[8,46,16,30]});
+      e = mk({type, ...base, x:TBL_X, w:TBL_W, h:31 * (N + 1), cols:[8,46,16,30]});
     }
     if(type === 'photo'){
       // 사진 칸 + 사진설명 칸으로 된 표
       const n = usedPhotoMax(L) + 1;
-      e = mk({type:'table', ...base, x:56, w:682, h:330, cols:[1], shadeR:[], shadeC:[], bw:1, bc:'#111111',
+      e = mk({type:'table', ...base, x:TBL_X, w:TBL_W, h:330, cols:[1], shadeR:[], shadeC:[], bw:1, bc:'#111111',
         cells:[[`{사진 ${n}}`], [`{사진 ${n} 설명}`]], rowH:{0:292, 1:36},
         ca:{'0:0':'center', '1:0':'center'}, cst:{'1:0':{italic:true, color:'#888888', size:16}}});
     }
     if(type === 'sat'){
       // 위성사진(사업장 위치, 4:3) + 아래 칸은 사업장 위치
-      e = mk({type:'table', ...base, x:56, w:682, h:432, cols:[1], shadeR:[], shadeC:[], bw:1, bc:'#111111',
+      e = mk({type:'table', ...base, x:TBL_X, w:TBL_W, h:432, cols:[1], shadeR:[], shadeC:[], bw:1, bc:'#111111',
         cells:[['{위성사진}'], ['{사업장 장소}']], rowH:{0:396, 1:36},
         ca:{'0:0':'center', '1:0':'center'}, cst:{'1:0':{size:14}}});
     }
@@ -4210,11 +4212,11 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       // 3칸: 농가명 | (입력) | 서명 · 5칸: 소속 | | 성명 | | 서명 · 7칸: 소속 | | 직급 | | 성명 | | 서명
       const R = ask[0], T = String(ask[1]); LS.set('ldSgR', R); LS.set('ldSgT', T);
       const SPEC = {
-        '3':{w:682, cols:[150, 250, 282], labs:{0:'농가명'}},
-        '5':{w:682, cols:[80, 175, 80, 165, 182], labs:{0:'소속', 2:'성명'}},
-        '7':{w:682, cols:[64, 120, 64, 90, 64, 110, 170], labs:{0:'소속', 2:'직급', 4:'성명'}}
+        '3':{w:TBL_W, cols:[150, 250, 282], labs:{0:'농가명'}},
+        '5':{w:TBL_W, cols:[80, 175, 80, 165, 182], labs:{0:'소속', 2:'성명'}},
+        '7':{w:TBL_W, cols:[64, 120, 64, 90, 64, 110, 170], labs:{0:'소속', 2:'직급', 4:'성명'}}
       }[T] || null;
-      const sp = SPEC || {w:682, cols:[150, 250, 282], labs:{0:'농가명'}}, nc = sp.cols.length, RH = 64;
+      const sp = SPEC || {w:TBL_W, cols:[150, 250, 282], labs:{0:'농가명'}}, nc = sp.cols.length, RH = 64;
       const cells = [], rowH = {}, ca = {}, cst = {};
       for(let r = 0; r < R; r++){
         cells.push(sp.cols.map((_, c) => c === nc - 1 ? (r === 0 ? '{서명}' : '(서명)') : (sp.labs[c] || '')));
@@ -4223,7 +4225,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         ca[r + ':' + (nc - 1)] = 'center';
         if(r > 0) cst[r + ':' + (nc - 1)] = {color:'#9ca3af'};
       }
-      e = mk({type:'table', ...base, x:56, w:sp.w, h:R * RH + 2, cols:sp.cols, shadeR:[], shadeC:[], bw:1, bc:'#111111', size:15, cells, rowH, ca, cst});
+      e = mk({type:'table', ...base, x:TBL_X, w:sp.w, h:R * RH + 2, cols:sp.cols, shadeR:[], shadeC:[], bw:1, bc:'#111111', size:15, cells, rowH, ca, cst});
     }
     if(type === 'line') e = mk({type, ...base, w:400, h:12, bw:1});
     if(type === 'date'){
@@ -4231,7 +4233,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       const z = TSV('h2').size;
       e = mk({type:'text', x:56, y:100, w:682, h:Math.max(28, Math.round(z * 1.7)), text:'{오늘 년월일}', size:z, align:'center'});
     }
-    placeFlow(e);
+    placeFlow(e, undefined, (e.type === 'table' || e.type === 'checklist') ? TBL_X : undefined);   // 표는 A4 좌우 1cm 여백 위치로
     sel = e.id; cell = null; draw(); props();
   }
 
