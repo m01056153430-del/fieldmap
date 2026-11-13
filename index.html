@@ -310,7 +310,7 @@
   #tmList .tag{background:var(--b);color:#fff;border-radius:999px;padding:1px 7px;font-size:11px}
   .tmb{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
   .tmb button{padding:10px 6px;border-radius:8px;font-size:14px;background:#fff}
-  .tmb #tmUse{grid-column:1/-1}
+  .tmb #tmUse,.tmb #tmDel{grid-column:1/-1}
   .chips{display:flex;flex-wrap:wrap;gap:6px}
   .chips .chip{font-size:12px;padding:4px 9px;cursor:pointer}
   #fsBtn{white-space:nowrap}
@@ -1122,6 +1122,7 @@
       <button type="button" id="tmRename">이름 바꾸기</button>
       <button type="button" id="tmCopy">복제</button>
       <button type="button" id="tmNew" title="한글(.hwpx)·엑셀(.xlsx)·워드(.docx)·PDF 파일을 골라 새 서식으로 추가">＋ 새 서식 (파일 올리기)</button>
+      <button type="button" id="tmBlank" title="빈 A4 쪽에서 양식 디자인으로 직접 만들어 새 서식으로 추가" style="color:#0f766e;border-color:#0f766e">＋ 직접 만들기</button>
       <button type="button" id="tmDel" style="color:#b91c1c">삭제</button>
     </div>
     <div class="row"><button value="cancel" type="submit">닫기</button></div>
@@ -2252,7 +2253,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261113104054';
+const APP_VER = '20261113105525';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -3487,6 +3488,30 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     return out;
   }
   window.layoutReflow = reflow;
+  /* 한 쪽에 들어가야 할 내용이 실제 글씨 크기로 넘치면, 줄 간격(위치·줄 높이)과 글씨를 조금씩 줄여 그 쪽에 맞춤 */
+  window.layoutFit = (pages, rec) => {
+    const LIMIT = PH - 36, T0 = 44;
+    for(const p of pages){
+      for(let guard = 0; guard < 14; guard++){
+        const c = clone(p); growToFit(c, rec);
+        const els = c.els.filter(x => !x.float); if(!els.length) break;
+        const bottom = Math.max(...els.map(x => x.y + x.h));
+        if(bottom <= LIMIT) break;
+        const f = Math.max(.85, Math.min(.985, (LIMIT - T0) / (bottom - T0)));
+        const sz = v => Math.max(8, Math.round(v * f * 10) / 10);
+        for(const e of p.els){
+          if(e.float) continue;
+          e.y = Math.round(T0 + (e.y - T0) * f);
+          if(e.type === 'table'){
+            const rh = {}; let H = 0; Object.keys(e.rowH || {}).forEach(r => { rh[r] = Math.max(8, Math.floor(e.rowH[r] * f)); H += rh[r]; });
+            if(Object.keys(rh).length){ e.rowH = rh; e.h = H + 2; } else e.h = Math.floor(e.h * f);
+            e.size = sz(e.size || 12); Object.values(e.cst || {}).forEach(k => { if(k.size) k.size = sz(k.size); });
+          } else if(e.type === 'text'){ e.h = Math.max(12, Math.floor(e.h * f)); if(e.size) e.size = sz(e.size); }
+        }
+      }
+    }
+    return pages;
+  };
   window.layoutPages = rec => {
     const L = rec.layout; if(!L || !L.pages) return [];
     const out = reflow(L.pages.filter(p => !(p.skipNoPhoto && !hasPhoto(p, rec))), rec).map(p => pageHtml(p, rec, false));
@@ -3734,7 +3759,29 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     }
     pushBelow(e, ob, e.h - oh, true);
   }
+  /* 고른 칸을 사진 칸으로 ({사진 N}). 바로 아래 칸이 '사진설명'이면 그 사진의 설명 칸으로 연결 */
+  function toPhotoCells(e){
+    if(e.type !== 'table') return toast('사진 칸은 표에서만 만들 수 있습니다');
+    const cs = selCells().filter(({r, c}) => { const t = (e.cells[r] || [])[c]; return t != null && t !== '<' && t !== '^' && !PHOTO_RE.test(String(t)); })
+      .sort((a, b) => a.r - b.r || a.c - b.c);
+    if(!cs.length) return toast('이미 사진 칸입니다');
+    snap();
+    let n = usedPhotoMax(L);
+    e.ca = {...(e.ca || {})};
+    for(const {r, c} of cs){
+      n++; e.cells[r][c] = `{사진 ${n}}`; e.ca[cellAKey(e, r, c)] = 'center';
+      // 낮은 행이면 사진이 보이게 높이를 220px로
+      const rh0 = (e.rowH && e.rowH[r]) || rowPx(e, r);
+      if(rh0 < 120){ const ob = e.y + e.h, d = 220 - rh0; e.rowH = {...(e.rowH || {}), [r]:220}; e.h += d; pushBelow(e, ob, d); }
+      let r2 = r + 1; while(r2 < e.cells.length && e.cells[r2][c] === '^') r2++;
+      const t2 = r2 < e.cells.length ? String(e.cells[r2][c] ?? '') : null;
+      if(t2 != null && (/^\s*(사진\s*)?설명\s*$/.test(t2) || CAP_RE.test(t2))) e.cells[r2][c] = `{사진 ${n} 설명}`;
+    }
+    draw(); props();
+    toast(`사진 칸 ${cs.length}개를 만들었습니다 (사진 ${n - cs.length + 1}${cs.length > 1 ? '~' + n : ''})`);
+  }
   function rangeAction(e, act){
+    if(act === 'tophoto') return toPhotoCells(e);
     const L = selCells(); if(!L.length) return;
     const R = curRange();
     const {nr, nc} = tblSize(e);
@@ -3816,7 +3863,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         const barRC = e.type === 'checklist'
           ? `<span class="seg">${btn('delrow', '항목 삭제', 1)}</span>`
           : `<span class="seg">${btn('delrow', '행 삭제', 1)}${btn('delcol', '열 삭제', 1)}</span><span class="seg">${btn('splitr', '행 나누기')}${btn('splitc', '열 나누기')}</span>`;
-        let extra = '';
+        let extra = e.type === 'table' ? ROW('사진 칸', `<span class="seg">${btn('tophoto', '📷 사진 칸으로 바꾸기')}</span>`) : '';
         const L1 = selCells();
         const src1 = L1.length === 1 ? srcText(e, L1[0]) : null;
         if((e.type === 'table' || (e.type === 'checklist' && L1[0].r > 0 && src1 != null)) && L1.length === 1){
@@ -3824,15 +3871,15 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
           const pm = PHOTO_RE.exec(t1);
           if(pm){
             const curN = +pm[1], fit = ((e.cst || {})[L1[0].r + ':' + L1[0].c] || {}).fit || 'contain';
-            extra = `<div class="cst ctrow"><span class="lab">사진</span><div class="ctg">${cur.photos.map((src, i) => src ? `<button type="button" data-ph="${i}" draggable="true" class="phb${i + 1 === curN ? ' on' : ''}" title="사진 ${i + 1} · 눌러서 넣기, 끌어서 다른 칸에 놓기"><img src="${src}"><i>${i + 1}</i></button>` : '').join('')}
+            extra += `<div class="cst ctrow"><span class="lab">사진</span><div class="ctg">${cur.photos.map((src, i) => src ? `<button type="button" data-ph="${i}" draggable="true" class="phb${i + 1 === curN ? ' on' : ''}" title="사진 ${i + 1} · 눌러서 넣기, 끌어서 다른 칸에 놓기"><img src="${src}"><i>${i + 1}</i></button>` : '').join('')}
               <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 추가</button><button type="button" data-sat="1" title="사업장 위치 위성사진을 4:3 비율로 넣고, 아래 사진설명 칸에는 사업장 위치를 넣습니다">🛰 위성사진 넣기</button><button type="button" data-phfit="1">${fit === 'cover' ? '전체 보이기' : '꽉 채우기'}</button></div></div>`;
           } else if(SAT_RE.test(t1)){
-            extra = `<div class="cst ctrow"><span class="lab">위성사진</span><div class="ctg"><button type="button" data-sat="1">🛰 다시 불러오기</button><button type="button" data-phadd="1">＋ 사진으로 바꾸기</button></div></div>`;
+            extra += `<div class="cst ctrow"><span class="lab">위성사진</span><div class="ctg"><button type="button" data-sat="1">🛰 다시 불러오기</button><button type="button" data-phadd="1">＋ 사진으로 바꾸기</button></div></div>`;
           } else if(!SIGN_RE.test(t1) && !CAP_RE.test(t1)){
             // 일반 칸에도 사진 넣기
-            extra = `<div class="cst ctrow"><span class="lab">사진</span><div class="ctg">${cur.photos.map((src, i) => src ? `<button type="button" data-ph="${i}" draggable="true" class="phb" title="사진 ${i + 1}을 이 칸에 넣기"><img src="${src}"><i>${i + 1}</i></button>` : '').join('')}
+            extra += `<div class="cst ctrow"><span class="lab">사진</span><div class="ctg">${cur.photos.map((src, i) => src ? `<button type="button" data-ph="${i}" draggable="true" class="phb" title="사진 ${i + 1}을 이 칸에 넣기"><img src="${src}"><i>${i + 1}</i></button>` : '').join('')}
               <button type="button" data-phadd="1" title="PC에서는 사진 파일을 이 칸에 끌어다 놓아도 됩니다">＋ 사진 넣기</button><button type="button" data-sat="1" title="사업장 위치 위성사진을 4:3 비율로 넣습니다">🛰 위성사진 넣기</button></div></div>`;
-          } else if(SIGN_RE.test(t1)) extra = `<div class="cst ctrow"><span class="lab">서명</span><div class="ctg"><button type="button" data-sg="pad">✍ 서명하기</button>${cur.sign ? '<button type="button" data-sg="clr" style="color:#b91c1c">서명 지우기</button>' : ''}</div></div>`;
+          } else if(SIGN_RE.test(t1)) extra += `<div class="cst ctrow"><span class="lab">서명</span><div class="ctg"><button type="button" data-sg="pad">✍ 서명하기</button>${cur.sign ? '<button type="button" data-sg="clr" style="color:#b91c1c">서명 지우기</button>' : ''}</div></div>`;
         }
         node.insertAdjacentHTML('beforeend', `<div class="ctbar" style="left:${Math.max(0, (left - nb0.left) / zoom)}px;top:0"><div class="cr1"><b class="ctgrip" title="끌어서 도구줄 옮기기">⠿</b><span class="ctn">${n > 1 ? n + '셀 선택' : '1셀 선택'}</span>${n === 1 && e.type === 'table' ? `<button type="button" class="ctfb${ctFields ? ' on' : ''}" data-fld="1" title="엑셀(명단) 항목을 이 셀에 넣기">📋 엑셀 항목</button>` : ''}</div>${ctFields && n === 1 && e.type === 'table' ? `<div class="cst ctfl">${fieldGroups(cur).map(([g, l]) => `<div class="fg">${esc(g)}</div>` + l.map(f => `<button type="button" data-ctf="${esc(f)}" title="${esc(fieldValue(cur, f) || '')}">${esc(f)}</button>`).join('')).join('')}</div>` : ''}${(() => { const P = cellParts(e); return SEC('셀', ROW('편집', barEdit) + ROW('행 · 열', barRC) + (P ? cellRows(P) : '')) + (P ? SEC('글자', textRows(P)) : '') + SEC('사진 · 서명', extra); })()}</div>`);
         const cb0 = node.querySelector('.ctbar');
@@ -3900,7 +3947,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(!cell) return '';
     const R0 = (cmulti && cmulti.size > 1) || crange ? curRange() : null;
     const rangeBox = R0 ? `<div class="pt" style="margin-top:10px;color:#b45309">선택한 칸 ${selCells().length}개${cmulti ? ' (Ctrl로 고름)' : ` (${R0.r1 + 1}~${R0.r2 + 1}행 × ${R0.c1 + 1}~${R0.c2 + 1}열)`}</div>
-      <div class="ldrow"><button type="button" data-rg="clear">내용 지우기</button><button type="button" data-rg="delrow" style="color:#b91c1c">${e.type === 'checklist' ? '항목 삭제' : '행 삭제'}</button>${e.type === 'table' ? '<button type="button" data-rg="delcol" style="color:#b91c1c">열 삭제</button><button type="button" data-rg="merge">칸 합치기</button><button type="button" data-rg="unmerge">합치기 풀기</button><button type="button" data-rg="splitc">열 나누기</button><button type="button" data-rg="splitr">행 나누기</button>' : ''}</div>
+      <div class="ldrow"><button type="button" data-rg="clear">내용 지우기</button><button type="button" data-rg="delrow" style="color:#b91c1c">${e.type === 'checklist' ? '항목 삭제' : '행 삭제'}</button>${e.type === 'table' ? '<button type="button" data-rg="delcol" style="color:#b91c1c">열 삭제</button><button type="button" data-rg="merge">칸 합치기</button><button type="button" data-rg="unmerge">합치기 풀기</button><button type="button" data-rg="splitc">열 나누기</button><button type="button" data-rg="splitr">행 나누기</button><button type="button" data-rg="tophoto">📷 사진 칸으로</button>' : ''}</div>
       <div class="hint">칸을 끌어서 여러 칸을 고르거나, Shift+누르기로 범위를 넓히거나, <b>Ctrl+누르기로 떨어진 칸을 하나씩</b> 더하고 뺍니다. Delete 키: 줄 전체면 행 삭제, 아니면 내용 지우기 · Esc: 선택 풀기</div>` : `<div class="hint" style="margin-top:8px">여러 칸을 고르려면 칸 위를 끌거나, Shift+누르기(범위), Ctrl+누르기(하나씩) 하세요.</div>`;
     return rangeBox + `<div class="pt" style="margin-top:10px">셀 서식</div>` + cellStyleCtl(e) + cellTools1(e);
   }
@@ -3914,6 +3961,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       <div class="ldrow"><span class="ldl">칸 너비</span><button type="button" data-cw="-10">−</button><input type="number" data-cwv="1" value="${cw}" style="width:70px"><button type="button" data-cw="10">＋</button><span class="ldl">px</span></div>
       <div class="ldrow"><span class="ldl">행 높이</span><button type="button" data-rh="-5">−</button><input type="number" data-rhv="1" value="${rh}" style="width:70px"><button type="button" data-rh="5">＋</button><span class="ldl">px</span>${e.rowH && e.rowH[cell.r] ? '<button type="button" data-rhauto="1">자동</button>' : ''}</div>`;
     if(e.type === 'table') h += `<div class="pt" style="margin-top:8px">칸·행·열 삭제 / 추가</div>
+      <div class="ldrow"><button type="button" data-rg="tophoto">📷 사진 칸으로 바꾸기</button></div>
       <div class="ldrow"><button type="button" data-cdel="clear">칸 비우기</button><button type="button" data-cdel="row" style="color:#b91c1c">이 행 삭제</button><button type="button" data-cdel="col" style="color:#b91c1c">이 열 삭제</button></div>
       <div class="ldrow"><button type="button" data-cins="up">위에 행</button><button type="button" data-cins="down">아래에 행</button><button type="button" data-cins="left">왼쪽에 열</button><button type="button" data-cins="right">오른쪽에 열</button></div>`;
     else if(cell.r > 0 && cell.c > 0) h += `<div class="ldrow"><button type="button" data-cdel="clear">칸 비우기</button></div>`;
@@ -4623,8 +4671,9 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   $('ldSave').onclick = () => {
     L.morePhotos = $('ldMore').checked;
     const old = tplById(cur.tplId);
-    const name = prompt('서식 이름 (목록에 표시)', old && old.layout ? old.name : `${$('ldTitle').value.trim() || cur.title} (디자인)`);
+    const name = prompt('서식 이름 (목록에 표시)', old && old.layout ? old.name : cur._newName || `${$('ldTitle').value.trim() || cur.title} (디자인)`);
     if(name === null) return;
+    delete cur._newName;
     finish(name.trim() || cur.title, clone(L));
   };
   addEventListener('resize', () => { if(!$('ld').hidden) draw(); });
@@ -6704,6 +6753,18 @@ $('iHwp').onclick = async () => {
     tpls.push(t); saveTpls();
     mgrSel = t.id; renderMgr(); toast('새 서식을 만들었습니다 — [항목·제목 편집]으로 고치세요');
   };
+  // [+ 직접 만들기] = 빈 A4 쪽으로 양식 디자인을 열고, [저장]하면 새 서식으로 추가
+  $('tmBlank').onclick = () => {
+    const name = prompt('새 서식 이름 (문서 제목으로도 쓰입니다)', '새 점검표'); if(name === null) return;
+    const nm = name.trim() || '새 점검표';
+    if($('insp').hidden || !cur){ cur = newRecord(sampleRow()); dirty = false; }
+    else collectForm();
+    cur.tplId = null; cur.title = nm; cur.hwpx = null; cur.items = []; cur.extra = [];
+    cur.layout = {pages:[{els:[]}], morePhotos:true}; cur._newName = nm;
+    $('tplMgr').close('cancel');
+    openDesigner();
+    toast('빈 A4 쪽입니다 — [요소 넣기]·[글자 넣기]로 만들고 [서식 저장]을 누르면 새 서식으로 추가됩니다');
+  };
   $('tmCopy').onclick = () => {
     const s = tplById(mgrSel); const now = Date.now();
     const name = prompt('복제할 서식 이름', s.name + ' 사본'); if(name === null) return;
@@ -7413,7 +7474,7 @@ $('iHwp').onclick = async () => {
     }
   }
   /* 격자 → 양식 표 요소 (쪽을 넘으면 행 단위로 나눔) */
-  function gridToTables(grid, colW, rowH){
+  function gridToTables(grid, colW, rowH, exact){
     const nr = grid.length, nc = colW.length, tw = colW.reduce((a, b) => a + b, 0) || 1, k = CW / tw;   // 쪽 너비에 맞춤
     const cols = colW.map(w => Math.max(12, Math.round(w * k))), W = cols.reduce((a, b) => a + b, 0);
     const cellsOf = (r0, r1) => {
@@ -7433,7 +7494,8 @@ $('iHwp').onclick = async () => {
     };
     const shadeC = [], heads = [];
     const tables = []; let r0 = 0;
-    const hOf = r => { const row = grid[r] || []; const lines = Math.max(1, ...row.map(g => g && !g.skip ? String(g.t || '').split('\n').length : 1));
+    const hOf = r => { if(exact) return Math.max(10, Math.round(rowH[r] || 0));   // 한글: 원본 줄 높이 그대로
+      const row = grid[r] || []; const lines = Math.max(1, ...row.map(g => g && !g.skip ? String(g.t || '').split('\n').length : 1));
       return Math.max(row.some(g => g && g.big) ? 220 : row.some(g => g && g.sign) ? 52 : 28 + (lines - 1) * 18, Math.round(rowH[r] || 0)); };
     while(r0 < nr){
       let h = 0, r1 = r0;
@@ -7455,6 +7517,7 @@ $('iHwp').onclick = async () => {
   }
   /* 요소들을 위에서부터 쌓아 쪽 나누기 */
   function paginate(blocks){
+    if(blocks.some(b => b._vp != null)) return paginateHwp(blocks);
     const pages = [{els:[]}]; let y = TOP;
     for(const b of blocks){
       if(b.pageBreak){ if(pages[pages.length - 1].els.length){ pages.push({els:[]}); y = TOP; } continue; }
@@ -7462,6 +7525,34 @@ $('iHwp').onclick = async () => {
       b.y = Math.round(y); pages[pages.length - 1].els.push(b); y += b.h + (b.type === 'table' ? 12 : 4);
     }
     return pages;
+  }
+  /* 한글 서식: 한글에서 나뉜 쪽 그대로. 한 쪽 내용이 넘치면 줄 간격·글씨를 줄여 그 쪽에 맞춤 */
+  function paginateHwp(blocks){
+    const pages = [], AV = LIM - TOP; let grp = [];
+    const flush = () => {
+      if(!grp.length) return;
+      let yy = 0;
+      grp.forEach(b => { b._y0 = b._vp != null ? Math.max(b._vp, yy) : yy; yy = b._y0 + b.h + (b._vp != null ? 0 : 4); });
+      const bottom = Math.max(...grp.map(b => b._y0 + b.h));
+      if(bottom > AV * 1.6){ grp.forEach(b => { delete b._vp; delete b._y0; }); pages.push(...paginate(grp)); grp = []; return; }   // 너무 길면 예전처럼 나눔
+      const k = Math.min(1, AV / bottom), fs = k < .97;
+      const sz = v => Math.max(8, Math.round(v * k * 10) / 10);
+      for(const b of grp){
+        b.y = Math.round(TOP + b._y0 * k);
+        if(k < 1){
+          if(b.type === 'table'){
+            const rh = {}; let H = 0; Object.keys(b.rowH || {}).forEach(r => { rh[r] = Math.max(8, Math.floor(b.rowH[r] * k)); H += rh[r]; });
+            b.rowH = rh; b.h = H + 2;
+            if(fs){ b.size = sz(b.size || 12); Object.values(b.cst || {}).forEach(c => { if(c.size) c.size = sz(c.size); }); }
+          } else { b.h = Math.max(12, Math.floor(b.h * k)); if(fs && b.size) b.size = sz(b.size); }
+        }
+        delete b._vp; delete b._y0;
+      }
+      pages.push({els:grp}); grp = [];
+    };
+    for(const b of blocks){ if(b.pageBreak) flush(); else grp.push(b); }
+    flush();
+    return pages.length ? pages : [{els:[]}];
   }
   const textEl = (t, o = {}) => {
     const size = o.size || 13, lines = Math.max(1, Math.ceil(String(t).length * size * .95 / CW) + (String(t).match(/\n/g) || []).length);
@@ -7658,13 +7749,19 @@ $('iHwp').onclick = async () => {
         const paras = cellParas(x.tc), t = paras.map(paraText).join('\n').replace(/[\uE000-\uF8FF]/g, '•');
         const ps = paras[0] ? paraStyle(paras[0]) : {};
         const bf = st && st.bf.get(x.tc.getAttribute('borderFillIDRef'));
-        G[x.r][x.c] = {t, b:ps.bold, al: ps.align !== 'left' ? ps.align : '', bg: bf && bf.bg ? bf.bg : ''};
+        G[x.r][x.c] = {t, b:ps.bold, al: ps.align !== 'left' ? ps.align : '', bg: bf && bf.bg ? bf.bg : '', ...(ps.size && ps.size !== 12 ? {sz:Math.min(20, Math.max(9, ps.size))} : {})};
         for(let r = x.r; r < x.r + x.rs; r++) for(let c = x.c; c < x.c + x.cs; c++) if(r !== x.r || c !== x.c) G[r][c] = {t:'', skip:true, h: c > x.c, v: r > x.r};
       }
       return {G, colW:colW.map(w => w || 40), rowH:rowH.map(h => h || 28)};
     };
+    let lastVp = -1;
     for(const x of docs) childs(x.d.documentElement, 'p').forEach((p, i) => {
       if(i && p.getAttribute('pageBreak') === '1') blocks.push({pageBreak:true});
+      // 한글이 계산해 둔 줄 위치(vertpos): 0으로 돌아가면 한글에서 새 쪽 → 같은 쪽 구성 그대로 옮김
+      const ls = ch(p, 'linesegarray')[0], seg = ls && ch(ls, 'lineseg')[0];
+      const vp = seg && seg.getAttribute('vertpos') != null ? H(seg.getAttribute('vertpos')) : null;
+      if(vp != null){ if(lastVp >= 0 && vp + 1 < lastVp && blocks.length && !blocks[blocks.length - 1].pageBreak) blocks.push({pageBreak:true}); lastVp = vp; }
+      const n0 = blocks.length;
       const tbls = []; for(const run of ch(p, 'run')) for(const c of run.childNodes) if(c.localName === 'tbl') tbls.push(c);
       const t = paraText(p).replace(/[\uE000-\uF8FF]/g, '•');
       if(t.trim()){
@@ -7672,18 +7769,23 @@ $('iHwp').onclick = async () => {
         if(!title && t.trim().length <= 60){ title = t.trim(); blocks.push(textEl(title, {size:Math.max(20, ps.size), bold:true, align:'center'})); }
         else blocks.push(textEl(t, {size:Math.min(24, Math.max(10, ps.size)), bold:ps.bold, align:ps.align, color:ps.color}));
       }
-      for(const tb of tbls){ const {G, colW, rowH} = tblGrid(tb); smartify(G, ctx); blocks.push(...gridToTables(G, colW, rowH)); }
+      for(const tb of tbls){ const {G, colW, rowH} = tblGrid(tb); smartify(G, ctx); blocks.push(...gridToTables(G, colW, rowH, vp != null)); }
+      if(vp != null){ let yy = vp; for(let j = n0; j < blocks.length; j++){ if(blocks[j].pageBreak) continue; blocks[j]._vp = yy; yy += blocks[j].h; } }
     });
     return {title, blocks, ...ctx};
   }
-  window.hwpxToLayout = async h => { const r = await fromHwpx(await hwpxFile(h)); return {layout:{pages:paginate(r.blocks), morePhotos:true}, title:r.title, items:r.items, iopts:r.iopts, extra:r.extra}; };
+  window.hwpxToLayout = async (h, rec) => {
+    const r = await fromHwpx(await hwpxFile(h)), pages = paginate(r.blocks);
+    if(rec && window.layoutFit){ try{ layoutFit(pages, {...rec, items: r.items.map(l => ({label:l, value:'', note:'', opts:null}))}); }catch(_){ } }   // 한글 쪽 구성 그대로: 넘치면 줄여서 맞춤
+    return {layout:{pages, morePhotos:true}, title:r.title, items:r.items, iopts:r.iopts, extra:r.extra};
+  };
   // 한글 서식으로 [양식 디자인]을 열면 기본 양식 대신 한글 서식 모양 그대로 시작
   const _openD = window.openDesigner;
   window.openDesigner = async function(){
     if(cur && cur.hwpx && !cur.layout){
       $('busy').textContent = '한글 서식을 양식 디자인으로 불러오는 중…'; $('busy').hidden = false;
       try{
-        const r = await hwpxToLayout(cur.hwpx);
+        const r = await hwpxToLayout(cur.hwpx, cur);
         cur.layout = r.layout; cur._fromHwpx = true;
         if(r.title && !cur.title) cur.title = r.title;
       }catch(e){ alert('한글 서식을 양식 디자인으로 불러오지 못했습니다: ' + e.message + '\n기본 양식으로 엽니다.'); }
