@@ -530,6 +530,14 @@
   .ldopen .si,.ldpop .si{width:26px;height:26px;border-radius:8px;background:#ccfbf1;display:flex;align-items:center;justify-content:center;font-size:14px;flex:none}
   .ldopen .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ldopen .go{color:#64748b;font-size:14px}
+  .ldgrp{margin-bottom:10px}
+  .ldgl{font-family:var(--f-title);font-size:12px;color:#0f766e;letter-spacing:.04em;margin:0 0 6px 4px}
+  .ldgrp.tiles .ldgb{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .ldopen.tile{flex-direction:column;gap:6px;margin:0;padding:12px 6px 10px;text-align:center;justify-content:center}
+  .ldopen.tile .si{width:34px;height:34px;border-radius:10px;font-size:18px}
+  .ldopen.tile .t{flex:none;font-size:14px;white-space:nowrap}
+  .ldopen.tile .go{display:none}
+  .ldgrp .ldgb>.ldopen:not(.tile):last-child{margin-bottom:0}
   .ldpop{position:absolute;z-index:30;display:flex;flex-direction:column;max-height:calc(100% - 16px);background:#fff;border:1px solid #cbd5e1;border-radius:14px;box-shadow:0 14px 36px rgba(15,23,42,.3);overflow:hidden}
   .ldpop[hidden]{display:none}
   .ldpop .lph{display:flex;align-items:center;gap:8px;padding:7px 7px 7px 10px;background:#134e4a;color:#fff;cursor:move;touch-action:none;user-select:none;flex:none}
@@ -575,6 +583,58 @@
   #numDlg .numrow>span{width:110px;flex:none;font-size:14px;color:#334155}
   #numDlg .numrow input{width:96px;padding:8px 10px;font-size:16px;text-align:center}
   #numDlg .numrow small{color:var(--mut)}
+  .tbgrid{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;width:100%;max-width:330px;touch-action:none;user-select:none}
+  .tbgrid i{aspect-ratio:1.35;border:1px solid #cbd5e1;border-radius:3px;background:#fff;cursor:pointer}
+  .tbgrid i.on{background:#ccfbf1;border-color:#0f766e}
+  .tbnums{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:14px;color:#334155}
+  .tbnums input{width:64px;padding:6px 8px;font-size:15px;text-align:center}
+  .tbnums small{color:var(--mut);font-size:12px}
+  .tbopt{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .tbopt>span{width:56px;flex:none;font-size:14px;color:#334155}
+  .tbopt select{padding:6px 8px;font-size:14px;width:auto;max-width:112px}
+  #elDlg,#tblDlg{width:min(440px,94vw)!important;max-width:94vw}
+  .tbopt input[type=color]{width:38px;height:32px;padding:2px}
+  .tbseg{display:inline-flex;border:1px solid #99f6e4;border-radius:999px;overflow:hidden}
+  .tbseg button{padding:6px 11px;font-size:13px;border:0;border-right:1px solid #ccfbf1;background:#fff;color:#134e4a;border-radius:0}
+  .tbseg button:last-child{border-right:0}
+  .tbseg button.on{background:#0f766e;color:#fff}
+  .tbsw{display:inline-flex;gap:5px}
+  .tbsw button{width:28px;height:28px;padding:0;border-radius:6px;border:1px solid #cbd5e1;font-size:11px;color:#64748b}
+  .tbsw button.on{outline:2px solid #0f766e;outline-offset:1px}
+  .tbprev{max-height:190px;overflow:auto;background:#f8fafc;border-radius:10px;padding:10px}
+  .tbprev table{width:100%;border-collapse:collapse;table-layout:fixed}
+  .tbchips{display:inline-flex;gap:4px;flex-wrap:wrap}
+  .tbchips button{min-width:34px;padding:5px 9px;font-size:13px;border:1px solid #99f6e4;border-radius:999px;background:#fff;color:#134e4a}
+  .tbchips button.on{background:#0f766e;color:#fff;border-color:#0f766e}
+  .tbopt input[type=number]{width:64px;padding:6px 8px;font-size:15px;text-align:center}
+  .phpv{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .phpv .pgm{width:84px;aspect-ratio:210/297;background:#fff;border:1px solid #cbd5e1;border-radius:3px;padding:7px 6px;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:min-content;gap:0;align-content:start;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .phpv .pgm.one{grid-template-columns:1fr}
+  .phpv .fr{display:flex;flex-direction:column}
+  .phpv .fr b{display:flex;align-items:center;justify-content:center;aspect-ratio:1.1;font-size:9px;color:#94a3b8;font-weight:400}
+  .phpv .pgm.one .fr b{aspect-ratio:1.5}
+  .phpv .fr i{height:7px}
+  .phpv small{width:100%;text-align:center;color:#94a3b8;font-size:12px}
+  .tbprev td[contenteditable]{cursor:text}
+  .tbprev td[contenteditable]:hover{box-shadow:inset 0 0 0 1px #5eead4}
+  .tbprev td[contenteditable]:focus{outline:2px solid #0f766e;outline-offset:-2px;background:#fff!important;white-space:normal}
+  .tbprev table.sg td{height:30px}
+  .tbprev td.fsel{box-shadow:inset 0 0 0 2px #f59e0b}
+  .fmb{display:flex;flex-direction:column;gap:6px;margin:0 0 8px;padding:8px 10px;background:#f0fdfa;border:1px solid #ccfbf1;border-radius:10px}
+  .fmb .fmk{font-size:12px;color:#0f766e}
+  .fmb .fmr{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .fmb select{padding:4px 6px;font-size:13px;max-width:150px;width:auto}
+  .fmb input[type=color]{width:34px;height:28px;padding:2px}
+  .fmb button{padding:4px 9px;font-size:13px;border:1px solid #99f6e4;border-radius:8px;background:#fff;color:#134e4a}
+  .fmb .seg{display:inline-flex}
+  .fmb .seg button{border-radius:0;margin-left:-1px}
+  .fmb .seg button:first-child{border-radius:8px 0 0 8px;margin-left:0}
+  .fmb .seg button:last-child{border-radius:0 8px 8px 0}
+  .fmb .seg b{display:inline-flex;align-items:center;padding:0 7px;font-size:12px;border-top:1px solid #99f6e4;border-bottom:1px solid #99f6e4;background:#fff;margin-left:-1px}
+  .fmb button.on{background:#0f766e;color:#fff;border-color:#0f766e}
+  .fmb.dis select,.fmb.dis input,.fmb.dis button{opacity:.45;pointer-events:none}
+  .tbprev .edh{text-align:center;color:#0f766e;font-size:12px;margin-top:6px}
+  .tbprev td{height:20px;font-size:11px;text-align:center;color:#475569;padding:0 3px;overflow:hidden;white-space:nowrap}
   #colDlg .colsel{display:flex;align-items:center;gap:8px;margin-top:6px}
   #colDlg .colsel>span{width:110px;flex:none;font-size:13px;color:#334155}
   #colDlg .colsel select{flex:1;min-width:0;padding:7px 8px;font-size:14px}
@@ -800,6 +860,37 @@
       <small class="setnote" id="numNote" style="margin-top:10px"></small>
     </div>
     <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">취소</button><button type="button" id="numOk" class="sgp">넣기</button></div>
+  </form>
+</dialog>
+
+<dialog id="tblDlg" class="setdlg" style="max-width:440px;width:94vw">
+  <form method="dialog">
+    <div class="setbox" style="margin-top:0">
+      <div class="setlab">표 넣기 · <span id="tbSz" style="color:#0f766e">3줄 × 2칸</span></div>
+      <div class="tbgrid" id="tbGrid" title="눌러서 줄·칸 수 고르기"></div>
+      <div class="tbnums"><label>줄 <input type="number" id="tbR" min="1" max="60" inputmode="numeric"></label><label>칸 <input type="number" id="tbC" min="1" max="12" inputmode="numeric"></label><small>칸을 누르거나 숫자로 (최대 60줄 · 12칸)</small></div>
+    </div>
+    <div class="setbox">
+      <div class="setlab">모양</div>
+      <div class="tbopt"><span>머리 칸</span><div class="tbseg" id="tbHead"><button type="button" data-v="none">없음</button><button type="button" data-v="row">첫 줄</button><button type="button" data-v="col">첫 칸</button><button type="button" data-v="both">둘 다</button></div><input type="color" id="tbHbg" title="머리 칸 색"></div>
+      <div class="tbopt"><span>테두리</span><select id="tbBs"><option value="solid">━ 실선</option><option value="dashed">╍ 파선</option><option value="dotted">┈ 점선</option><option value="double">═ 이중선</option><option value="none">없음</option></select><select id="tbBw"><option value="1">1px</option><option value="2">2px</option><option value="3">3px</option></select><input type="color" id="tbBc" title="테두리 색"></div>
+      <div class="tbopt"><span></span><label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" id="tbOut" style="width:auto"> 바깥 테두리 굵게</label></div>
+      <div class="tbopt"><span>바탕색</span><div class="tbsw" id="tbBgSw"></div><input type="color" id="tbBg" title="바탕색 직접 고르기"></div>
+    </div>
+    <div class="setbox">
+      <div class="setlab">미리보기</div>
+      <div id="tbPrev" class="tbprev"></div>
+    </div>
+    <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">취소</button><button type="button" id="tbOk" class="sgp">넣기</button></div>
+  </form>
+</dialog>
+
+<dialog id="elDlg" class="setdlg" style="max-width:440px;width:94vw">
+  <form method="dialog">
+    <div class="setbox" style="margin-top:0"><div class="setlab" id="elHead">넣기</div><div id="elTop"></div></div>
+    <div class="setbox" id="elStyBox"><div class="setlab">모양</div><div id="elSty"></div></div>
+    <div class="setbox"><div class="setlab">미리보기</div><div id="elPrev" class="tbprev"></div><small id="elNote" class="setnote" style="display:block;margin-top:8px"></small></div>
+    <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">취소</button><button type="button" id="elOk" class="sgp">넣기</button></div>
   </form>
 </dialog>
 
@@ -1412,6 +1503,269 @@ function askNums(head, f, note){
     d.showModal();
     const first = d.querySelector('input'); if(first){ first.focus(); first.select(); }
   });
+}
+/* 미리보기 칸 글자 꾸미기 (글꼴·색·굵게·정렬·글자 간격) — 고른 칸에만 적용, 넣을 때 그 칸 서식으로 들어감 */
+function fmtCss(f){
+  if(!f) return '';
+  let s = '';
+  if(f.color) s += `color:${f.color};`;
+  if(f.font) s += `font-family:${(window.LAY_fontCss || (x => x))(f.font)};`;
+  if(f.bold != null) s += `font-weight:${f.bold ? 700 : 400};`;
+  if(f.al) s += `text-align:${f.al};`;
+  if(f.ls) s += `letter-spacing:${f.ls / 100}em;`;
+  return s;
+}
+function fmtBar(box, fm, on = true){
+  let bar = box.previousElementSibling;
+  if(!bar || !bar.classList.contains('fmb')){ bar = document.createElement('div'); bar.className = 'fmb'; box.before(bar); }
+  bar.hidden = !on; box._fm = fm; box._fk = null;
+  if(!on) return;
+  const F = window.LAY_FONTS || [['', '기본']];
+  bar.innerHTML = `<span class="fmk">✎ 칸을 누르면 꾸밀 수 있어요</span>
+    <div class="fmr"><select data-f="font" title="글꼴">${F.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select><input type="color" data-f="color" title="글자 색" value="#111111"><button type="button" data-f="bold" title="굵게"><b>가</b></button></div>
+    <div class="fmr"><span class="seg"><button type="button" data-f="al" data-v="left" title="왼쪽 정렬">⇤</button><button type="button" data-f="al" data-v="center" title="가운데 정렬">↔</button><button type="button" data-f="al" data-v="right" title="오른쪽 정렬">⇥</button></span>
+      <span class="seg"><button type="button" data-f="ls" data-v="-5" title="글자 간격 좁게">자간−</button><b class="lsv">0%</b><button type="button" data-f="ls" data-v="5" title="글자 간격 넓게">자간＋</button></span><button type="button" data-f="clr" title="이 칸 꾸밈 지우기">↺</button></div>`;
+  const td = () => box._fk && box.querySelector(`[data-e="${box._fk}"]`);
+  const sync = () => {
+    const t = td(), f = (box._fm[box._fk] || {});
+    bar.classList.toggle('dis', !t);
+    bar.querySelector('.fmk').textContent = t ? `✎ 고른 칸: ${(t.innerText || '').trim().slice(0, 12) || '(빈 칸)'}` : '✎ 칸을 누르면 꾸밀 수 있어요';
+    bar.querySelector('[data-f=font]').value = f.font || '';
+    bar.querySelector('[data-f=color]').value = f.color || '#111111';
+    const bold = f.bold ?? (t ? +getComputedStyle(t).fontWeight >= 600 : false);
+    bar.querySelector('[data-f=bold]').classList.toggle('on', !!bold);
+    bar.querySelectorAll('[data-f=al]').forEach(b => b.classList.toggle('on', (f.al || (t ? getComputedStyle(t).textAlign : '')) === b.dataset.v));
+    bar.querySelector('.lsv').textContent = (f.ls || 0) + '%';
+  };
+  const upd = mut => {
+    const t = td(); if(!t) return;
+    const f = box._fm[box._fk] = {...(box._fm[box._fk] || {})}; mut(f, t);
+    Object.keys(f).forEach(k => { if(f[k] === '' || f[k] == null || (k === 'ls' && !f[k])) delete f[k]; });
+    t.style.color = f.color || ''; t.style.fontFamily = f.font ? (window.LAY_fontCss || (x => x))(f.font) : '';
+    t.style.fontWeight = f.bold == null ? '' : (f.bold ? 700 : 400); t.style.textAlign = f.al || ''; t.style.letterSpacing = f.ls ? f.ls / 100 + 'em' : '';
+    if(box._repaint) box._repaint();
+    sync();
+  };
+  if(!box._fmInit){
+    box._fmInit = true;
+    box.addEventListener('focusin', ev => { const t = ev.target.closest('[data-e]'); if(t){ box._fk = t.dataset.e; box.querySelectorAll('.fsel').forEach(x => x.classList.remove('fsel')); t.classList.add('fsel'); box._sync && box._sync(); } });
+  }
+  box._sync = sync; box._repaint = null;
+  bar.onmousedown = ev => { if(ev.target.closest('button')) ev.preventDefault(); };   // 칸 입력이 끊기지 않게
+  bar.onclick = ev => {
+    const b = ev.target.closest('button[data-f]'); if(!b) return;
+    if(b.dataset.f === 'bold') upd((f, t) => f.bold = !(f.bold ?? (+getComputedStyle(t).fontWeight >= 600)));
+    if(b.dataset.f === 'al') upd(f => f.al = b.dataset.v);
+    if(b.dataset.f === 'ls') upd(f => f.ls = Math.max(-30, Math.min(60, (f.ls || 0) + +b.dataset.v)));
+    if(b.dataset.f === 'clr') upd(f => Object.keys(f).forEach(k => delete f[k]));
+  };
+  bar.oninput = ev => { const t = ev.target; if(t.dataset.f === 'color') upd(f => f.color = t.value); if(t.dataset.f === 'font') upd(f => f.font = t.value); };
+  bar.onchange = bar.oninput;
+  sync();
+}
+/* 미리보기 꾸밈(fm) → 표 요소의 칸 서식(cst)·정렬(ca). key: 미리보기 '줄:칸' → 요소의 칸 키 */
+function fmtApply(e, fm, keyOf = k => k){
+  for(const [k, f] of Object.entries(fm || {})){
+    if(!f || !Object.keys(f).length) continue;
+    const kk = keyOf(k); if(kk == null) continue;
+    const {al, ...rest} = f;
+    if(Object.keys(rest).length){ e.cst = {...(e.cst || {})}; e.cst[kk] = {...(e.cst[kk] || {}), ...rest}; }
+    if(al){ e.ca = {...(e.ca || {})}; e.ca[kk] = al; }
+  }
+}
+/* 표 넣기 창: 칸 그림을 눌러 줄·칸 수를 고르고, 머리 칸·테두리·바탕색을 정함 (미리보기). 고른 모양은 기기에 기억 */
+function askTable(){
+  return new Promise(res => {
+    const d = $('tblDlg'), GR = 10, GC = 10;
+    const o = Object.assign({R:3, C:2, head:'col', hbg:'#eef1f5', bs:'solid', bw:1, bc:'#333333', out:false, bg:''}, LS.get('ldTbOpt', {}) || {});
+    o.R = LS.get('ldTbR', o.R); o.C = LS.get('ldTbC', o.C);
+    const SW = [['', '없음'], ['#f1f5f9', ''], ['#eff6ff', ''], ['#fefce8', ''], ['#f0fdf4', ''], ['#fdf2f8', '']];
+    $('tbGrid').innerHTML = Array.from({length:GR * GC}, (_, i) => `<i data-r="${Math.floor(i / GC) + 1}" data-c="${i % GC + 1}"></i>`).join('');
+    $('tbBgSw').innerHTML = SW.map(([c, l]) => `<button type="button" data-bg="${c}" style="background:${c || '#fff'}" title="${c ? '바탕색' : '바탕색 없음'}">${l}</button>`).join('');
+    let hov = null; const ed = {}, fm = {};   // 미리보기에서 고친 글자·꾸밈 (줄:칸 → …)
+    fmtBar($('tbPrev'), fm);
+    const lit = (r, c) => $('tbGrid').querySelectorAll('i').forEach(x => x.classList.toggle('on', +x.dataset.r <= r && +x.dataset.c <= c));
+    const paint = () => {
+      const r = hov ? hov[0] : o.R, c = hov ? hov[1] : o.C;
+      lit(Math.min(r, GR), Math.min(c, GC));
+      $('tbSz').textContent = `${r}줄 × ${c}칸`;
+      $('tbR').value = o.R; $('tbC').value = o.C;
+      $('tbHead').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === o.head));
+      $('tbHbg').value = o.hbg; $('tbBs').value = o.bs; $('tbBw').value = String(o.bw); $('tbBc').value = o.bc; $('tbOut').checked = !!o.out;
+      $('tbBg').value = o.bg || '#ffffff';
+      $('tbBgSw').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.bg === (o.bg || '')));
+      // 미리보기 (최대 8줄)
+      const inW = o.bs === 'none' ? 0 : o.bw, inS = o.bs === 'none' ? 'solid' : o.bs, ouW = o.out ? Math.max(2, inW + 1) : inW;
+      const ln = (w, st) => w > 0 ? `${st === 'double' ? Math.max(3, w * 3) : w}px ${st} ${o.bc}` : '0 none';
+      const show = r;
+      let h = '<table>';
+      for(let i = 0; i < show; i++){
+        h += '<tr>';
+        for(let j = 0; j < c; j++){
+          const hd = (o.head === 'row' || o.head === 'both') && i === 0 || (o.head === 'col' || o.head === 'both') && j === 0;
+          const bd = side => { const edge = side === 't' ? i === 0 : side === 'b' ? i === r - 1 : side === 'l' ? j === 0 : j === c - 1; return ln(edge && o.out ? ouW : inW, edge && o.out && o.bs === 'none' ? 'solid' : inS); };
+          const def = hd ? (j === 0 && (o.head === 'col' || o.head === 'both') ? '항목' : '제목') : '', k = i + ':' + j;
+          h += `<td contenteditable="true" data-e="${k}" class="${$('tbPrev')._fk === k ? 'fsel' : ''}" style="border-top:${bd('t')};border-bottom:${bd('b')};border-left:${bd('l')};border-right:${bd('r')};background:${hd ? o.hbg : (o.bg || '#fff')};${hd ? 'font-weight:700;' : ''}${fmtCss(fm[k])}">${esc(ed[k] ?? def)}</td>`;
+        }
+        h += '</tr>';
+      }
+      $('tbPrev').innerHTML = h + '</table><div class="edh">✎ 칸을 눌러 글자를 바로 넣거나 고칠 수 있습니다</div>';
+    };
+    // 미리보기 칸 글자 고치기 (다시 그리지 않아 입력이 끊기지 않음)
+    $('tbPrev').oninput = ev => { const t = ev.target.closest('[data-e]'); if(t) ed[t.dataset.e] = t.innerText.replace(/\n+$/, ''); };
+    $('tbPrev').onkeydown = ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); const t = ev.target.closest('[data-e]'); if(t) t.blur(); } };
+    const G = $('tbGrid');
+    G.onpointermove = ev => { const t = ev.target.closest('i'); if(!t) return; hov = [+t.dataset.r, +t.dataset.c]; paint(); };
+    G.onpointerleave = () => { hov = null; paint(); };
+    G.onpointerdown = ev => { const t = ev.target.closest('i'); if(!t) return; o.R = +t.dataset.r; o.C = +t.dataset.c; hov = null; paint(); ev.preventDefault(); };
+    const num = (el, k, mx) => el.oninput = () => { const n = Math.round(+el.value); if(isFinite(n) && n >= 1){ o[k] = Math.min(mx, n); hov = null; paint(); } };
+    num($('tbR'), 'R', 60); num($('tbC'), 'C', 12);
+    $('tbHead').onclick = ev => { const b = ev.target.closest('button'); if(b){ o.head = b.dataset.v; paint(); } };
+    $('tbBgSw').onclick = ev => { const b = ev.target.closest('button'); if(b){ o.bg = b.dataset.bg; paint(); } };
+    $('tbHbg').oninput = ev => { o.hbg = ev.target.value; paint(); };
+    $('tbBs').onchange = ev => { o.bs = ev.target.value; paint(); };
+    $('tbBw').onchange = ev => { o.bw = +ev.target.value; paint(); };
+    $('tbBc').oninput = ev => { o.bc = ev.target.value; paint(); };
+    $('tbOut').onchange = ev => { o.out = ev.target.checked; paint(); };
+    $('tbBg').oninput = ev => { o.bg = ev.target.value; paint(); };
+    const onClose = () => { d.removeEventListener('close', onClose); res(null); };
+    d.addEventListener('close', onClose);
+    $('tbOk').onclick = () => {
+      LS.set('ldTbR', o.R); LS.set('ldTbC', o.C);
+      const {R, C, ...keep} = o; LS.set('ldTbOpt', keep);
+      d.removeEventListener('close', onClose); d.close(); res({...o, ed, fm});
+    };
+    paint(); d.showModal();
+  });
+}
+/* 요소 넣기 창 (점검항목표 · 사진 · 서명 · 오늘 날짜): 개수·형식을 고르고, 테두리·바탕색을 정하고, 미리보기로 확인 */
+function askEl(kind, ctx = {}){
+  return new Promise(res => {
+    const d = $('elDlg');
+    const DEF = {
+      checklist:{n:Math.max(1, ctx.items || 5), bs:'solid', bw:1, bc:'#333333', out:false, bg:'', hbg:'#eef1f5'},
+      photo:{n:1, bs:'solid', bw:1, bc:'#111111', out:false, bg:''},
+      sign:{n:1, t:'3', bs:'solid', bw:1, bc:'#111111', out:false, bg:'', head:false, hbg:'#eef1f5'},
+      date:{fmt:'ymd', al:'center', ts:'h2', bold:false, color:'#111111'}
+    }[kind];
+    const o = Object.assign({}, DEF, LS.get('ldEl_' + kind, {}) || {});
+    if(kind === 'checklist') o.n = Math.max(1, ctx.items || o.n);
+    if(kind === 'photo') o.n = LS.get('ldPhN', o.n);
+    if(kind === 'sign'){ o.n = LS.get('ldSgR', o.n); o.t = String(LS.get('ldSgT', o.t)); }
+    const TITLE = {checklist:'점검항목표 넣기', photo:'사진 넣기', sign:'서명 넣기', date:'오늘 날짜 넣기'}[kind];
+    const MAX = {checklist:60, photo:40, sign:30}[kind];
+    const seg = (k, list) => `<div class="tbseg" data-sk="${k}">${list.map(([v, l]) => `<button type="button" data-v="${v}">${l}</button>`).join('')}</div>`;
+    const chips = (k, list) => `<div class="tbchips" data-ck="${k}">${list.map(v => `<button type="button" data-v="${v}">${v}</button>`).join('')}</div>`;
+    const cnt = (lab, unit, list) => `<div class="tbopt"><span>${lab}</span><input type="number" data-nk="n" min="1" max="${MAX}" inputmode="numeric"><small style="color:var(--mut)">${unit}</small>${chips('n', list)}</div>`;
+    let top = '';
+    if(kind === 'checklist') top = cnt('항목 수', '가지', [3, 5, 8, 10, 15]);
+    if(kind === 'photo') top = cnt('장수', '장', [1, 2, 4, 6, 8]);
+    if(kind === 'sign') top = cnt('줄 수', '줄', [1, 2, 3, 4]) + `<div class="tbopt"><span>형식</span>${seg('t', [['3', '3칸'], ['5', '5칸'], ['7', '7칸']])}</div>`;
+    if(kind === 'date') top = `<div class="tbopt"><span>형식</span>${seg('fmt', [['ymd', '0000 년 00 월 00 일'], ['dot', '0000. 0. 0.']])}</div>
+      <div class="tbopt"><span>정렬</span>${seg('al', [['left', '왼쪽'], ['center', '가운데'], ['right', '오른쪽']])}</div>
+      <div class="tbopt"><span>크기</span>${seg('ts', [['h1', '대제목'], ['h2', '중제목'], ['h3', '소제목'], ['p', '일반']])}</div>
+      <div class="tbopt"><span>글자</span><label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" data-bk="bold" style="width:auto"> 굵게</label><input type="color" data-vk="color" title="글자 색"></div>`;
+    $('elHead').textContent = TITLE; $('elTop').innerHTML = top;
+    const SW = ['', '#f1f5f9', '#eff6ff', '#fefce8', '#f0fdf4', '#fdf2f8'];
+    $('elStyBox').hidden = kind === 'date';
+    $('elSty').innerHTML = kind === 'date' ? '' : `
+      ${kind === 'sign' ? `<div class="tbopt"><span>이름 칸</span><label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" data-bk="head" style="width:auto"> 색칠</label><input type="color" data-vk="hbg" title="이름 칸 색"></div>` : ''}
+      ${kind === 'checklist' ? `<div class="tbopt"><span>머리 줄</span><input type="color" data-vk="hbg" title="머리 줄 색"></div>` : ''}
+      <div class="tbopt"><span>테두리</span><select data-vk="bs"><option value="solid">━ 실선</option><option value="dashed">╍ 파선</option><option value="dotted">┈ 점선</option><option value="double">═ 이중선</option><option value="none">없음</option></select><select data-vk="bw" data-num="1"><option value="1">1px</option><option value="2">2px</option><option value="3">3px</option></select><input type="color" data-vk="bc" title="테두리 색"></div>
+      <div class="tbopt"><span></span><label style="display:flex;align-items:center;gap:6px;font-size:14px"><input type="checkbox" data-bk="out" style="width:auto"> 바깥 테두리 굵게</label></div>
+      <div class="tbopt"><span>바탕색</span><div class="tbsw">${SW.map(c => `<button type="button" data-bg="${c}" style="background:${c || '#fff'}" title="${c ? '바탕색' : '바탕색 없음'}">${c ? '' : '없음'}</button>`).join('')}</div><input type="color" data-vk="bg" title="바탕색 직접 고르기"></div>`;
+    const ln = (w, st) => (w > 0 && st !== 'none') ? `${st === 'double' ? Math.max(3, w * 3) : w}px ${st} ${o.bc}` : '0 none';
+    const inW = () => o.bs === 'none' ? 0 : o.bw, ouW = () => o.out ? Math.max(2, inW() + 1) : inW();
+    const bd = (i, j, R, C) => { const e = (x) => ln(x && o.out ? ouW() : inW(), x && o.out && o.bs === 'none' ? 'solid' : o.bs);
+      return `border-top:${e(i === 0)};border-bottom:${e(i === R - 1)};border-left:${e(j === 0)};border-right:${e(j === C - 1)};`; };
+    const ed = {}, fm = {};   // 미리보기에서 고친 글자·꾸밈 (줄:칸 → …)
+    fmtBar($('elPrev'), fm, kind === 'checklist' || kind === 'sign');
+    // 점검항목표는 항목 칸 꾸밈이 열 전체에 적용되므로 미리보기도 열 단위로 보여 줌
+    const fmOf = (i, j) => kind === 'checklist' && i > 0 ? Object.entries(fm).filter(([k]) => { const [a, b] = k.split(':').map(Number); return a > 0 && b === j; }).reduce((m, [, f]) => ({...m, ...f}), {}) : fm[i + ':' + j];
+    const mini = (rows, head, can = () => false) => { const R = rows.length, C = rows[0].length; return '<table>' + rows.map((row, i) => '<tr>' + row.map((t, j) => { const hd = head(i, j), k = i + ':' + j, e = can(i, j);
+      return `<td${e ? ` contenteditable="true" data-e="${k}"${$('elPrev')._fk === k ? ' class="fsel"' : ''}` : ''} style="${bd(i, j, R, C)}background:${hd ? (o.hbg || '#eef1f5') : (o.bg || '#fff')};${hd ? 'font-weight:700;' : ''}${e ? fmtCss(fmOf(i, j)) : ''}">${e ? esc(ed[k] ?? String(t)) : t}</td>`; }).join('') + '</tr>').join('') + '</table>'; };
+    const EDH = '<div class="edh">✎ 칸을 눌러 글자를 바로 고칠 수 있습니다</div>';
+    const paint = () => {
+      d.querySelectorAll('[data-nk]').forEach(el => { if(document.activeElement !== el) el.value = o[el.dataset.nk]; });
+      d.querySelectorAll('[data-ck]').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.v === +o[g.dataset.ck])));
+      d.querySelectorAll('[data-sk]').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === String(o[g.dataset.sk]))));
+      d.querySelectorAll('[data-vk]').forEach(el => { const v = o[el.dataset.vk]; el.value = el.type === 'color' ? (v || '#ffffff') : String(v); });
+      d.querySelectorAll('[data-bk]').forEach(el => el.checked = !!o[el.dataset.bk]);
+      d.querySelectorAll('.tbsw button').forEach(b => b.classList.toggle('on', b.dataset.bg === (o.bg || '')));
+      let pv = '', note = '';
+      if(kind === 'checklist'){
+        const lab = k => (ctx.labels || [])[k] || `점검 항목 ${k + 1}`, show = o.n;
+        pv = mini([ctx.heads || ['번호', '점검 항목', '결과', '비고'], ...Array.from({length:show}, (_, k) => [k + 1, lab(k), '', ''])], i => i === 0, (i, j) => i === 0 || j === 1).replace('<table>', '<table><colgroup><col style="width:10%"><col style="width:50%"><col style="width:15%"><col style="width:25%"></colgroup>');
+        pv += EDH;
+        note = `지금 서식의 점검 항목은 ${ctx.items || 0}가지입니다. 늘리면 '점검 항목 N'이 추가되고, 줄이면 아래쪽 항목부터 지워집니다.`;
+      }
+      if(kind === 'photo'){
+        const pages = Math.ceil(o.n / 4), shown = Math.min(pages, 3); let h = '';
+        for(let p = 0; p < shown; p++){
+          const m = Math.min(4, o.n - p * 4), one = o.n === 1, cells = [];
+          for(let k = 0; k < (one ? 1 : Math.ceil(m / 2) * 2); k++){
+            const has = k < m, i = Math.floor(k / 2), j = k % 2, R = one ? 1 : Math.ceil(m / 2) * 2;
+            const e = (x) => ln(x && o.out ? ouW() : inW(), o.bs === 'none' && x && o.out ? 'solid' : o.bs);
+            const r0 = i * 2, C = one ? 1 : 2;
+            cells.push(`<div class="fr" style="background:${o.bg || '#fff'}"><b style="border-top:${e(r0 === 0)};border-left:${e(j === 0)};border-right:${e(j === C - 1)};border-bottom:${ln(Math.min(1, inW()) || 0, o.bs)}">${has ? '사진 ' + (p * 4 + k + 1) : ''}</b><i style="border-left:${e(j === 0)};border-right:${e(j === C - 1)};border-bottom:${e(r0 + 1 === R - 1)}"></i></div>`);
+          }
+          h += `<div class="pgm${one ? ' one' : ''}">${cells.join('')}</div>`;
+        }
+        pv = `<div class="phpv">${h}${pages > shown ? `<small>… 모두 ${pages}쪽</small>` : ''}</div>`;
+        note = o.n === 1 ? '1장이면 크게 한 장으로 넣습니다.' : `한 쪽에 최대 4장(2장씩 2줄) · 모두 ${pages}쪽. 넘치면 다음 쪽이 자동으로 생깁니다.`;
+      }
+      if(kind === 'sign'){
+        const L3 = {'3':['농가명', '', '(서명)'], '5':['소속', '', '성명', '', '(서명)'], '7':['소속', '', '직급', '', '성명', '', '(서명)']}[o.t] || ['농가명', '', '(서명)'];
+        const show = o.n, labCols = L3.map((t, j) => t && j < L3.length - 1);
+        pv = mini(Array.from({length:show}, () => L3), (i, j) => o.head && labCols[j], (i, j) => j < L3.length - 1).replace('<table>', '<table class="sg">');
+        pv += EDH;
+        note = '첫 줄 서명 칸은 앱에서 두 번 눌러 서명하고, 둘째 줄부터는 출력한 종이에 서명하는 칸으로 들어갑니다.';
+      }
+      if(kind === 'date'){
+        const t = new Date(), p2 = n => String(n).padStart(2, '0'), g = '\u00a0\u00a0\u00a0';
+        const txt = o.fmt === 'dot' ? `${t.getFullYear()}. ${t.getMonth() + 1}. ${t.getDate()}.` : `${t.getFullYear()} 년${g}${p2(t.getMonth() + 1)} 월${g}${p2(t.getDate())} 일`;
+        const z = (ctx.sizes || {})[o.ts] || 16;
+        pv = `<div style="background:#fff;border:1px dashed #cbd5e1;border-radius:6px;padding:10px 12px;text-align:${o.al};font-size:${z}px;font-weight:${o.bold ? 700 : 400};color:${o.color};white-space:pre">${txt}</div>`;
+        note = '출력할 때마다 그날 날짜로 채워집니다.';
+      }
+      $('elPrev').innerHTML = pv; $('elNote').textContent = note;
+    };
+    $('elPrev').oninput = ev => { const t = ev.target.closest('[data-e]'); if(t){ ed[t.dataset.e] = t.innerText.replace(/\n+$/, ''); ev.stopPropagation(); } };
+    $('elPrev').onkeydown = ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); const t = ev.target.closest('[data-e]'); if(t) t.blur(); } };
+    d.onclick = ev => {
+      const b = ev.target.closest('button'); if(!b || b.id === 'elOk' || b.type === 'submit') return;
+      const ck = b.closest('[data-ck]'), sk = b.closest('[data-sk]');
+      if(ck) o[ck.dataset.ck] = +b.dataset.v;
+      else if(sk) o[sk.dataset.sk] = b.dataset.v;
+      else if(b.dataset.bg !== undefined) o.bg = b.dataset.bg;
+      else return;
+      paint();
+    };
+    d.oninput = ev => {
+      const t = ev.target;
+      if(t.dataset.nk){ const n = Math.round(+t.value); if(isFinite(n) && n >= 1){ o[t.dataset.nk] = Math.min(MAX, n); paint(); } }
+      else if(t.dataset.vk) { o[t.dataset.vk] = t.dataset.num ? +t.value : t.value; paint(); }
+      else if(t.dataset.bk) { o[t.dataset.bk] = t.checked; paint(); }
+    };
+    d.onchange = d.oninput;
+    const onClose = () => { d.removeEventListener('close', onClose); res(null); };
+    d.addEventListener('close', onClose);
+    $('elOk').onclick = () => {
+      const {n, t, ...keep} = o; LS.set('ldEl_' + kind, keep);
+      if(kind === 'photo') LS.set('ldPhN', o.n);
+      if(kind === 'sign'){ LS.set('ldSgR', o.n); LS.set('ldSgT', o.t); }
+      d.removeEventListener('close', onClose); d.close(); res({...o, ed, fm});
+    };
+    paint(); d.showModal();
+  });
+}
+/* 표 모양 옵션 → 요소 속성 (선 두께·색·모양·바깥 굵기·바탕색) */
+function tblSty(o){
+  const bw = o.bs === 'none' ? 0 : o.bw, r = {bw, bc:o.bc};
+  if(o.bs && o.bs !== 'solid') r.bs = o.bs;
+  if(o.out) r.ow = Math.max(2, bw + 1);
+  if(o.bg) r.bg = o.bg;
+  return r;
 }
 /* 열 설정 창. mode 'upload' = 이름·위치·읍면 열도 고름, 'edit' = 팝업 항목만 */
 function colDialog(o){
@@ -2253,7 +2607,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261113105525';
+const APP_VER = '20261116054336';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -3205,6 +3559,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   const FONTS = [['','기본 (맑은 고딕)'],['Noto Sans KR','본고딕'],['Nanum Gothic','나눔고딕'],['Nanum Myeongjo','나눔명조'],
     ['Gowun Dodum','고운돋움'],['Gowun Batang','고운바탕'],['Nanum Pen Script','손글씨 (나눔펜)'],['Batang','바탕 (PC에 있을 때)'],['Gulim','굴림 (PC에 있을 때)']];
   const fontCss = f => (f ? `'${f}',` : '') + `'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif`;
+  window.LAY_FONTS = FONTS; window.LAY_fontCss = fontCss;
   const clone = o => JSON.parse(JSON.stringify(o));
   const won = v => { if(v === '' || v == null) return ''; const n = Number(String(v).replace(/,/g,'')); return isNaN(n) ? String(v) : n.toLocaleString() + '원'; };
   const areaTxt = v => { if(v === '' || v == null) return ''; const n = Number(String(v).replace(/,/g,'')); return isNaN(n) ? String(v) : n.toLocaleString() + '㎡'; };
@@ -3326,6 +3681,10 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   window.LAY_usedPhotoMax = usedPhotoMax;
   function tableHtml(e, rec, design){
     const bw = e.bw ?? 1, bc = e.bc || '#333', hb = e.hbg || '#eef1f5';
+    // 선 모양(bs: 실선·파선·점선·이중·없음) · 바깥 테두리 굵기(ow)
+    const bs = e.bs || 'solid', ow = +e.ow || 0, plainB = bs === 'solid' && !ow;
+    const ln = (w, st) => (w > 0 && st !== 'none') ? `${st === 'double' ? Math.max(3, w) : w}px ${st} ${bc}` : '0 none transparent';
+    const sd = edge => edge && ow ? ln(ow, bs === 'none' ? 'solid' : bs) : ln(bw, bs);
     let cells, cols, shadeR, shadeC;
     if(e.type === 'checklist'){
       const heads = e.heads && e.heads.length === 4 ? e.heads : ['번호','점검 항목','결과','비고'];
@@ -3352,8 +3711,9 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
           while(r + rs < nr && get(r + rs, c) === '^') rs++;
         }
         const shaded = shadeR.includes(r) || shadeC.includes(c);
-        let st = `border:${bw}px solid ${bc};vertical-align:${va};`;
+        let st = (plainB ? `border:${bw}px solid ${bc};` : `border-top:${sd(r === 0)};border-bottom:${sd(r + rs >= nr)};border-left:${sd(c === 0)};border-right:${sd(c + cs >= nc)};`) + `vertical-align:${va};`;
         if(shaded) st += `background:${hb};font-weight:700;text-align:center;`;
+        else if(e.bg) st += `background:${e.bg};`;
         let cls = '';
         if(e.type === 'checklist' && r > 0){
           if(c === 0 || c === 2) st += 'text-align:center;';
@@ -3366,6 +3726,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         if(cs0){
           if(cs0.bg) st += `background:${cs0.bg};`;
           if(cs0.font != null) st += `font-family:${fontCss(cs0.font)};`;
+          if(cs0.ls) st += `letter-spacing:${cs0.ls / 100}em;`;
           if(cs0.size) st += `font-size:${cs0.size}px;`;
           if(cs0.color) st += `color:${cs0.color};`;
           if(cs0.bold != null) st += `font-weight:${cs0.bold ? 700 : 400};`;
@@ -3626,6 +3987,10 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       shape: `<span class="seg"><button type="button" data-cs="bold"${on(c0.bold ?? (e.bold || false))} title="굵게"><b>가</b></button><button type="button" data-cs="italic"${on(c0.italic)} title="기울임"><i>가</i></button><button type="button" data-cs="under"${on(c0.under)} title="밑줄"><u>가</u></button></span>`,
       tstyle: `<span class="seg"><button type="button" data-cs="ts-h1" title="대제목: 크게·굵게·가운데">대제목</button><button type="button" data-cs="ts-h2" title="중제목: 기호 + 굵게">중제목</button><button type="button" data-cs="ts-h3" title="소제목: 굵게">소제목</button><button type="button" data-cs="ts-p" title="일반: 표 안 글씨">일반</button></span>`,
       size: `<span class="seg"><button type="button" data-cs="size-" title="글자 작게">A−</button><b class="sz">${sz}</b><button type="button" data-cs="size+" title="글자 크게">A＋</button></span>`,
+      align: (() => { const a = (e.ca || {})[k0] || '', v = (e.cva || {})[k0] || '';
+        return `<span class="seg"><button type="button" data-cs="al-left"${on(a === 'left')} title="왼쪽 정렬">⇤ 왼쪽</button><button type="button" data-cs="al-center"${on(a === 'center')} title="가운데 정렬">↔ 가운데</button><button type="button" data-cs="al-right"${on(a === 'right')} title="오른쪽 정렬">⇥ 오른쪽</button></span>`
+          + `<span class="seg"><button type="button" data-cs="va-top"${on(v === 'top')} title="위로">⤒</button><button type="button" data-cs="va-middle"${on(v === 'middle')} title="세로 가운데">⇕</button><button type="button" data-cs="va-bottom"${on(v === 'bottom')} title="아래로">⤓</button></span>`; })(),
+      ls: `<span class="seg"><button type="button" data-cs="ls-" title="글자 간격 좁게">자간 −</button><b class="sz">${c0.ls || 0}%</b><button type="button" data-cs="ls+" title="글자 간격 넓게">자간 ＋</button><button type="button" data-cs="ls0" title="글자 간격 원래대로">↺</button></span>`,
       font: `<span class="g"><select data-csv="font" title="글꼴">${FONTS.map(([v, l]) => `<option value="${esc(v)}"${(c0.font ?? e.font ?? '') === v ? ' selected' : ''}>${esc(l)}</option>`).join('')}</select></span>`,
       tcolor: `<span class="g sw" title="글자 색"><input type="color" data-csv="color" value="${c0.color || e.color || '#111111'}"></span>`,
       bg: `<span class="g sw" title="칸 배경색"><input type="color" data-csv="bg" value="${c0.bg || '#ffffff'}"></span><button type="button" data-cs="bgnone" title="배경 없음">색 없음</button>`,
@@ -3635,7 +4000,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       bbtn: `<span class="seg"><button type="button" data-bd="all" title="모든 선">▦</button><button type="button" data-bd="out" title="바깥 선">▢</button><button type="button" data-bd="t" title="위 선">▔</button><button type="button" data-bd="b" title="아래 선">▁</button><button type="button" data-bd="l" title="왼쪽 선">▏</button><button type="button" data-bd="r" title="오른쪽 선">▕</button><button type="button" data-bd="none" title="선 없애기">✕선</button><button type="button" data-bd="reset" title="원래 선으로">↺</button></span>`
     };
   }
-  const textRows = P => ROW('스타일', P.tstyle) + ROW('모양', P.shape + P.size) + ROW('글꼴', P.font + P.tcolor);
+  const textRows = P => ROW('스타일', P.tstyle) + ROW('모양', P.shape + P.size) + ROW('글꼴 · 색', P.font + P.tcolor) + ROW('정렬', P.align) + ROW('글자 간격', P.ls);
   const cellRows = P => ROW('셀 색', P.bg) + ROW('테두리', P.bsel) + ROW('', P.bbtn);
   function cellStyleCtl(e){
     const P = cellParts(e); if(!P) return '';
@@ -3651,6 +4016,10 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(op === 'bold' || op === 'italic' || op === 'under'){ const nv = !(first[op] ?? (op === 'bold' ? !!e.bold : false)); keys.forEach(k => set(k, o => o[op] = nv)); }
     else if(op === 'size+' || op === 'size-'){ keys.forEach(k => set(k, o => o.size = clamp((o.size || e.size || 13) + (op === 'size+' ? 1 : -1), 6, 72))); }
     else if(op === 'bgnone') keys.forEach(k => set(k, o => delete o.bg));
+    else if(op === 'ls+' || op === 'ls-'){ keys.forEach(k => set(k, o => { o.ls = clamp((o.ls || 0) + (op === 'ls+' ? 5 : -5), -30, 60); if(!o.ls) delete o.ls; })); }
+    else if(op === 'ls0') keys.forEach(k => set(k, o => delete o.ls));
+    else if(op.startsWith('al-')){ e.ca = {...(e.ca || {})}; keys.forEach(k => e.ca[k] = op.slice(3)); }
+    else if(op.startsWith('va-')){ e.cva = {...(e.cva || {})}; keys.forEach(k => e.cva[k] = op.slice(3)); }
     else if(op.startsWith('ts-')){
       // 셀 글자 스타일 (대·중·소제목·일반): 크기·굵기·정렬, 중제목은 앞에 기호
       const tk = op.slice(3); if(!TSTYLE[tk]) return; const S = TSV(tk);
@@ -4067,7 +4436,9 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       h += `<div class="ldrow"><span class="ldl">${e.cells.length}행 × ${nc}열</span><button type="button" data-tb="r+">행 +</button><button type="button" data-tb="r-">행 −</button><button type="button" data-tb="c+">열 +</button><button type="button" data-tb="c-">열 −</button></div>
         <div class="ldrow"><span class="ldl">열 너비 비율</span><input data-k="cols" value="${(e.cols || []).join(',')}" placeholder="예) 17,33,17,33"></div>
         <div class="ldrow"><span class="ldl">색칠할 행</span><input data-k="shadeR" value="${pct(e.shadeR)}" placeholder="예) 1" style="width:70px"><span class="ldl">열</span><input data-k="shadeC" value="${pct(e.shadeC)}" placeholder="예) 1,3" style="width:70px"><input type="color" data-k="hbg" value="${e.hbg || '#eef1f5'}" title="색칠 색" style="width:40px;padding:2px"></div>
-        <div class="ldrow"><span class="ldl">선 두께</span><input type="number" data-k="bw" min="0" max="6" value="${e.bw ?? 1}" style="width:60px"><input type="color" data-k="bc" value="${e.bc || '#333333'}" style="width:40px;padding:2px"></div>`;
+        <div class="ldrow"><span class="ldl">선 두께</span><input type="number" data-k="bw" min="0" max="6" value="${e.bw ?? 1}" style="width:60px"><input type="color" data-k="bc" value="${e.bc || '#333333'}" style="width:40px;padding:2px"></div>
+        <div class="ldrow"><span class="ldl">선 모양</span><select data-k="bs" title="선 모양">${[['solid','━ 실선'],['dashed','╍ 파선'],['dotted','┈ 점선'],['double','═ 이중'],['none','없음']].map(([v, l]) => opt(v, e.bs || 'solid', l)).join('')}</select><span class="ldl">바깥</span><input type="number" data-k="ow" min="0" max="6" value="${e.ow || 0}" title="바깥 테두리 굵기 (0 = 안쪽과 같음)" style="width:54px"></div>
+        <div class="ldrow"><span class="ldl">표 바탕색</span><input type="color" data-k="bg" value="${e.bg || '#ffffff'}" style="width:40px;padding:2px"><button type="button" data-clr="bg">없음</button></div>`;
       if(cell && e.cells[cell.r]){
         h += `<div class="pt" style="margin-top:10px">선택한 칸 (${cell.r + 1}행 ${cell.c + 1}열)</div>
           <textarea id="ldTxt" data-cell="1" placeholder="칸 내용">${esc(e.cells[cell.r][cell.c] ?? '')}</textarea>${insSel()}
@@ -4094,6 +4465,8 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       h += `<div class="ldrow"><span class="ldl">머리글</span><input data-k="heads" value="${esc((e.heads || ['번호','점검 항목','결과','비고']).join(','))}"></div>
         <div class="ldrow"><span class="ldl">열 너비 비율</span><input data-k="cols" value="${(e.cols || [8,46,16,30]).join(',')}"></div>
         <div class="ldrow"><span class="ldl">선 두께</span><input type="number" data-k="bw" min="0" max="6" value="${e.bw ?? 1}" style="width:60px"><input type="color" data-k="bc" value="${e.bc || '#333333'}" style="width:40px;padding:2px"><span class="ldl">머리 색</span><input type="color" data-k="hbg" value="${e.hbg || '#eef1f5'}" style="width:40px;padding:2px"></div>
+        <div class="ldrow"><span class="ldl">선 모양</span><select data-k="bs" title="선 모양">${[['solid','━ 실선'],['dashed','╍ 파선'],['dotted','┈ 점선'],['double','═ 이중'],['none','없음']].map(([v, l]) => opt(v, e.bs || 'solid', l)).join('')}</select><span class="ldl">바깥</span><input type="number" data-k="ow" min="0" max="6" value="${e.ow || 0}" title="바깥 테두리 굵기 (0 = 안쪽과 같음)" style="width:54px"></div>
+        <div class="ldrow"><span class="ldl">바탕색</span><input type="color" data-k="bg" value="${e.bg || '#ffffff'}" style="width:40px;padding:2px"><button type="button" data-clr="bg">없음</button></div>
         <div class="pt" style="margin-top:8px">점검 항목 (한 줄에 하나 — 추가·삭제)</div>
         <textarea data-items="1" style="min-height:120px">${esc(cur.items.map(x => x.label).join('\n'))}</textarea>
         <div class="ldrow" style="margin-top:6px"><span class="ldl">결과 선택지</span><input data-opts="1" value="${esc(cur.opts.join(', '))}"></div>`;
@@ -4191,7 +4564,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   /* 새로 넣는 표는 A4(가로 794px) 좌우에 1cm(약 38px)씩 여백을 두고 꽉 차게 */
   const TBL_X = 38, TBL_W = PW - 2 * 38;
   /* 사진 여러 장: 한 쪽에 최대 4장(2×2, 사진 + 설명 칸). 넘치면 다음 쪽을 새로 만든다 */
-  function addPhotos(cnt){
+  function addPhotos(cnt, sty = {}){
     let n = usedPhotoMax(L) + 1;
     const PHH = 330, CAPH = 34, W = TBL_W, X = TBL_X;
     let at = pg;
@@ -4205,7 +4578,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         for(const c of [0, 1]){ ca[(r * 2) + ':' + c] = 'center'; ca[(r * 2 + 1) + ':' + c] = 'center'; cst[(r * 2 + 1) + ':' + c] = {italic:true, color:'#888888', size:15}; }
       }
       const h = rows * (PHH + CAPH) + 2;
-      const e = mk({type:'table', x:X, y:FLOW_TOP, w:W, h, cols:[1, 1], shadeR:[], shadeC:[], bw:1, bc:'#111111', cells, rowH, ca, cst});
+      const e = mk({type:'table', x:X, y:FLOW_TOP, w:W, h, cols:[1, 1], shadeR:[], shadeC:[], bw:1, bc:'#111111', ...sty, cells, rowH, ca, cst});
       const P = L.pages[at], bottom = P.els.length ? Math.max(...P.els.map(x => x.y + x.h)) : FLOW_TOP - 8;
       if(k === 0 && bottom + 8 + h <= FLOW_LIM){ e.y = Math.round(bottom + 8); P.els.push(e); }   // 지금 쪽에 자리가 있으면 그 아래
       else { at++; L.pages.splice(at, 0, {els:[e]}); }                                          // 아니면 새 쪽
@@ -4217,36 +4590,56 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   async function addEl(type){
     // 몇 개 넣을지 먼저 묻기 (사진 장수 · 표 줄·칸 · 점검 항목 수)
     let ask = null;
-    if(type === 'photo') ask = await askNums('사진 넣기', [{label:'사진 장수', val:LS.get('ldPhN', 1), min:1, max:40, unit:'장'}], '한 쪽에 최대 4장(2장씩 2줄)이 들어가고, 넘치면 다음 쪽이 자동으로 생깁니다. 1장이면 크게 한 장으로 넣습니다.');
-    if(type === 'table') ask = await askNums('표 넣기', [{label:'줄 (가로줄 수)', val:LS.get('ldTbR', 3), min:1, max:60, unit:'줄'}, {label:'칸 (세로칸 수)', val:LS.get('ldTbC', 2), min:1, max:12, unit:'칸'}], '첫째 칸은 연한 색 머리 칸으로 들어갑니다. 넣은 뒤 행·열 추가·삭제도 됩니다.');
-    if(type === 'checklist') ask = await askNums('점검항목표 넣기', [{label:'점검 항목 수', val:Math.max(1, cur.items.length || 5), min:1, max:60, unit:'가지'}], `지금 서식의 점검 항목은 ${cur.items.length}가지입니다. 늘리면 '점검 항목 N'이 추가되고, 줄이면 아래쪽 항목부터 지워집니다.`);
-    if(type === 'sign') ask = await askNums('서명 넣기', [{label:'줄 수', val:LS.get('ldSgR', 1), min:1, max:30, unit:'줄'}, {label:'칸 형식', val:LS.get('ldSgT', '3'), options:[['3', '3칸: 농가명 / (입력) / 서명'], ['5', '5칸: 소속 / (입력) / 성명 / (입력) / 서명'], ['7', '7칸: 소속 / (입력) / 직급 / (입력) / 성명 / (입력) / 서명']]}], '첫 줄 서명 칸은 앱에서 두 번 눌러 서명하고, 둘째 줄부터는 출력한 종이에 서명하는 칸으로 들어갑니다.');
-    if(['photo', 'table', 'checklist', 'sign'].includes(type) && !ask) return;
-    if(type === 'checklist' && ask[0] < cur.items.length){
-      const gone = cur.items.slice(ask[0]).map(x => x.label);
+    if(type === 'photo') ask = await askEl('photo');
+    if(type === 'text'){ if(window.LAY_openPopBeside) LAY_openPopBeside('ldSecText', 'ldSecAdd'); return; }   // 글자: 왼쪽에 [글자 넣기] 창을 열어 스타일을 고르게
+    if(type === 'table') ask = await askTable();
+    if(type === 'checklist') ask = await askEl('checklist', {items:cur.items.length, labels:cur.items.map(x => x.label)});
+    if(type === 'sign') ask = await askEl('sign');
+    if(type === 'date') ask = await askEl('date', {sizes:{h1:TSV('h1').size, h2:TSV('h2').size, h3:TSV('h3').size, p:TSV('p').size}});
+    if(['photo', 'table', 'checklist', 'sign', 'date'].includes(type) && !ask) return;
+    if(type === 'checklist' && ask.n < cur.items.length){
+      const gone = cur.items.slice(ask.n).map(x => x.label);
       if(!confirm(`점검 항목 ${gone.length}가지가 지워집니다:\n- ${gone.slice(0, 8).join('\n- ')}${gone.length > 8 ? '\n…' : ''}\n\n계속할까요?`)) return;
     }
     snap();
-    if(type === 'photo'){ LS.set('ldPhN', ask[0]); if(ask[0] > 1){ addPhotos(ask[0]); draw(); props(); return; } }
+    if(type === 'photo' && ask.n > 1){ addPhotos(ask.n, tblSty(ask)); draw(); props(); return; }
     const base = {x:100, y:100 + (page().els.length % 10) * 20};
     let e;
     if(type === 'text') e = mk({type, ...base, w:300, h:30, text:'새 글자'});
     if(type === 'table'){
-      const [R, C] = ask; LS.set('ldTbR', R); LS.set('ldTbC', C);
-      const cells = Array.from({length:R}, () => Array.from({length:C}, (_, c) => (c === 0 && C > 1) ? '항목' : ''));
-      e = mk({type, ...base, x:TBL_X, w:TBL_W, h:32 * R, cols:C === 2 ? [25, 75] : Array(C).fill(1), shadeR:[], shadeC:C > 1 ? [0] : [], cells});
+      const o = ask, R = o.R, C = o.C;
+      const hr = o.head === 'row' || o.head === 'both', hc = (o.head === 'col' || o.head === 'both') && C > 1;
+      const ed = o.ed || {};
+      const cells = Array.from({length:R}, (_, r) => Array.from({length:C}, (_, c) => ed[r + ':' + c] ?? ((hc && c === 0) ? '항목' : (hr && r === 0) ? '제목' : '')));
+      const inW = o.bs === 'none' ? 0 : o.bw;
+      const t = {type, ...base, x:TBL_X, w:TBL_W, h:32 * R + 2, cols:C === 2 && hc ? [25, 75] : Array(C).fill(1),
+        shadeR:hr ? [0] : [], shadeC:hc ? [0] : [], cells, bw:inW, bc:o.bc, hbg:o.hbg,
+        rowH:Object.fromEntries(Array.from({length:R}, (_, r) => [r, 32]))};   // 빈 줄도 같은 높이로
+      if(o.bg) t.bg = o.bg;
+      if(o.bs !== 'solid') t.bs = o.bs;
+      if(o.out) t.ow = Math.max(2, inW + 1);
+      fmtApply(t, o.fm, k => { const [r, c] = k.split(':').map(Number); return r < R && c < C ? k : null; });
+      e = mk(t);
     }
     if(type === 'checklist'){
-      const N = ask[0];
+      const N = ask.n;
       if(N < cur.items.length) cur.items.splice(N);
       for(let k = cur.items.length; k < N; k++) cur.items.push({label:`점검 항목 ${k + 1}`, result:'', note:''});
+      for(const [k, v] of Object.entries(ask.ed || {})){   // 미리보기에서 고친 항목 이름
+        const [i, j] = k.split(':').map(Number);
+        if(i > 0 && i <= N && j === 1 && v.trim()) cur.items[i - 1].label = v.trim();
+      }
       dirty = true;
-      e = mk({type, ...base, x:TBL_X, w:TBL_W, h:31 * (N + 1), cols:[8,46,16,30]});
+      e = mk({type, ...base, x:TBL_X, w:TBL_W, h:31 * (N + 1), cols:[8,46,16,30], ...tblSty(ask), hbg:ask.hbg});
+      const hs = ['번호', '점검 항목', '결과', '비고'].map((t, j) => (ask.ed || {})['0:' + j] ?? t);
+      if(hs.join() !== '번호,점검 항목,결과,비고') e.heads = hs;
+      // 점검항목표 칸 꾸밈: 머리 줄은 칸마다, 항목 줄은 그 열 전체
+      Object.keys(ask.fm || {}).sort((a, b) => +a.split(':')[0] - +b.split(':')[0]).forEach(k => fmtApply(e, {[k]:ask.fm[k]}, kk => { const [r, c] = kk.split(':').map(Number); return (r === 0 ? 'h:' : 'c:') + c; }));
     }
     if(type === 'photo'){
       // 사진 칸 + 사진설명 칸으로 된 표
       const n = usedPhotoMax(L) + 1;
-      e = mk({type:'table', ...base, x:TBL_X, w:TBL_W, h:330, cols:[1], shadeR:[], shadeC:[], bw:1, bc:'#111111',
+      e = mk({type:'table', ...base, x:TBL_X, w:TBL_W, h:330, cols:[1], shadeR:[], shadeC:[], bw:1, bc:'#111111', ...tblSty(ask),
         cells:[[`{사진 ${n}}`], [`{사진 ${n} 설명}`]], rowH:{0:292, 1:36},
         ca:{'0:0':'center', '1:0':'center'}, cst:{'1:0':{italic:true, color:'#888888', size:16}}});
     }
@@ -4258,7 +4651,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     }
     if(type === 'sign'){
       // 3칸: 농가명 | (입력) | 서명 · 5칸: 소속 | | 성명 | | 서명 · 7칸: 소속 | | 직급 | | 성명 | | 서명
-      const R = ask[0], T = String(ask[1]); LS.set('ldSgR', R); LS.set('ldSgT', T);
+      const R = ask.n, T = String(ask.t);
       const SPEC = {
         '3':{w:TBL_W, cols:[150, 250, 282], labs:{0:'농가명'}},
         '5':{w:TBL_W, cols:[80, 175, 80, 165, 182], labs:{0:'소속', 2:'성명'}},
@@ -4267,19 +4660,20 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       const sp = SPEC || {w:TBL_W, cols:[150, 250, 282], labs:{0:'농가명'}}, nc = sp.cols.length, RH = 64;
       const cells = [], rowH = {}, ca = {}, cst = {};
       for(let r = 0; r < R; r++){
-        cells.push(sp.cols.map((_, c) => c === nc - 1 ? (r === 0 ? '{서명}' : '(서명)') : (sp.labs[c] || '')));
+        cells.push(sp.cols.map((_, c) => c === nc - 1 ? (r === 0 ? '{서명}' : '(서명)') : ((ask.ed || {})[r + ':' + c] ?? (sp.labs[c] || ''))));
         rowH[r] = RH;
         Object.keys(sp.labs).forEach(c => ca[r + ':' + c] = 'center');
         ca[r + ':' + (nc - 1)] = 'center';
         if(r > 0) cst[r + ':' + (nc - 1)] = {color:'#9ca3af'};
       }
-      e = mk({type:'table', ...base, x:TBL_X, w:sp.w, h:R * RH + 2, cols:sp.cols, shadeR:[], shadeC:[], bw:1, bc:'#111111', size:15, cells, rowH, ca, cst});
+      e = mk({type:'table', ...base, x:TBL_X, w:sp.w, h:R * RH + 2, cols:sp.cols, shadeR:[], shadeC:ask.head ? Object.keys(sp.labs).map(Number) : [], hbg:ask.hbg, size:15, cells, rowH, ca, cst, ...tblSty(ask)});
+      fmtApply(e, ask.fm, k => +k.split(':')[0] < R ? k : null);
     }
     if(type === 'line') e = mk({type, ...base, w:400, h:12, bw:1});
     if(type === 'date'){
       // 오늘 날짜: 「2026 년   11 월   13 일」 가운데 정렬, 글자 크기는 중제목 크기 (출력할 때 그날 날짜로 채워짐)
-      const z = TSV('h2').size;
-      e = mk({type:'text', x:56, y:100, w:682, h:Math.max(28, Math.round(z * 1.7)), text:'{오늘 년월일}', size:z, align:'center'});
+      const z = TSV(ask.ts).size;
+      e = mk({type:'text', x:TBL_X, y:100, w:TBL_W, h:Math.max(28, Math.round(z * 1.7)), text:ask.fmt === 'dot' ? '{오늘}' : '{오늘 년월일}', size:z, align:ask.al, bold:!!ask.bold, ...(ask.color && ask.color !== '#111111' ? {color:ask.color} : {})});
     }
     placeFlow(e, undefined, (e.type === 'table' || e.type === 'checklist') ? TBL_X : undefined);   // 표는 A4 좌우 1cm 여백 위치로
     sel = e.id; cell = null; draw(); props();
@@ -4488,7 +4882,36 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       pops[id] = {w, btn, open, close};
     }
     T.querySelectorAll('.ldsec').forEach(makePop);
+    // 버튼을 하는 일끼리 묶기: 넣기(타일) · 고치기 · 문서
+    (() => {
+      const host = pops.ldSecAdd && pops.ldSecAdd.btn.parentNode; if(!host) return;
+      const G = [['넣기', [['ldSecAdd', '요소'], ['ldSecText', '글자'], ['ldSecField', '엑셀 항목']], true],
+                 ['고치기', [['ldSecSel']], false],
+                 ['문서', [['ldSecDoc']], false]];
+      const frag = document.createDocumentFragment();
+      for(const [lab, ids, tile] of G){
+        const g = document.createElement('div'); g.className = 'ldgrp' + (tile ? ' tiles' : '');
+        g.innerHTML = `<div class="ldgl">${lab}</div><div class="ldgb"></div>`;
+        for(const [id, short] of ids){
+          const P = pops[id]; if(!P) continue;
+          if(tile){ P.btn.classList.add('tile'); if(short) P.btn.querySelector('.t').textContent = short; }
+          g.lastChild.appendChild(P.btn);
+        }
+        frag.appendChild(g);
+      }
+      host.prepend(frag);
+    })();
     window.LAY_closePops = () => Object.values(pops).forEach(p => p.close());
+    // 다른 팝업(예: 요소 넣기) 바로 왼쪽에 열기 — 왼쪽 자리가 없으면 오른쪽
+    window.LAY_openPopBeside = (id, besideId) => {
+      const P = pops[id], B = pops[besideId]; if(!P) return;
+      P.open();
+      if(!B || B.w.hidden || innerWidth <= 760) return;
+      const W = wrap.clientWidth, bl = B.w.offsetLeft, bt = B.w.offsetTop, pw = P.w.offsetWidth;
+      let l = bl - pw - 10; if(l < 4) l = Math.min(W - pw - 4, bl + B.w.offsetWidth + 10);
+      Object.assign(P.w.style, {left:Math.max(4, l) + 'px', top:Math.max(0, bt) + 'px'});
+      P.w.style.zIndex = ++popZ;
+    };
     // '선택한 요소' 버튼·팝업 제목을 지금 선택한 것으로
     new MutationObserver(() => {
       const pt = $('ldProps').querySelector('.pt'), t0 = pt ? pt.textContent.trim() : '선택한 요소';
@@ -5027,7 +5450,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
   const syncItemsBox = () => { const ta = P.querySelector('[data-items]'); if(ta && document.activeElement !== ta) ta.value = cur.items.map(x => x.label).join('\n'); };
   P.addEventListener('focusin', ev => { if(ev.target.matches('input,textarea')){ snap(); typing = true; } });
   P.addEventListener('focusout', () => { typing = false; });
-  const nums = new Set(['x','y','w','h','size','lh','bw','idx']);
+  const nums = new Set(['x','y','w','h','size','lh','bw','ow','idx']);
   const idxList = v => [...new Set(String(v).split(/[,\s]+/).map(n => parseInt(n, 10) - 1).filter(n => n >= 0))];
   function applyK(e, k, v){
     if(nums.has(k)){ const n = parseFloat(v); if(isNaN(n)) return; e[k] = n; }
@@ -7091,15 +7514,16 @@ $('iHwp').onclick = async () => {
       charBase:+((header.match(/<hh:charProperties itemCnt="(\d+)"/) || [])[1] || 7),
       paraBase:+((header.match(/<hh:paraProperties itemCnt="(\d+)"/) || [])[1] || 20),
       fillBase:+((header.match(/<hh:borderFills itemCnt="(\d+)"/) || [])[1] || 3)};
-    S.charId = ({size = 13, bold, italic, under, color = '#111111', font = ''}) => {
-      const k = [size, !!bold, !!italic, !!under, color, font].join('|');
+    S.charId = ({size = 13, bold, italic, under, color = '#111111', font = '', ls = 0}) => {
+      const k = [size, !!bold, !!italic, !!under, color, font, ls].join('|');
+      const sp = Math.max(-50, Math.min(50, Math.round(+ls || 0)));
       if(S.charMap.has(k)) return S.charMap.get(k);
       const id = S.charBase + S.char.length, f = fontBase + Math.max(0, Object.keys(FONT_FACE).indexOf(font || ''));
       const c = /^#[0-9a-f]{6}$/i.test(color) ? color.toUpperCase() : '#000000';
       S.char.push(`<hh:charPr id="${id}" height="${Math.round(size * 75)}" textColor="${c}" shadeColor="none" useFontSpace="0" useKerning="0" symMark="NONE" borderFillIDRef="2">`
         + `<hh:fontRef hangul="${f}" latin="${f}" hanja="${f}" japanese="${f}" other="${f}" symbol="${f}" user="${f}"/>`
         + `<hh:ratio hangul="100" latin="100" hanja="100" japanese="100" other="100" symbol="100" user="100"/>`
-        + `<hh:spacing hangul="0" latin="0" hanja="0" japanese="0" other="0" symbol="0" user="0"/>`
+        + `<hh:spacing hangul="${sp}" latin="${sp}" hanja="${sp}" japanese="${sp}" other="${sp}" symbol="${sp}" user="${sp}"/>`
         + `<hh:relSz hangul="100" latin="100" hanja="100" japanese="100" other="100" symbol="100" user="100"/>`
         + `<hh:offset hangul="0" latin="0" hanja="0" japanese="0" other="0" symbol="0" user="0"/>`
         + (italic ? '<hh:italic/>' : '') + (bold ? '<hh:bold/>' : '')
@@ -7222,11 +7646,18 @@ $('iHwp').onclick = async () => {
           const w = cw.slice(c, c + cs).reduce((a, b) => a + b, 0);
           const cx = g.cst || {};
           const bgc = cx.bg || (g.shade ? hb : (e.bg || ''));
-          const fid = cx.b && Object.keys(cx.b).length ? S.fillSides({bw, bc, bg:bgc, sides:cx.b}) : S.fillId({bw, bc, bg:bgc});
+          let sides = cx.b || {};
+          if((e.bs && e.bs !== 'solid') || +e.ow){   // 선 모양·바깥 굵기
+            const s0 = e.bs || 'solid', IN = {w:s0 === 'none' ? 0 : bw, s:s0, c:bc}, OUT = {w:+e.ow || bw, s:s0 === 'none' ? 'solid' : s0, c:bc};
+            const ed = x => x && +e.ow ? OUT : IN;
+            sides = {t:ed(r === 0), b:ed(r + rs >= nr), l:ed(c === 0), r:ed(c + cs >= nc), ...sides};
+          }
+          const fid = Object.keys(sides).length ? S.fillSides({bw, bc, bg:bgc, sides}) : S.fillId({bw, bc, bg:bgc});
           const align = g.align || (g.shade ? 'center' : (e.align || 'left'));
           const s = {...st(e), bold: e.bold || g.shade || g.bold, color: g.color || e.color || '#111111'};
           if(cx.size) s.size = cx.size; if(cx.font != null) s.font = cx.font; if(cx.color) s.color = cx.color;
           if(cx.bold != null) s.bold = cx.bold; if(cx.italic != null) s.italic = cx.italic; if(cx.under != null) s.under = cx.under;
+          if(cx.ls) s.ls = cx.ls;
           const pid = S.paraId({align, lh:120});
           let inner = '';
           const pics = [...(extraPics.get(r + ':' + c) || []), ...(g.pic ? [g.pic] : [])];
