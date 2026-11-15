@@ -819,10 +819,10 @@
 <dialog id="dlg" class="setdlg">
   <form method="dialog">
     <div class="setmenu">
-      <button type="button" class="setcard" id="setList"><span class="si">📊</span><span class="tx"><b>엑셀 명단 관리</b><small id="setListSub">명단 올리기 · 이름 바꾸기 · 삭제</small></span><span class="go">›</span></button>
-      <button type="button" class="setcard" id="setTplMgr"><span class="si">📝</span><span class="tx"><b>점검 서식 관리</b><small>서식 업로드 · 편집 · 디자인</small></span><span class="go">›</span></button>
-      <button type="button" class="setcard" id="setOps"><span class="si">🛡</span><span class="tx"><b>운영 관리</b><small id="setOpsSub">운영 중단 · 접속자 · 차단</small></span><span class="go">›</span></button>
-      <button type="button" class="setcard" id="setLog"><span class="si">🕒</span><span class="tx"><b>접속 · 점검 기록</b><small>접속 시각 · 사용자별 점검 기록</small></span><span class="go">›</span></button>
+      <button type="button" class="setcard" id="setList"><span class="si">📊</span><span class="tx"><b>대상관리</b><small id="setListSub">명단 올리기 · 이름 바꾸기 · 삭제</small></span><span class="go">›</span></button>
+      <button type="button" class="setcard" id="setTplMgr"><span class="si">📝</span><span class="tx"><b>서식관리</b><small>서식 업로드 · 편집 · 디자인</small></span><span class="go">›</span></button>
+      <button type="button" class="setcard" id="setLog"><span class="si">📋</span><span class="tx"><b>점검관리</b><small>점검 기록 수정 · 삭제 · 접속 기록 · 사용자별</small></span><span class="go">›</span></button>
+      <button type="button" class="setcard" id="setOps"><span class="si">🛡</span><span class="tx"><b>운영관리</b><small id="setOpsSub">운영 중단 · 접속자 · 차단</small></span><span class="go">›</span></button>
     </div>
     <div class="setbox">
       <label for="region" class="setlab"><img class="gico" src="data:image/png;base64,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" alt=""> 지번 앞에 붙일 시·군</label>
@@ -927,7 +927,7 @@
 <dialog id="logDlg" style="max-width:640px;width:94vw">
   <form method="dialog">
     <div class="lgTabs" style="display:flex;gap:6px;margin-bottom:8px">
-      <button type="button" data-lt="v" class="on">🕒 접속 기록</button><button type="button" data-lt="r">📋 점검 기록</button><button type="button" data-lt="u">👤 사용자별</button>
+      <button type="button" data-lt="r" class="on">📋 점검 기록</button><button type="button" data-lt="u">👤 사용자별</button><button type="button" data-lt="v">🕒 접속 기록</button>
     </div>
     <input id="lgFind" type="search" placeholder="찾기 (이름·기기·대상)" style="margin:0 0 8px">
     <div id="lgList" style="max-height:58vh;overflow:auto;font-size:13px"></div>
@@ -2607,7 +2607,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261116054336';
+const APP_VER = '20261116055516';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -6917,7 +6917,7 @@ $('iHwp').onclick = async () => {
     const r = await checkAdminPw(pw);
     if(!r.ok){ alert(r.error || '비밀번호가 맞지 않습니다.'); return; }
     adminBypass = true; unlocked = true; showGate(null);
-    toast('관리자로 들어왔습니다. 설정 → 운영 관리에서 운영을 재개할 수 있습니다.');
+    toast('관리자로 들어왔습니다. 설정 → 운영관리에서 운영을 재개할 수 있습니다.');
   };
 
   /* ---------- 관리자 기능 ---------- */
@@ -7064,7 +7064,7 @@ $('iHwp').onclick = async () => {
   }
 
   /* ---------- 팝업(dialog) ---------- */
-  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', hwpDlg:'한글 양식 미리보기', dlg:'설정', listDlg:'엑셀 명단 관리', numDlg:'요소 넣기', colDlg:'엑셀 열 · 팝업 항목 설정', opsDlg:'운영 관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'점검 서식 관리', logDlg:'접속 · 점검 기록'};
+  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', hwpDlg:'한글 양식 미리보기', dlg:'설정', listDlg:'대상관리', numDlg:'요소 넣기', colDlg:'엑셀 열 · 팝업 항목 설정', opsDlg:'운영관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'서식관리', logDlg:'점검관리'};
   function winDialog(d){
     if(d._win) return; d._win = true;
     const bar = document.createElement('div');
@@ -9204,9 +9204,16 @@ $('iHwp').onclick = async () => {
   #logDlg .lgTabs button.on{background:var(--b);border-color:var(--b);color:#fff;font-weight:700}
   #logDlg table{width:100%;border-collapse:collapse}#logDlg th,#logDlg td{padding:6px 5px;border-bottom:1px solid var(--ln);text-align:left;vertical-align:top}
   #logDlg th{position:sticky;top:0;background:#f8fafc;font-size:12px;color:#475569;z-index:1}#logDlg td small{color:var(--mut)}
-  #logDlg .st{display:inline-block;padding:0 6px;border-radius:6px;font-size:11px;background:#eef2f7;color:#334155}#logDlg .st.ok{background:#dcfce7;color:#166534}`;
+  #logDlg .st{display:inline-block;padding:0 6px;border-radius:6px;font-size:11px;background:#eef2f7;color:#334155}#logDlg .st.ok{background:#dcfce7;color:#166534}
+  #logDlg .lgAct{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+  #logDlg .lgAct button,#logDlg .lgBulk button{padding:3px 8px;font-size:12px;border:1px solid var(--ln);border-radius:7px;background:#fff;color:#1f6feb;white-space:nowrap}
+  #logDlg .lgAct button.del,#logDlg .lgBulk button.del{color:#b91c1c}
+  #logDlg .lgBulk{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 6px;padding:6px 8px;background:#f8fafc;border:1px solid var(--ln);border-radius:8px}
+  #logDlg .lgBulk button:disabled{opacity:.4}
+  #logDlg td.ck,#logDlg th.ck{width:24px;text-align:center}#logDlg input[type=checkbox]{width:auto;margin:0}
+  #logDlg tr.on td{background:#eff6ff}`;
   document.head.appendChild(css);
-  let tab = 'v', vis = null, verr = '', logs = null, lerr = '';
+  let tab = 'r', vis = null, verr = '', logs = null, lerr = '';
   const ago = ts => { if(!ts) return ''; const m = Math.round((Date.now() - ts) / 60000); return m < 1 ? '방금' : m < 60 ? m + '분 전' : m < 1440 ? Math.round(m / 60) + '시간 전' : Math.round(m / 1440) + '일 전'; };
   const T = ts => ts ? fmtTs(ts) : '';
   async function loadVis(){
@@ -9238,8 +9245,12 @@ $('iHwp').onclick = async () => {
     const recs = (typeof allRecs !== 'undefined' ? allRecs : []);   // 이전 기록까지 모두
     if(tab === 'r'){
       const rs = [...recs].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0)).filter(r => !q || [r.inspector, r.target.name, r.target.place, r.title].join(' ').toLowerCase().includes(q));
-      box.innerHTML = `<div style="margin:0 0 6px;color:var(--mut)">점검 기록 ${rs.length}건 · 최근 저장 순</div><table><tr><th>저장 시각</th><th>점검자</th><th>대상</th><th>서식 · 판정</th></tr>`
-        + rs.map(r => `<tr><td>${esc(T(r.savedAt))}<br><small>${ago(r.savedAt)}</small></td><td>${esc(r.inspector || '')}</td><td><b>${esc(r.target.name || '')}</b><br><small>${esc(r.target.place || '')}</small></td><td><small>${esc((tplById(r.tplId) || {}).name || r.title || '')}</small><br>${r.done ? '<span class="st ok">완료</span> ' : ''}${r.overall ? `<span class="st">${esc(r.overall)}</span>` : ''}${recEmpty(r) ? '<span class="st">열어만 봄</span>' : ''}</td></tr>`).join('') + '</table>';
+      const ids = new Set(rs.map(r => r.id)); [...pick].forEach(id => { if(!ids.has(id)) pick.delete(id); });
+      const n = pick.size, all = rs.length && rs.every(r => pick.has(r.id));
+      box.innerHTML = `<div style="margin:0 0 6px;color:var(--mut)">점검 기록 ${rs.length}건 · 최근 저장 순 · 행의 [열기·수정]으로 내용을 고치고, 체크해서 한꺼번에 지우거나 점검자를 바꿀 수 있습니다</div>
+        <div class="lgBulk"><b style="font-size:12px">선택 ${n}건</b><button type="button" data-bk="who"${n ? '' : ' disabled'}>👤 점검자 바꾸기</button><button type="button" data-bk="done"${n ? '' : ' disabled'}>✔ 완료로</button><button type="button" data-bk="undone"${n ? '' : ' disabled'}>↺ 완료 해제</button><button type="button" class="del" data-bk="del"${n ? '' : ' disabled'}>🗑 선택 삭제</button></div>
+        <table><tr><th class="ck"><input type="checkbox" data-all="1"${all ? ' checked' : ''} title="모두 고르기"></th><th>저장 시각</th><th>점검자</th><th>대상</th><th>서식 · 판정</th></tr>`
+        + rs.map(r => `<tr class="${pick.has(r.id) ? 'on' : ''}"><td class="ck"><input type="checkbox" data-pk="${esc(r.id)}"${pick.has(r.id) ? ' checked' : ''}></td><td>${esc(T(r.savedAt))}<br><small>${ago(r.savedAt)}</small></td><td>${esc(r.inspector || '')}<div class="lgAct"><button type="button" data-ra="who" data-id="${esc(r.id)}" title="점검자 이름 고치기">✎</button></div></td><td><b>${esc(r.target.name || '')}</b><br><small>${esc(r.target.place || '')}</small><div class="lgAct"><button type="button" data-ra="open" data-id="${esc(r.id)}">✏ 열기·수정</button><button type="button" class="del" data-ra="del" data-id="${esc(r.id)}">🗑 삭제</button></div></td><td><small>${esc((tplById(r.tplId) || {}).name || r.title || '')}</small><br>${r.done ? '<span class="st ok">완료</span> ' : ''}${r.overall ? `<span class="st">${esc(r.overall)}</span>` : ''}${recEmpty(r) ? '<span class="st">열어만 봄</span>' : ''}</td></tr>`).join('') + '</table>';
       return;
     }
     // 사용자별: 점검자마다 건수 · 완료 · 최근 저장 · 최근 접속
@@ -9248,7 +9259,7 @@ $('iHwp').onclick = async () => {
     const lastSeen = name => { if(!vis) return 0; const tail = String(name).split(/\s+/).pop(); return Math.max(0, ...vis.filter(v => v.name && (v.name === name || v.name.includes(tail) || name.includes(v.name))).map(v => v.last || 0)); };
     const us = [...by].sort((a, b) => b[1].last - a[1].last).filter(([k]) => !q || k.toLowerCase().includes(q));
     box.innerHTML = `<div style="margin:0 0 6px;color:var(--mut)">점검자 ${us.length}명</div><table><tr><th>점검자</th><th>점검</th><th>완료</th><th>최근 점검 저장</th><th>최근 접속</th></tr>`
-      + us.map(([k, o]) => { const ls = lastSeen(k); return `<tr><td><b>${esc(k)}</b></td><td>${o.n}건</td><td>${o.done}건</td><td>${esc(T(o.last))}<br><small>${esc(o.lastT || '')}</small></td><td>${ls ? esc(T(ls)) + `<br><small>${ago(ls)}</small>` : '<small>—</small>'}</td></tr>`; }).join('') + '</table>';
+      + us.map(([k, o]) => { const ls = lastSeen(k); return `<tr><td><b>${esc(k)}</b><div class="lgAct"><button type="button" data-ua="ren" data-who="${esc(k)}" title="이 점검자의 모든 기록에서 이름 바꾸기">✎ 이름 바꾸기</button><button type="button" data-ua="show" data-who="${esc(k)}">📋 기록 보기</button></div></td><td>${o.n}건</td><td>${o.done}건</td><td>${esc(T(o.last))}<br><small>${esc(o.lastT || '')}</small></td><td>${ls ? esc(T(ls)) + `<br><small>${ago(ls)}</small>` : '<small>—</small>'}</td></tr>`; }).join('') + '</table>';
   }
   async function open(){
     if(!$('logDlg').open) $('logDlg').showModal();
@@ -9256,6 +9267,70 @@ $('iHwp').onclick = async () => {
     render(); await loadVis(); render();
   }
   $('setLog').onclick = open;
+  /* ---------- 점검 기록 고치기 · 지우기 ---------- */
+  const pick = new Set();
+  const recOf = id => (typeof allRecs !== 'undefined' ? allRecs : []).find(r => r.id === id);
+  async function putRecs(list){   // 고친 기록 저장 + 동기화
+    for(const r of list){ r.savedAt = Date.now(); r._dirty = true; await idb.put(r); }
+    await reloadRecs(); if(typeof renderList === 'function') renderList(); if(window.syncSoon) syncSoon();
+  }
+  async function delRecs(ids){
+    for(const id of ids){ await idb.del(id); if(window.syncDelete) syncDelete(id); pick.delete(id); }
+    if(typeof cur !== 'undefined' && cur && ids.includes(cur.id) && !$('insp').hidden){ $('insp').hidden = true; }
+    await reloadRecs(); if(typeof renderList === 'function') renderList();
+  }
+  const label = r => `${r.target.name || '(이름 없음)'} · ${T(r.savedAt)}`;
+  $('lgList').addEventListener('change', ev => {
+    const t = ev.target;
+    if(t.dataset.pk){ t.checked ? pick.add(t.dataset.pk) : pick.delete(t.dataset.pk); render(); }
+    if(t.dataset.all){ const q = $('lgFind').value.trim().toLowerCase();
+      const rs = (typeof allRecs !== 'undefined' ? allRecs : []).filter(r => !q || [r.inspector, r.target.name, r.target.place, r.title].join(' ').toLowerCase().includes(q));
+      rs.forEach(r => t.checked ? pick.add(r.id) : pick.delete(r.id)); render(); }
+  });
+  $('lgList').addEventListener('click', async ev => {
+    const b = ev.target.closest('button'); if(!b) return;
+    ev.preventDefault();
+    if(b.dataset.ra){
+      const r = recOf(b.dataset.id); if(!r) return toast('기록을 찾지 못했습니다');
+      if(b.dataset.ra === 'open'){
+        if(typeof dirty !== 'undefined' && dirty && !$('insp').hidden && !confirm('지금 점검 화면에 저장하지 않은 내용이 있습니다. 버리고 이 기록을 열까요?')) return;
+        $('logDlg').close(); if($('dlg') && $('dlg').open) $('dlg').close();
+        openRecord(r); toast('기록을 열었습니다 — 고친 뒤 [저장]하세요');
+        return;
+      }
+      if(b.dataset.ra === 'del'){
+        if(!confirm(`이 점검 기록을 지울까요? 되돌릴 수 없습니다.\n\n${label(r)}`)) return;
+        await delRecs([r.id]); render(); toast('점검 기록을 지웠습니다'); return;
+      }
+      if(b.dataset.ra === 'who'){
+        const v = prompt('점검자 이름', r.inspector || ''); if(v === null) return;
+        r.inspector = v.trim(); await putRecs([r]); render(); toast('점검자를 고쳤습니다'); return;
+      }
+    }
+    if(b.dataset.bk){
+      const list = [...pick].map(recOf).filter(Boolean); if(!list.length) return;
+      if(b.dataset.bk === 'del'){
+        if(!confirm(`고른 점검 기록 ${list.length}건을 지울까요? 되돌릴 수 없습니다.\n\n- ${list.slice(0, 6).map(label).join('\n- ')}${list.length > 6 ? '\n…' : ''}`)) return;
+        await delRecs(list.map(r => r.id)); render(); toast(`점검 기록 ${list.length}건을 지웠습니다`); return;
+      }
+      if(b.dataset.bk === 'who'){
+        const v = prompt(`고른 ${list.length}건의 점검자 이름`, list[0].inspector || ''); if(v === null) return;
+        list.forEach(r => r.inspector = v.trim()); await putRecs(list); render(); toast(`${list.length}건의 점검자를 바꿨습니다`); return;
+      }
+      if(b.dataset.bk === 'done' || b.dataset.bk === 'undone'){
+        list.forEach(r => r.done = b.dataset.bk === 'done'); await putRecs(list); render(); toast(`${list.length}건을 ${b.dataset.bk === 'done' ? '완료로 표시' : '완료 해제'}했습니다`); return;
+      }
+    }
+    if(b.dataset.ua){
+      const who = b.dataset.who;
+      if(b.dataset.ua === 'show'){ tab = 'r'; $('lgFind').value = who === '(점검자 없음)' ? '' : who; render(); return; }
+      if(b.dataset.ua === 'ren'){
+        const list = (typeof allRecs !== 'undefined' ? allRecs : []).filter(r => (r.inspector || '(점검자 없음)').trim() === who);
+        const v = prompt(`'${who}'의 점검 기록 ${list.length}건에서 점검자 이름을 바꿉니다`, who === '(점검자 없음)' ? '' : who); if(v === null || v.trim() === who) return;
+        list.forEach(r => r.inspector = v.trim()); await putRecs(list); render(); toast(`${list.length}건의 점검자를 '${v.trim() || '(없음)'}'(으)로 바꿨습니다`); return;
+      }
+    }
+  });
   window.lgReloadFn = async () => { $('lgList').innerHTML = '<div style="color:var(--mut);padding:10px 0">불러오는 중…</div>'; try{ if(window.syncNow) await syncNow(); }catch(_){} await reloadRecs(); await loadVis(); render(); };
   document.querySelectorAll('#logDlg [data-lt]').forEach(b => b.onclick = () => { tab = b.dataset.lt; render(); });
   $('lgFind').addEventListener('input', render);
