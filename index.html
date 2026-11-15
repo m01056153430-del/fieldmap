@@ -41,6 +41,10 @@
   #map{flex:1;min-height:0}
   #q{margin:10px;padding:9px 10px;border:1px solid var(--ln);border-radius:8px;font-size:15px}
   #filters{display:flex;gap:6px;flex-wrap:wrap;padding:0 10px 8px}
+  #stFilters{display:flex;gap:6px;flex-wrap:wrap;padding:0 10px 8px;align-items:center}
+  #stFilters .lab{font-size:12px;color:var(--mut);margin-right:2px}
+  #stFilters .chip b{font-weight:700;margin-left:3px}
+  #stFilters .sd{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:-1px;box-sizing:border-box}
   .chip{border:1px solid var(--ln);background:#fff;color:var(--fg);border-radius:999px;padding:4px 10px;font-size:13px;font-weight:500}
   .chip.on{background:var(--b);color:#fff;border-color:var(--b)}
   #list{flex:1;overflow:auto;margin:0;padding:0;list-style:none;border-top:1px solid var(--ln)}
@@ -307,6 +311,11 @@
   #tmList .tmi.on{border-color:var(--b);background:#eff6ff}
   #tmList .tmi input{width:auto;margin-top:3px}
   #tmList small{color:var(--mut)}
+  #tmList .tmth{flex:none;width:76px;height:107px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;overflow:hidden;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  #tmList .tmth>div{position:absolute;left:0;top:0;transform-origin:0 0;transform:scale(.0957);pointer-events:none}
+  #tmList .tmth>div .pg{box-shadow:none}
+  #tmList .tmth.wait::after{content:'…';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:18px}
+  #tmList .tmi>span{flex:1;min-width:0}
   #tmList .tag{background:var(--b);color:#fff;border-radius:999px;padding:1px 7px;font-size:11px}
   .tmb{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
   .tmb button{padding:10px 6px;border-radius:8px;font-size:14px;background:#fff}
@@ -539,6 +548,16 @@
   .ldopen.tile .go{display:none}
   .ldgrp .ldgb>.ldopen:not(.tile):last-child{margin-bottom:0}
   .ldpop{position:absolute;z-index:30;display:flex;flex-direction:column;max-height:calc(100% - 16px);background:#fff;border:1px solid #cbd5e1;border-radius:14px;box-shadow:0 14px 36px rgba(15,23,42,.3);overflow:hidden}
+  /* 휴대폰: 디자인 창은 아래에서 올라오는 시트 한 장 (지도·문서를 덜 가림) */
+  @media (max-width:760px){
+    .ldpop{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:auto!important;max-height:58%!important;border-radius:18px 18px 0 0!important;box-shadow:0 -8px 28px rgba(15,23,42,.28)!important;animation:ldsheet .18s ease-out}
+    .ldpop .lph{position:relative;padding-top:14px!important;cursor:default!important}
+    .ldpop .lph::before{content:'';position:absolute;left:50%;top:5px;width:38px;height:4px;margin-left:-19px;border-radius:2px;background:rgba(255,255,255,.55)}
+    .ldpop .lpb{overflow:auto;-webkit-overflow-scrolling:touch}
+    .ldgrp.tiles .ldgb{gap:6px}
+    .ldopen.tile{padding:9px 4px 8px}
+  }
+  @keyframes ldsheet{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
   .ldpop[hidden]{display:none}
   .ldpop .lph{display:flex;align-items:center;gap:8px;padding:7px 7px 7px 10px;background:#134e4a;color:#fff;cursor:move;touch-action:none;user-select:none;flex:none}
   .ldpop .lph .si{background:rgba(255,255,255,.2)}
@@ -791,6 +810,7 @@
       </div>
       <input id="q" type="search" placeholder="모든 항목 검색 (띄어쓰기로 여러 단어)">
       <div id="filters"></div>
+      <div id="stFilters"></div>
       <ul id="list"></ul>
       <div id="status">엑셀 파일을 열어 주세요.</div>
       <div id="rate" style="padding:0 12px 8px;font-size:13px;color:var(--mut);display:none"></div>
@@ -1304,6 +1324,7 @@ function applyListOps(all, ops){
 let rows = pickRows();
 let geoCache = LS.get('geo', {});
 let map, geocoder, info, markers = [], filterTown = null, colorOf = {};
+let filterSt = (() => { try{ return JSON.parse(localStorage.getItem('fm_stFilter') || '""') || ''; }catch(_){ return ''; } })();   // 점검 상태 필터: '' 전체 · todo 미점검 · ing 점검 중 · done 완료 · notdone 미완료
 
 /* ---------- 지번 파싱 ----------
    "구례읍 봉동리 89-0,1, 구례읍 봉동리 90-5" → ["구례읍 봉동리 89", "구례읍 봉동리 90-5"]
@@ -1904,13 +1925,33 @@ const rtInc = new Set(LS.get('rtInc', []));   // 완료된 곳 중 사용자가 
 const rtSaveEx = () => { LS.set('rtEx', [...rtEx]); LS.set('rtInc', [...rtInc]); };
 window.rtIncluded = r => isDone(r) ? rtInc.has(rowKey(r)) : !rtEx.has(rowKey(r));
 const pinColor = r => isDone(r) ? DONE_COLOR : colorOf[placeTown(r)];
-const _mkCache = {};
-function markerImage(color){
-  if(_mkCache[color]) return _mkCache[color];
-  return _mkCache[color] = _markerImage(color);
+/* 점검 상태: done 완료 · ing 점검 중(미완료) · todo 미점검 */
+const stOf = r => isDone(r) ? 'done' : (window.inspDone && inspDone.has(rowKey(r))) ? 'ing' : 'todo';
+function renderStFilters(){
+  const box = document.getElementById('stFilters'); if(!box) return;
+  if(!rows.length){ box.innerHTML = ''; return; }
+  const base = rows.filter(r => !filterTown || placeTown(r) === filterTown);
+  const n = {todo:0, ing:0, done:0}; base.forEach(r => n[stOf(r)]++);
+  const c = (v, l, k) => `<button type="button" class="chip${filterSt === v ? ' on' : ''}" data-st="${v}">${l}${k != null ? `<b>${k}</b>` : ''}</button>`;
+  box.innerHTML = `<span class="lab">점검</span>` + c('', '전체') + c('notdone', '미완료', n.todo + n.ing) + c('todo', '<i class="sd" style="background:#fff;border:1.5px solid #94a3b8"></i>미점검', n.todo) + c('ing', '<i class="sd" style="background:#f59e0b"></i>점검 중', n.ing) + c('done', '<i class="sd" style="background:#16a34a"></i>완료', n.done);
 }
-function _markerImage(color){
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38"><path d="M14 1C7 1 1 6.6 1 13.6 1 23 14 37 14 37s13-14 13-23.4C27 6.6 21 1 14 1z" fill="${color}" stroke="#fff" stroke-width="2"/><circle cx="14" cy="13.5" r="5" fill="#fff"/></svg>`;
+document.addEventListener('click', e => {
+  const b = e.target.closest('#stFilters [data-st]'); if(!b) return;
+  filterSt = b.dataset.st; try{ localStorage.setItem('fm_stFilter', JSON.stringify(filterSt)); }catch(_){}
+  renderList(); if(typeof fitVisible === 'function') fitVisible();
+});
+const _mkCache = {};
+function markerImage(color, st){
+  const k = color + '|' + (st || '');
+  if(_mkCache[k]) return _mkCache[k];
+  return _mkCache[k] = _markerImage(color, st);
+}
+/* 핀 가운데 표시: 완료 ✔ · 점검 중 반쪽 원(주황) · 미점검 흰 점 */
+function _markerImage(color, st){
+  const mid = st === 'done' ? `<circle cx="14" cy="13.5" r="7" fill="#fff"/><path d="M10.4 13.7l2.4 2.4 4.8-5" fill="none" stroke="#16a34a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`
+    : st === 'ing' ? `<circle cx="14" cy="13.5" r="6" fill="#fff"/><path d="M14 7.5a6 6 0 0 1 0 12z" fill="#f59e0b"/><circle cx="14" cy="13.5" r="6" fill="none" stroke="#f59e0b" stroke-width="1.6"/>`
+    : `<circle cx="14" cy="13.5" r="5" fill="#fff"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38"><path d="M14 1C7 1 1 6.6 1 13.6 1 23 14 37 14 37s13-14 13-23.4C27 6.6 21 1 14 1z" fill="${color}" stroke="#fff" stroke-width="2"/>${mid}</svg>`;
   return new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
     new kakao.maps.Size(28,38), {offset:new kakao.maps.Point(14,37)});
 }
@@ -1951,6 +1992,7 @@ function renderFilters(){
 }
 function visible(r){
   if(filterTown && placeTown(r) !== filterTown) return false;
+  if(filterSt){ const st = stOf(r); if(filterSt === 'notdone' ? st === 'done' : st !== filterSt) return false; }
   const words = $('q').value.toLowerCase().split(/\s+/).filter(Boolean);
   if(!words.length) return true;
   const hay = [...XLS_COLS.map(c => r[c[0]]), placeTown(r), ...Object.values(etcOf(r))].map(v => String(v ?? '')).join(' ').toLowerCase();
@@ -1987,6 +2029,7 @@ function rtSelInfo(){
 }
 function renderList(){
   const ul = $('list'); ul.innerHTML = '';
+  renderStFilters();
   rows.forEach((r,i) => {
     if(!visible(r)) return;
     const li = document.createElement('li');
@@ -2004,12 +2047,13 @@ function renderList(){
   rtSelInfo();
   markers.forEach(m => {
     const r = rows[m._i], d = isDone(r);
-    if(m._done !== d){ m.setImage(markerImage(pinColor(r))); m._done = d; }
+    const st = stOf(r);
+    if(m._st !== st){ m.setImage(markerImage(pinColor(r), st)); m._st = st; m._done = d; }
     m.setMap(visible(r) ? map : null);
   });
   updateLabels();
   const shown = rows.filter(visible).length;
-  if(rows.length && (filterTown || $('q').value.trim())) setStatus(`검색·선택 결과 ${shown}명 / 전체 ${rows.length}명`);
+  if(rows.length && (filterTown || filterSt || $('q').value.trim())) setStatus(`검색·선택 결과 ${shown}명 / 전체 ${rows.length}명`);
   if(window.inspDone && rows.length){
     const done = rows.filter(r => inspDone.has(rowKey(r))).length;
     const ft = filterTown ? rows.filter(r => placeTown(r) === filterTown) : null;
@@ -2223,8 +2267,8 @@ async function plot(){
       const pt = fixPos[p] ? {lat:+fixPos[p][0], lng:+fixPos[p][1], fixed:true} : await geocodePlace(p);
       if(!pt) continue;
       r._pts.push(pt);
-      const m = new kakao.maps.Marker({position:new kakao.maps.LatLng(pt.lat,pt.lng), image:markerImage(pinColor(r)), title:r.name});
-      m._done = isDone(r);
+      const m = new kakao.maps.Marker({position:new kakao.maps.LatLng(pt.lat,pt.lng), image:markerImage(pinColor(r), stOf(r)), title:r.name});
+      m._done = isDone(r); m._st = stOf(r);
       m._i = i; m._pt = pt; m._part = p; m._pi = pi; m.setMap(map); markers.push(m);
       m._lab = new kakao.maps.CustomOverlay({position:m.getPosition(), yAnchor:1, zIndex:3, clickable:true, content:''});
       labSet(m);
@@ -2607,7 +2651,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261116055516';
+const APP_VER = '20261116063048';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -2732,7 +2776,8 @@ function newRecord(r){
     items: t.items.map((label, i) => itemOf(t, label, i)), opts: [...t.opts],
     extra: t.extra.map(label => ({label, value:''})), sec: {...t.sec}, hwpx: t.hwpx || null, layout: t.layout ? JSON.parse(JSON.stringify(t.layout)) : null,
     overall: '', memo: '', date: localDT(new Date()), dateText: '', gpsText: '',
-    inspector: LS.get('inspector', ''), gps: null, photos: [], photoIds: [], capt: [], sign: null, signId: null,
+    // 점검자: 마지막에 쓴 이름, 없으면 동기화 사용자 이름
+    inspector: LS.get('inspector', '') || LS.get('syncUser', ''), gps: null, photos: [], photoIds: [], capt: [], sign: null, signId: null,
     target: (({_pts, ...x}) => ({...x}))(r),
     savedAt: 0
   };
@@ -4487,7 +4532,10 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
         ${tog('border', e, '바깥 테두리')}${e.border ? `<input type="number" data-k="bw" min="1" max="10" value="${e.bw || 1}" style="width:54px"><input type="color" data-k="bc" value="${e.bc || '#333333'}" style="width:40px;padding:2px">` : ''}</div>`;
     }
     if(['text','table','checklist'].includes(e.type)) h += `<div class="ldrow"><button type="button" data-act="fit" style="border-color:#0f766e;color:#0f766e">내용에 맞게 높이 조절</button></div>`;
-    h += `<div class="ldrow" style="margin-top:6px"><button type="button" data-act="dup">복제</button><button type="button" data-act="front">맨 앞으로</button><button type="button" data-act="back">맨 뒤로</button><button type="button" data-act="del" style="color:#b91c1c">삭제</button></div>`;
+    h += `<div class="pt" style="margin-top:10px">맞추기</div>
+      <div class="ldrow"><button type="button" data-act="al-l" title="왼쪽 여백(1cm)에 붙이기">⇤ 왼쪽</button><button type="button" data-act="al-c" title="쪽 가로 가운데로">↔ 가운데</button><button type="button" data-act="al-r" title="오른쪽 여백(1cm)에 붙이기">⇥ 오른쪽</button><button type="button" data-act="al-w" title="좌우 1cm 여백까지 꽉 채우기">⟷ 꽉 채우기</button></div>
+      <div class="ldrow"><button type="button" data-act="al-up" title="바로 위 요소 아래에 붙이기">⤒ 위에 붙이기</button><button type="button" data-act="pg-x" title="이 쪽의 모든 요소를 이 요소와 같은 왼쪽 줄로">이 쪽 왼쪽 줄 맞추기</button><button type="button" data-act="pg-gap" title="이 쪽 요소들의 위아래 간격을 같게">위아래 간격 같게</button></div>
+      <div class="ldrow" style="margin-top:6px"><button type="button" data-act="dup" title="Ctrl+D">복제 (Ctrl+D)</button><button type="button" data-act="front">맨 앞으로</button><button type="button" data-act="back">맨 뒤로</button><button type="button" data-act="del" style="color:#b91c1c">삭제</button></div>`;
     P.innerHTML = h;
   }
 
@@ -4865,7 +4913,10 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       sec.replaceWith(btn);
       let q = null;
       const front = () => { w.style.zIndex = ++popZ; };
-      const open = () => { w.hidden = false; q = placePop(w, id); front(); btn.classList.add('on'); };
+      const open = () => {
+        if(innerWidth <= 760) Object.values(pops).forEach(p => { if(p.w !== w) p.close(); });   // 휴대폰: 한 번에 창 하나만 (아래 시트)
+        w.hidden = false; q = placePop(w, id); front(); btn.classList.add('on');
+      };
       const close = () => { w.hidden = true; btn.classList.remove('on'); };
       btn.onclick = () => w.hidden ? open() : close();
       w.querySelector('.lpx').onclick = close;
@@ -5426,6 +5477,7 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
     if(/INPUT|TEXTAREA|SELECT/.test(document.activeElement && document.activeElement.tagName)) return;
     if(editing || (document.activeElement && document.activeElement.isContentEditable)) return;
     const e = selEl(); if(!e) return;
+    if((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'd'){ ev.preventDefault(); const db = P.querySelector('[data-act="dup"]'); if(db) db.click(); return; }   // Ctrl+D 복제
     if(ev.key === 'Enter' || ev.key === 'F2'){ ev.preventDefault(); startInline(e, cell); return; }
     const st = ev.shiftKey ? 10 : 1;
     const mv = {ArrowLeft:[-st,0], ArrowRight:[st,0], ArrowUp:[0,-st], ArrowDown:[0,st]}[ev.key];
@@ -5573,6 +5625,27 @@ function upsertPreview(d){   // 비교용으로 upsertTpl 과 같은 정리만 �
       if(b.dataset.act === 'del'){ page().els = els.filter(x => x.id !== e.id); sel = null; }
       if(b.dataset.act === 'dup'){ const c = {...clone(e), id:nid(), x:clamp(e.x + 15, 0, PW - e.w), y:clamp(e.y + 15, 0, PH - e.h), z:Math.max(...els.map(x => x.z || 1)) + 1}; els.push(c); sel = c.id; }
       if(b.dataset.act === 'front') e.z = Math.max(...els.map(x => x.z || 1)) + 1;
+      // 맞추기 (A4 좌우 1cm 여백 기준)
+      if(b.dataset.act === 'al-l') e.x = TBL_X;
+      if(b.dataset.act === 'al-r') e.x = Math.max(0, PW - TBL_X - e.w);
+      if(b.dataset.act === 'al-c') e.x = Math.round((PW - e.w) / 2);
+      if(b.dataset.act === 'al-w'){ e.x = TBL_X; e.w = TBL_W; }   // 표 열 너비는 비율이라 그대로 늘어남
+      if(b.dataset.act === 'al-up'){
+        const above = els.filter(x => x !== e && !x.float && x.y + x.h <= e.y + 2 && x.x < e.x + e.w && x.x + x.w > e.x).sort((a, c) => (c.y + c.h) - (a.y + a.h))[0];
+        e.y = above ? Math.round(above.y + above.h + 6) : FLOW_TOP;
+      }
+      if(b.dataset.act === 'pg-x') els.forEach(x => { if(!x.float && x !== e && x.w <= PW - e.x) x.x = e.x; });
+      if(b.dataset.act === 'pg-gap'){
+        // 위아래로 겹치는 요소는 한 줄로 보고, 줄 사이 간격을 같게 (맨 위·맨 아래 줄은 그대로)
+        const list = els.filter(x => !x.float).sort((a, c) => a.y - c.y), bands = [];
+        for(const x of list){ const bd = bands[bands.length - 1]; if(bd && x.y < bd.bot - 2){ bd.els.push(x); bd.bot = Math.max(bd.bot, x.y + x.h); } else bands.push({top:x.y, bot:x.y + x.h, els:[x]}); }
+        if(bands.length > 2){
+          const top = bands[0].top, end = bands[bands.length - 1].bot, sum = bands.reduce((a, bd) => a + (bd.bot - bd.top), 0);
+          const gap = Math.max(6, (end - top - sum) / (bands.length - 1));
+          let y = top;
+          for(const bd of bands){ const d = Math.round(y - bd.top); bd.els.forEach(x => x.y = clamp(x.y + d, 0, PH - x.h)); y += (bd.bot - bd.top) + gap; }
+        } else if(bands.length === 2){ const d = Math.round(bands[0].bot + 8 - bands[1].top); bands[1].els.forEach(x => x.y = clamp(x.y + d, 0, PH - x.h)); }
+      }
       if(b.dataset.act === 'fit'){
         const node = $('ldPage').querySelector(`[data-id="${e.id}"]`);
         if(node){
@@ -7144,13 +7217,36 @@ $('iHwp').onclick = async () => {
     return rows[0] || {name:'(예시) 홍길동', town:'구례읍', addr:'구례읍 ○○로 1', tel:'010-0000-0000', place:'구례읍 봉동리 89', item:'오이', detail:'배전반',
       area:1200, total:4000000, subsidy:2400000, national:'', province:'', county:'', self:1600000, biz:'2026년 ○○ 지원사업', note:'', etc:''};
   }
+  /* 서식 1쪽 작은 미리보기 (서식 내용이 바뀌면 다시 그림) */
+  const thumbC = new Map();
+  function tplRec(t, layout){
+    const r = newRecord(sampleRow());
+    Object.assign(r, {tplId:t.id, title:t.title, items:t.items.map((l, i) => itemOf(t, l, i)), extra:(t.extra || []).map(l => ({label:l, value:''})), sec:{...r.sec, ...(t.sec || {})}, hwpx:null, layout});
+    return r;
+  }
+  function thumbHtml(t){
+    const k = t.id + '|' + (t.savedAt || 0);
+    if(thumbC.has(k)) return thumbC.get(k);
+    let h = null;
+    try{
+      if(t.layout){ const r = tplRec(t, JSON.parse(JSON.stringify(t.layout))); h = (window.layoutPages(r) || [])[0] || ''; }
+      else if(!t.hwpx){ const r = tplRec(t, null); r.layout = LAY.defaultLayout(r); h = (window.layoutPages(r) || [])[0] || ''; }
+    }catch(_){ h = ''; }
+    if(h === null){   // 한글 서식: 파일을 읽어 1쪽을 만든 뒤 다시 그림
+      thumbC.set(k, null);
+      (async () => { try{ const x = await hwpxToLayout(t.hwpx); const r = tplRec(t, x.layout); thumbC.set(k, (window.layoutPages(r) || [])[0] || ''); }catch(_){ thumbC.set(k, ''); } if($('tplMgr').open) renderMgr(); })();
+      return null;
+    }
+    thumbC.set(k, h); return h;
+  }
   function renderMgr(){
     const list = sortedTpls();
     if(!mgrSel || !tplById(mgrSel)) mgrSel = list[0].id;
-    $('tmList').innerHTML = list.map((t, i) => `<label class="tmi${t.id === mgrSel ? ' on' : ''}">
+    $('tmList').innerHTML = list.map((t, i) => { const th = thumbHtml(t); return `<label class="tmi${t.id === mgrSel ? ' on' : ''}">
         <input type="radio" name="tm" value="${t.id}" ${t.id === mgrSel ? 'checked' : ''}>
+        <div class="tmth${th == null ? ' wait' : ''}" title="1쪽 미리보기">${th ? `<div>${th}</div>` : ''}</div>
         <span><b>${esc(t.name)}</b>${i === 0 ? ' <small class="tag">사용 중</small>' : ''}<br>
-        <small>${esc(t.title)} · ${t.items.length}항목 · ${kind(t)} · ${fmtTs(t.savedAt).slice(2)}</small></span></label>`).join('');
+        <small>${esc(t.title)} · ${t.items.length}항목 · ${kind(t)} · ${fmtTs(t.savedAt).slice(2)}</small></span></label>`; }).join('');
   }
   function withTempRec(fn){
     const t = tplById(mgrSel); if(!t) return;
@@ -9211,9 +9307,23 @@ $('iHwp').onclick = async () => {
   #logDlg .lgBulk{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 6px;padding:6px 8px;background:#f8fafc;border:1px solid var(--ln);border-radius:8px}
   #logDlg .lgBulk button:disabled{opacity:.4}
   #logDlg td.ck,#logDlg th.ck{width:24px;text-align:center}#logDlg input[type=checkbox]{width:auto;margin:0}
-  #logDlg tr.on td{background:#eff6ff}`;
+  #logDlg tr.on td{background:#eff6ff}
+  #logDlg .lgTool{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 6px}
+  #logDlg .lgTool .seg{display:inline-flex;border:1px solid var(--ln);border-radius:8px;overflow:hidden}
+  #logDlg .lgTool .seg button{padding:4px 9px;font-size:12px;border:0;border-right:1px solid var(--ln);background:#fff;color:#334155;border-radius:0}
+  #logDlg .lgTool .seg button:last-child{border-right:0}
+  #logDlg .lgTool .seg button.on{background:#1f6feb;color:#fff}
+  #logDlg .lgTool input[type=date]{width:auto;padding:3px 6px;font-size:12px}
+  #logDlg .lgTool label{display:flex;align-items:center;gap:4px;font-size:12px;color:#334155}
+  #logDlg .lgTool .xl{padding:4px 9px;font-size:12px;border:1px solid #16a34a;border-radius:8px;background:#fff;color:#15803d}
+  #logDlg .lgTool .cl{padding:4px 9px;font-size:12px;border:1px solid var(--ln);border-radius:8px;background:#fff;color:#b45309}
+  #logDlg .more{display:inline-block;margin-top:3px;padding:0 7px;border-radius:999px;background:#fef3c7;color:#92400e;font-size:11px;border:0;cursor:pointer}
+  #logDlg tr.sub td{background:#fafafa}#logDlg tr.sub td:nth-child(3),#logDlg tr.sub td:nth-child(4){opacity:.85}`;
   document.head.appendChild(css);
   let tab = 'r', vis = null, verr = '', logs = null, lerr = '';
+  // 점검 기록 보기 옵션: 기간 · 같은 대상·같은 날 묶기 (기기에 기억)
+  let per = LS.get('lgPer', 'all'), pFrom = LS.get('lgFrom', ''), pTo = LS.get('lgTo', ''), grp = LS.get('lgGrp', true);
+  const openG = new Set();
   const ago = ts => { if(!ts) return ''; const m = Math.round((Date.now() - ts) / 60000); return m < 1 ? '방금' : m < 60 ? m + '분 전' : m < 1440 ? Math.round(m / 60) + '시간 전' : Math.round(m / 1440) + '일 전'; };
   const T = ts => ts ? fmtTs(ts) : '';
   async function loadVis(){
@@ -9223,6 +9333,44 @@ $('iHwp').onclick = async () => {
     // 지난 접속·사용 기록 전체 (서버 '사용기록' 시트) — 서버(Code.gs)가 새 버전이어야 함
     logs = null; lerr = '';
     try{ const j = await window.adminCall('logs', {limit:3000}); if(Array.isArray(j.logs)) logs = j.logs; else lerr = 'old'; }catch(e){ lerr = e.message; }
+  }
+  /* 기간(점검 날짜 기준) · 찾기 적용 + 최근 저장 순 */
+  const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  function perRange(){
+    const now = new Date(), t = ymd(now);
+    if(per === 'today') return [t, t];
+    if(per === 'week'){ const d = new Date(now); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return [ymd(d), t]; }
+    if(per === 'month') return [t.slice(0, 8) + '01', t];
+    if(per === 'range') return [pFrom || '0000-00-00', pTo || '9999-99-99'];
+    return null;
+  }
+  function filtRecs(recs, q){
+    const pr = perRange();
+    return [...recs].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0)).filter(r => {
+      if(pr){ const d = String(r.date || '').slice(0, 10) || (r.savedAt ? ymd(new Date(r.savedAt)) : ''); if(!d || d < pr[0] || d > pr[1]) return false; }
+      return !q || [r.inspector, r.target.name, r.target.place, r.title].join(' ').toLowerCase().includes(q);
+    });
+  }
+  window.lgFiltRecs = () => filtRecs(typeof allRecs !== 'undefined' ? allRecs : [], $('lgFind').value.trim().toLowerCase());
+  /* 지금 보이는 점검 기록을 엑셀로: 기본 정보 + 점검 항목별 결과·비고 + 추가 항목 */
+  function exportXlsx(){
+    if(!window.XLSX) return alert('엑셀 도구를 불러오지 못했습니다 (인터넷 연결 확인)');
+    const rs = window.lgFiltRecs(); if(!rs.length) return toast('내보낼 기록이 없습니다');
+    const items = [], extras = [];
+    rs.forEach(r => { (r.items || []).forEach(it => { if(!items.includes(it.label)) items.push(it.label); }); (r.extra || []).forEach(x => { if(!extras.includes(x.label)) extras.push(x.label); }); });
+    const head = ['점검 날짜', '저장 시각', '점검자', '대상', '위치', '서식', '판정', '완료', ...items.flatMap(l => [l, l + ' 비고']), ...extras, '메모', '사진 수'];
+    const body = rs.map(r => {
+      const im = new Map((r.items || []).map(it => [it.label, it])), xm = new Map((r.extra || []).map(x => [x.label, x.value]));
+      return [String(r.date || '').replace('T', ' '), r.savedAt ? fmtTs(r.savedAt) : '', r.inspector || '', r.target.name || '', r.target.place || '', (tplById(r.tplId) || {}).name || r.title || '', r.overall || '', r.done ? '완료' : '',
+        ...items.flatMap(l => { const it = im.get(l); return [it ? (it.result || '') : '', it ? (it.note || '') : '']; }), ...extras.map(l => xm.get(l) || ''), r.memo || '', (r.photos || []).filter(Boolean).length || (r.photoIds || []).length || 0];
+    });
+    const ws = XLSX.utils.aoa_to_sheet([head, ...body]);
+    ws['!cols'] = head.map((h, i) => ({wch: i < 8 ? [12, 16, 14, 22, 30, 18, 10, 6][i] : Math.min(30, Math.max(10, String(h).length * 2))}));
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '점검 기록');
+    const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+    const pr = perRange(), tag = pr ? `_${pr[0].replace(/^0000.*/, '')}~${pr[1].replace(/^9999.*/, '')}` : '';
+    saveBlob(new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}), `점검기록${tag}_${ymd(new Date())}.xlsx`);
+    toast(`점검 기록 ${rs.length}건을 엑셀로 저장했습니다`);
   }
   function render(){
     const q = $('lgFind').value.trim().toLowerCase(), box = $('lgList');
@@ -9244,13 +9392,24 @@ $('iHwp').onclick = async () => {
     }
     const recs = (typeof allRecs !== 'undefined' ? allRecs : []);   // 이전 기록까지 모두
     if(tab === 'r'){
-      const rs = [...recs].sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0)).filter(r => !q || [r.inspector, r.target.name, r.target.place, r.title].join(' ').toLowerCase().includes(q));
+      const rs = filtRecs(recs, q);
       const ids = new Set(rs.map(r => r.id)); [...pick].forEach(id => { if(!ids.has(id)) pick.delete(id); });
-      const n = pick.size, all = rs.length && rs.every(r => pick.has(r.id));
-      box.innerHTML = `<div style="margin:0 0 6px;color:var(--mut)">점검 기록 ${rs.length}건 · 최근 저장 순 · 행의 [열기·수정]으로 내용을 고치고, 체크해서 한꺼번에 지우거나 점검자를 바꿀 수 있습니다</div>
+      // 같은 대상(명단 행) · 같은 점검 날짜는 한 묶음 — 가장 최근 것만 보이고 나머지는 [+N] 눌러 펼침
+      const groups = [];
+      if(grp){ const m = new Map(); for(const r of rs){ const k = (r.key || r.target.name) + '|' + String(r.date || '').slice(0, 10); if(!m.has(k)){ m.set(k, []); groups.push(m.get(k)); } m.get(k).push(r); } }
+      else rs.forEach(r => groups.push([r]));
+      const n = pick.size, all = rs.length && rs.every(r => pick.has(r.id)), empties = recs.filter(recEmpty).length;
+      const row = (r, sub, more, gk) => `<tr class="${pick.has(r.id) ? 'on' : ''}${sub ? ' sub' : ''}"><td class="ck"><input type="checkbox" data-pk="${esc(r.id)}"${pick.has(r.id) ? ' checked' : ''}></td><td>${sub ? '└ ' : ''}${esc(T(r.savedAt))}<br><small>${ago(r.savedAt)}</small>${more ? `<br><button type="button" class="more" data-grp="${esc(gk)}">${openG.has(gk) ? '▲ 접기' : `+${more}건 더`}</button>` : ''}</td><td>${esc(r.inspector || '')}<div class="lgAct"><button type="button" data-ra="who" data-id="${esc(r.id)}" title="점검자 이름 고치기">✎</button></div></td><td><b>${esc(r.target.name || '')}</b><br><small>${esc(r.target.place || '')}</small><div class="lgAct"><button type="button" data-ra="open" data-id="${esc(r.id)}">✏ 열기·수정</button><button type="button" class="del" data-ra="del" data-id="${esc(r.id)}">🗑 삭제</button></div></td><td><small>${esc((tplById(r.tplId) || {}).name || r.title || '')}</small><br>${r.done ? '<span class="st ok">완료</span> ' : ''}${r.overall ? `<span class="st">${esc(r.overall)}</span>` : ''}${recEmpty(r) ? '<span class="st">열어만 봄</span>' : ''}</td></tr>`;
+      const PER = [['all', '전체'], ['today', '오늘'], ['week', '이번 주'], ['month', '이번 달'], ['range', '기간']];
+      box.innerHTML = `<div class="lgTool"><span class="seg">${PER.map(([v, l]) => `<button type="button" data-per="${v}" class="${per === v ? 'on' : ''}">${l}</button>`).join('')}</span>
+          ${per === 'range' ? `<input type="date" data-pd="from" value="${esc(pFrom)}"> ~ <input type="date" data-pd="to" value="${esc(pTo)}">` : ''}
+          <label><input type="checkbox" data-grpon="1"${grp ? ' checked' : ''}> 같은 대상·같은 날 묶기</label>
+          <span style="flex:1"></span><button type="button" class="xl" data-xl="1" title="지금 보이는 기록(기간·찾기 적용)을 엑셀로">📥 엑셀로 받기</button>${empties ? `<button type="button" class="cl" data-clean="1" title="아무것도 적지 않고 열어만 본 기록을 모두 지웁니다">🧹 열어만 본 기록 정리 ${empties}건</button>` : ''}</div>
+        <div style="margin:0 0 6px;color:var(--mut)">점검 기록 ${rs.length}건${grp && groups.length !== rs.length ? ` (묶어서 ${groups.length}줄)` : ''} · 최근 저장 순 · [열기·수정]으로 고치고, 체크해서 한꺼번에 지우거나 바꿀 수 있습니다</div>
         <div class="lgBulk"><b style="font-size:12px">선택 ${n}건</b><button type="button" data-bk="who"${n ? '' : ' disabled'}>👤 점검자 바꾸기</button><button type="button" data-bk="done"${n ? '' : ' disabled'}>✔ 완료로</button><button type="button" data-bk="undone"${n ? '' : ' disabled'}>↺ 완료 해제</button><button type="button" class="del" data-bk="del"${n ? '' : ' disabled'}>🗑 선택 삭제</button></div>
         <table><tr><th class="ck"><input type="checkbox" data-all="1"${all ? ' checked' : ''} title="모두 고르기"></th><th>저장 시각</th><th>점검자</th><th>대상</th><th>서식 · 판정</th></tr>`
-        + rs.map(r => `<tr class="${pick.has(r.id) ? 'on' : ''}"><td class="ck"><input type="checkbox" data-pk="${esc(r.id)}"${pick.has(r.id) ? ' checked' : ''}></td><td>${esc(T(r.savedAt))}<br><small>${ago(r.savedAt)}</small></td><td>${esc(r.inspector || '')}<div class="lgAct"><button type="button" data-ra="who" data-id="${esc(r.id)}" title="점검자 이름 고치기">✎</button></div></td><td><b>${esc(r.target.name || '')}</b><br><small>${esc(r.target.place || '')}</small><div class="lgAct"><button type="button" data-ra="open" data-id="${esc(r.id)}">✏ 열기·수정</button><button type="button" class="del" data-ra="del" data-id="${esc(r.id)}">🗑 삭제</button></div></td><td><small>${esc((tplById(r.tplId) || {}).name || r.title || '')}</small><br>${r.done ? '<span class="st ok">완료</span> ' : ''}${r.overall ? `<span class="st">${esc(r.overall)}</span>` : ''}${recEmpty(r) ? '<span class="st">열어만 봄</span>' : ''}</td></tr>`).join('') + '</table>';
+        + groups.map(g => { const gk = g[0].id, more = g.length - 1; return row(g[0], false, more, gk) + (more && openG.has(gk) ? g.slice(1).map(r => row(r, true)).join('') : ''); }).join('') + '</table>'
+        + (rs.length ? '' : '<div style="color:var(--mut);padding:8px 0">이 조건에 맞는 점검 기록이 없습니다.</div>');
       return;
     }
     // 사용자별: 점검자마다 건수 · 완료 · 최근 저장 · 최근 접속
@@ -9282,14 +9441,23 @@ $('iHwp').onclick = async () => {
   const label = r => `${r.target.name || '(이름 없음)'} · ${T(r.savedAt)}`;
   $('lgList').addEventListener('change', ev => {
     const t = ev.target;
+    if(t.dataset.grpon){ grp = t.checked; LS.set('lgGrp', grp); render(); return; }
+    if(t.dataset.pd){ if(t.dataset.pd === 'from'){ pFrom = t.value; LS.set('lgFrom', pFrom); } else { pTo = t.value; LS.set('lgTo', pTo); } render(); return; }
     if(t.dataset.pk){ t.checked ? pick.add(t.dataset.pk) : pick.delete(t.dataset.pk); render(); }
-    if(t.dataset.all){ const q = $('lgFind').value.trim().toLowerCase();
-      const rs = (typeof allRecs !== 'undefined' ? allRecs : []).filter(r => !q || [r.inspector, r.target.name, r.target.place, r.title].join(' ').toLowerCase().includes(q));
-      rs.forEach(r => t.checked ? pick.add(r.id) : pick.delete(r.id)); render(); }
+    if(t.dataset.all){ window.lgFiltRecs().forEach(r => t.checked ? pick.add(r.id) : pick.delete(r.id)); render(); }
   });
   $('lgList').addEventListener('click', async ev => {
     const b = ev.target.closest('button'); if(!b) return;
     ev.preventDefault();
+    if(b.dataset.per){ per = b.dataset.per; LS.set('lgPer', per); render(); return; }
+    if(b.dataset.grp){ openG.has(b.dataset.grp) ? openG.delete(b.dataset.grp) : openG.add(b.dataset.grp); render(); return; }
+    if(b.dataset.xl){ exportXlsx(); return; }
+    if(b.dataset.clean){
+      const list = (typeof allRecs !== 'undefined' ? allRecs : []).filter(recEmpty);
+      if(!list.length) return;
+      if(!confirm(`아무것도 적지 않고 열어만 본 점검 기록 ${list.length}건을 지울까요?\n(점검 결과·사진·메모·서명이 하나도 없는 기록만 지웁니다)`)) return;
+      await delRecs(list.map(r => r.id)); render(); toast(`열어만 본 기록 ${list.length}건을 정리했습니다`); return;
+    }
     if(b.dataset.ra){
       const r = recOf(b.dataset.id); if(!r) return toast('기록을 찾지 못했습니다');
       if(b.dataset.ra === 'open'){
@@ -9376,6 +9544,51 @@ $('iHwp').onclick = async () => {
     rl.addEventListener('pointerdown', e => e.stopPropagation()); b.addEventListener('pointerdown', e => e.stopPropagation());
     rl.onclick = () => window.lgReloadFn && window.lgReloadFn();
   }
+})();
+</script>
+<script>
+/* ===================== 점검 화면 자동 임시 저장 =====================
+   점검 화면에서 고친 내용이 있으면 30초마다(앱이 뒤로 갈 때도) 따로 임시 저장.
+   앱이 꺼지거나 실수로 닫혀도 다음에 열 때 이어서 할지 물어봄. [저장]하거나 닫으면 지움 */
+(function draftMod(){
+  const $ = id => document.getElementById(id);
+  let dbp = null;
+  const DB = () => dbp || (dbp = new Promise((res, rej) => { const q = indexedDB.open('fieldmap_draft', 1); q.onupgradeneeded = () => q.result.createObjectStore('d'); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }));
+  const put = async v => { const db = await DB(); return new Promise(r => { const t = db.transaction('d', 'readwrite'); t.objectStore('d').put(v, 'cur'); t.oncomplete = () => r(true); t.onerror = () => r(false); }); };
+  const get = async () => { const db = await DB(); return new Promise(r => { const t = db.transaction('d', 'readonly'), q = t.objectStore('d').get('cur'); q.onsuccess = () => r(q.result || null); q.onerror = () => r(null); }); };
+  const clear = () => put(null).catch(() => {});
+  let last = 0;
+  async function snapNow(){
+    try{
+      if(!$('insp') || $('insp').hidden || typeof cur === 'undefined' || !cur || typeof dirty === 'undefined' || !dirty) return;
+      if($('pv') && !$('pv').hidden){ if(typeof readPreviewEdits === 'function') readPreviewEdits(); } else collectForm();
+      await put({rec:JSON.parse(JSON.stringify(cur)), at:Date.now()}); last = Date.now();
+      const b = $('iSave'); if(b) b.title = '임시 저장됨 ' + new Date(last).toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'}) + ' · 눌러서 정식 저장';
+    }catch(_){}
+  }
+  window.draftSnap = snapNow; window.draftClear = clear;
+  setInterval(snapNow, 30000);
+  document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') snapNow(); });
+  addEventListener('pagehide', snapNow);
+  // 저장하면 · 화면을 닫으면 · 기록을 지우면 임시 저장도 지움
+  if(typeof saveCur === 'function'){ const _s = saveCur; saveCur = async function(q){ const ok = await _s.apply(this, arguments); if(ok !== false && !dirty) clear(); return ok; }; }
+  setTimeout(() => {
+    for(const id of ['iBack', 'iDel']){ const b = $(id); if(!b || !b.onclick) continue; const f = b.onclick; b.onclick = async function(e){ const r = await f.call(this, e); if($('insp').hidden) clear(); return r; }; }
+    const sv = $('iSave'); if(sv && sv.onclick){ const f = sv.onclick; sv.onclick = async function(e){ const r = await f.call(this, e); if(!dirty) clear(); return r; }; }
+  }, 0);
+  // 다음에 열 때: 저장 안 된 내용이 있으면 이어서 할지 묻기
+  setTimeout(async () => {
+    try{
+      const d = await get(); if(!d || !d.rec) return;
+      if(Date.now() - d.at > 7 * 864e5){ clear(); return; }
+      const saved = await idb.get(d.rec.id).catch(() => null);
+      if(saved && (saved.savedAt || 0) >= d.at){ clear(); return; }
+      const when = new Date(d.at).toLocaleString('ko-KR', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'});
+      if(confirm(`저장하지 않은 점검 내용이 있습니다.\n\n${(d.rec.target && d.rec.target.name) || '(이름 없음)'} · ${when} 임시 저장\n\n이어서 할까요? ([취소]하면 지웁니다)`)){
+        openRecord(d.rec); dirty = true; toast('임시 저장된 내용을 불러왔습니다 — 확인 후 [저장]하세요');
+      } else clear();
+    }catch(_){}
+  }, 5000);
 })();
 </script>
 <script>
