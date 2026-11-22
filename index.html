@@ -591,6 +591,28 @@
   .sg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
   .sbo{background:#fff;border:1px solid #93c5fd!important;color:var(--b);padding:10px 6px;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sbo.sbw{border-color:#fdba74!important;color:#c2410c}
+  .sbo.xmBig{display:block;width:100%;margin-top:8px;background:#eff6ff;border-width:2px!important;font-weight:400}
+  .xmRow{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:10px 12px;margin-bottom:8px}
+  .xmRow.cur{border:2px solid #93c5fd;background:#f8fbff}
+  .xmTop{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .xmTop b{font-size:16px;color:#1b1f24;word-break:break-all}
+  .xmBadge{font-size:12px;background:var(--b);color:#fff;border-radius:999px;padding:1px 8px}
+  .xmMeta{display:block;font-size:13px;color:var(--mut);margin:3px 0 8px;line-height:1.45;word-break:break-all}
+  .xmBtns{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+  .xmBtns button{font-family:Jua,sans-serif;font-size:13px;border-radius:999px;padding:7px 4px;background:#fff;border:1px solid #93c5fd;color:var(--b);cursor:pointer;white-space:nowrap}
+  .xmBtns button:active{transform:translateY(1px)}
+  .xmBtns .xmDel{border-color:#fdba74;color:#c2410c}
+  #xlsMgrDlg .setinfo{cursor:move;touch-action:none;user-select:none}
+  .xmRow.drop{border:2px dashed #1f6feb;background:#eff6ff}
+  .xmZone{display:none;margin-top:8px;border:2px dashed #93c5fd;border-radius:12px;background:#f8fbff;padding:14px 10px;text-align:center;color:#334155;font-size:14px;line-height:1.5}
+  .xmRow.zone .xmZone{display:block}
+  .xmZone.over,.xmRow.drop .xmZone{border-color:#1f6feb;background:#dbeafe;color:#1e40af}
+  .xmZone .zi{font-size:24px;display:block}
+  .xmZone small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
+  .xmZone .xmPick{margin-top:8px;font-family:Jua,sans-serif;font-size:13px;border-radius:999px;padding:7px 16px;background:var(--b);color:#fff;border:0;cursor:pointer}
+  .xmZone .xmZx{margin:8px 0 0 6px;font-family:Jua,sans-serif;font-size:13px;border-radius:999px;padding:7px 14px;background:#fff;color:#475569;border:1px solid #cbd5e1;cursor:pointer}
+  .xmBtns button.on{background:var(--b);color:#fff;border-color:var(--b)}
+  .xmBtns .xmGo[disabled]{background:#eff6ff;color:#94a3b8;border-color:#dbeafe;cursor:default}
   .setsub{font-family:var(--f-title);font-size:14px;color:#475569;margin:14px 0 0}
   .setchk{display:flex!important;gap:10px;align-items:flex-start;margin:12px 0 4px!important;padding:10px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;font-size:14px!important;cursor:pointer}
   .setchk input{width:18px!important;height:18px;margin-top:2px;flex:none}
@@ -735,6 +757,13 @@
   #cDone label input{accent-color:#16a34a}
   #cDone label:has(input:checked){background:#22c55e;border-color:#15803d;color:#fff}
   #cDone label:has(input:checked) small{color:#ecfdf5!important}
+  /* 점검 완료 · 한글 미리보기 한 줄 (한글 서식이 아니면 점검 완료만 가득) */
+  .doneRow{display:flex;gap:8px;align-items:stretch;margin-bottom:12px}
+  .doneRow > *{flex:1 1 0;min-width:0;margin:0!important}
+  .doneRow #cDone label{height:100%;box-sizing:border-box;white-space:nowrap}
+  .doneRow .hpbtn{height:100%;white-space:nowrap;padding:11px 8px}
+  /* PDF 편집 · PDF 저장 · 한글 저장 한 줄 */
+  .acts3 button{min-width:0;white-space:nowrap;padding:12px 6px}
 
   /* 셀 도구줄: 내용만큼 넓게 + 이동 · 크기 조절 */
   #ldPage .le .ctbar{width:max-content;min-width:300px;max-width:none;overflow:auto!important;display:flex!important;flex-direction:column}
@@ -842,6 +871,7 @@
       <button type="button" class="setcard" id="setList"><span class="si">📊</span><span class="tx"><b>대상관리</b><small id="setListSub">명단 올리기 · 이름 바꾸기 · 삭제</small></span><span class="go">›</span></button>
       <button type="button" class="setcard" id="setTplMgr"><span class="si">📝</span><span class="tx"><b>서식관리</b><small>서식 업로드 · 편집 · 디자인</small></span><span class="go">›</span></button>
       <button type="button" class="setcard" id="setLog"><span class="si">📋</span><span class="tx"><b>점검관리</b><small>점검 기록 수정 · 삭제 · 접속 기록 · 사용자별</small></span><span class="go">›</span></button>
+      <button type="button" class="setcard" id="setManual"><span class="si">📘</span><span class="tx"><b>사용설명서</b><small>화면별 사용법 PDF 내려받기</small></span><span class="go">›</span></button>
       <button type="button" class="setcard" id="setOps"><span class="si">🛡</span><span class="tx"><b>운영관리</b><small id="setOpsSub">운영 중단 · 접속자 · 차단</small></span><span class="go">›</span></button>
     </div>
     <div class="setbox">
@@ -861,6 +891,7 @@
   <form method="dialog">
     <div class="setinfo"><span class="si">📊</span><small id="listNow"></small></div>
     <button type="button" id="openInSet" class="sbp">엑셀 올리기 (명단 추가·교체)</button>
+    <button type="button" id="xlsMgrBtn" class="sbo xmBig">📂 올린 엑셀 목록 관리 (이름 수정·교체·받기·삭제)</button>
     <div class="sg2"><button type="button" id="listRen" class="sbo">명단 이름 바꾸기</button><button type="button" id="listDel" class="sbo sbw">명단 삭제</button></div>
     <button type="button" id="listPop" class="sbo" style="width:100%;margin-top:8px">팝업 표시 항목 설정 (간단 · 상세)</button>
     <div class="setsub">엑셀 서식 받기</div>
@@ -868,6 +899,16 @@
     <button type="button" id="curXlsBtn" class="sbo" style="width:100%;margin-top:8px">현재 명단 (추가·수정용)</button>
     <label class="setchk"><input type="checkbox" id="allowTop"><span>상단에 '엑셀 열기' 버튼 표시<small>켜면 비밀번호 없이 누구나 명단을 바꿀 수 있습니다</small></span></label>
     <small class="setnote">☁ 동기화가 연결된 상태에서 올리면 모든 사용자에게 같은 명단이 공유됩니다.</small>
+    <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">닫기</button></div>
+  </form>
+</dialog>
+
+<dialog id="xlsMgrDlg" class="setdlg" style="max-width:520px;width:94vw">
+  <form method="dialog">
+    <div class="setinfo"><span class="si">📂</span><small id="xlsMgrNow"></small></div>
+    <div id="xlsMgrList"></div>
+    <button type="button" id="xlsMgrAdd" class="sbp" style="margin-top:10px">＋ 새 엑셀 올리기 (명단 추가)</button>
+    <small class="setnote">· <b>이름 수정</b>: 명단 이름만 바꿉니다. 점검 기록은 그대로 이어집니다.<br>· <b>교체</b>: 새 엑셀로 그 명단 내용을 바꿉니다(이름은 그대로).<br>· <b>받기</b>: 그 명단을 엑셀로 내려받습니다(고쳐서 [교체]로 다시 올리면 됩니다).<br>· <b>삭제</b>: 명단만 지우고 점검 기록은 남깁니다.<br>☁ 동기화가 연결되어 있으면 모든 사용자에게 똑같이 적용됩니다.</small>
     <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">닫기</button></div>
   </form>
 </dialog>
@@ -988,6 +1029,7 @@
     <input id="syUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
     <label class="chk"><input type="checkbox" id="syPdf"> PDF 저장할 때 구글 드라이브에도 보관</label>
     <div id="syInfo" style="font-size:13px;color:var(--mut);margin-top:10px;line-height:1.7"></div>
+    <button type="button" id="syManual" style="display:block;width:100%;margin-top:10px;border-radius:999px;border:1px solid #93c5fd;background:#eff6ff;color:#1f6feb;padding:9px;font-size:14px;font-family:Jua,sans-serif;cursor:pointer">📘 사용설명서 받기 (PDF)</button>
     <div class="row">
       <button value="off" type="submit" class="bdan">끄기</button>
       <span style="flex:1"></span>
@@ -1080,19 +1122,21 @@
     </div>
 
 
-    <div class="card" id="cDone">
-      <label style="display:flex;gap:8px;align-items:center;padding:2px;font-size:15px;font-weight:600;cursor:pointer">
-        <input type="checkbox" id="iDone" style="width:20px;height:20px"> 점검 완료 <small style="font-weight:400;color:var(--mut)">(저장하면 지도 마커가 회색으로 바뀝니다)</small></label>
-    </div>
-    <div id="cHwpPrev" style="display:none;margin-bottom:12px">
-      <button type="button" id="hwpPrevOpen" class="hpbtn">📄 한글 양식 미리보기</button>
+    <div class="doneRow">
+      <div class="card" id="cDone">
+        <label style="display:flex;gap:8px;align-items:center;padding:2px;font-size:15px;font-weight:600;cursor:pointer" title="저장하면 지도 마커가 완료 표시로 바뀝니다">
+          <input type="checkbox" id="iDone" style="width:20px;height:20px"> 점검 완료</label>
+      </div>
+      <div id="cHwpPrev" style="display:none">
+        <button type="button" id="hwpPrevOpen" class="hpbtn">📄 한글 미리보기</button>
+      </div>
     </div>
 
-    <div class="acts">
-      <button id="iPreview" class="bline">PDF 미리보기 · 편집</button>
+    <div class="acts acts3">
+      <button id="iPreview" class="bline">PDF 편집</button>
       <button id="iPdf" class="bpri">PDF 저장</button>
+      <button id="iHwp" class="bpri" style="display:none;background:#0f766e!important">한글 저장</button>
     </div>
-    <div class="acts" style="margin-top:8px"><button id="iHwp" class="bpri" style="display:none;background:#0f766e!important">한글(hwpx) 저장</button></div>
   </div>
 </section>
 
@@ -1415,7 +1459,8 @@ const XLS_GUIDE = [
   ['· 자부담은 환급대상 부가세를 포함한 자부담 소계를 적습니다.'],
   ['· 추가한 열 제목은 점검 서식 디자인에서 {제목} 으로 불러 쓸 수 있습니다.'],
   ['· 이 「작성요령」 시트는 올릴 때 자동으로 무시됩니다.'],
-  ['· 올릴 때 [엑셀 열 · 팝업 항목 설정] 창에서 팝업(간단·상세)에 보일 열을 고를 수 있습니다.']
+  ['· 올릴 때 [엑셀 열 · 팝업 항목 설정] 창에서 팝업(간단·상세)에 보일 열을 고를 수 있습니다.'],
+  ['· 「지도위치(조정)」 열은 지도에서 📍 조정으로 옮긴 마커 위치(위도, 경도)입니다. 고쳐서 다시 올려도 그 위치가 유지됩니다. 칸을 지우면 지번으로 다시 찾습니다.']
 ];
 const normHead = h => String(h ?? '').replace(/\s|\(.*?\)|（.*?）/g, '');
 /* 숫자로 바꿀 수 있으면 숫자, 아니면 원래 글자 */
@@ -1448,8 +1493,34 @@ function readSheetRaw(buf){
   const heads = json.length ? Object.keys(json[0]).filter(h => !/^__EMPTY/.test(h)) : [];
   return {heads, json};
 }
+/* 📍 조정한 마커 위치를 엑셀 한 칸으로 주고받기 (받은 엑셀을 고쳐 다시 올려도 조정 위치 유지)
+   필지 1개: "35.202512, 127.462734" / 여러 필지: "구례읍 봉동리 89 = 35.2, 127.4 / 구례읍 봉동리 90-5 = 35.2, 127.4"
+   칸을 지우면 그 곳은 지번으로 다시 위치를 찾음 */
+const POS_COL = '지도위치(조정)';
+const POS_RE = /^(지도\s*위치|조정\s*위치)/;
+function fmtPosCell(r){
+  const ps = etcRaw(r)._pos; if(!ps) return '';
+  const parts = parsePlace(r.place), keys = parts.filter(p => Array.isArray(ps[p]));
+  const ll = a => `${(+a[0]).toFixed(6)}, ${(+a[1]).toFixed(6)}`;
+  if(!keys.length) return '';
+  return parts.length === 1 ? ll(ps[keys[0]]) : keys.map(k => `${k} = ${ll(ps[k])}`).join(' / ');
+}
+function parsePosCell(v, place){
+  const str = String(v ?? '').trim(); if(!str) return null;
+  const parts = parsePlace(place), out = {};
+  str.split('/').forEach((seg, i) => {
+    const m = seg.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/); if(!m) return;
+    let lat = +m[1], lng = +m[2];
+    if(lat > 100 && lng < 50) [lat, lng] = [lng, lat];   // 경도·위도를 거꾸로 적은 경우
+    if(!(lat > 32 && lat < 39.5 && lng > 123 && lng < 132.5)) return;
+    let key = seg.includes('=') ? seg.slice(0, seg.indexOf('=')).trim() : '';
+    if(!parts.includes(key)){ const pk = parsePlace(key)[0]; key = parts.includes(pk) ? pk : (parts.length === 1 ? parts[0] : (!key && parts[i]) || ''); }
+    if(key) out[key] = [lat, lng];
+  });
+  return Object.keys(out).length ? out : null;
+}
 /* 행 만들기. cfg(열 설정)가 있으면 이름·위치·읍면 열은 사용자가 고른 열을 씀 → {rows, map(엑셀 제목→명단 키)} */
-function buildRows({heads, json}, cfg){
+function buildRows({heads, json}, cfg, posH){
   if(!json.length) return {rows:[], map:{}};
   const map = mapHeaders(heads);
   if(cfg){
@@ -1467,6 +1538,7 @@ function buildRows({heads, json}, cfg){
       if(k){ const col = XLS_COLS.find(c => c[0] === k); o[k] = col[3] ? numOr(v) : String(v ?? '').trim(); }
       else if(String(v ?? '').trim() !== '') etc[String(h).trim()] = String(v).trim();
     }
+    if(posH){ const ps = parsePosCell(r[posH], o.place); if(ps) etc._pos = ps; }   // 지도위치(조정) 열
     // 보조금 계 = 국비 + 도비 + 군비, 총사업비 = 보조금 + 자부담 (비어 있을 때만 계산)
     const n = v => typeof v === 'number' ? v : 0;
     if(o.subsidy === '' && [o.national, o.province, o.county].some(v => typeof v === 'number')) o.subsidy = n(o.national) + n(o.province) + n(o.county);
@@ -1867,7 +1939,9 @@ const XLS_COMMON_GUIDE = [
   ['10. 파일은 .xlsx · .xls · .csv 모두 됩니다. 비밀번호를 건 파일은 읽지 못합니다.'],
   ['11. 올릴 때 명단 이름을 정합니다. 같은 이름이면 그 명단을 새 내용으로 바꾸고, 새 이름이면 명단이 하나 더 추가됩니다.'],
   ['12. 처음 올리면 위치를 찾느라 시간이 걸립니다 (수백 곳이면 몇 분). 한 번 찾은 위치는 저장되어 다음부터 빠릅니다.'],
-  ['13. 점검 서식(한글 양식)에서 추가한 열은 {열 제목} 으로 불러 쓸 수 있습니다.']
+  ['13. 점검 서식(한글 양식)에서 추가한 열은 {열 제목} 으로 불러 쓸 수 있습니다.'],
+  ['14. 「지도위치(조정)」 열은 지도에서 📍 조정으로 옮긴 마커 위치(위도, 경도)입니다. 받은 엑셀을 고쳐 다시 올려도 이 위치가 그대로 쓰입니다.'],
+  ['    · 이 칸을 지우면 그 곳은 지번·주소로 다시 위치를 찾습니다. 숫자는 고치지 않는 것이 좋습니다.']
 ];
 function downloadCommonXlsx(){
   const head = ['이름', '지번·주소', '읍면', '연락처', '구분', '내용', '비고'];
@@ -1884,11 +1958,29 @@ function downloadCommonXlsx(){
   const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
   saveBlob(new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}), '명단_업로드용_공통서식.xlsx');
 }
+/* 올린 엑셀 목록 관리 → [받기]: 그 명단을 올릴 때의 열 순서 그대로 엑셀로 (고쳐서 [교체]로 다시 올릴 수 있음) */
+function downloadListXlsx(name){
+  const lr = ROSTER.filter(r => listOf(r) === name);
+  if(!lr.length) return toast('명단이 비어 있습니다');
+  const {heads:h0, map} = listCols(lr);
+  const hasPos = lr.some(r => fmtPosCell(r)), heads = hasPos ? [...h0.filter(h => h !== POS_COL), POS_COL] : h0;
+  const val = (r, h) => h === POS_COL && hasPos ? fmtPosCell(r) : colVal(r, {h:map}, h);
+  const ws = XLSX.utils.aoa_to_sheet([heads, ...lr.map(r => heads.map(h => val(r, h)))]);
+  ws['!cols'] = heads.map(h => ({wch:Math.min(40, Math.max(10, ...lr.slice(0, 50).map(r => String(val(r, h)).length + 2), String(h).length * 2 + 2))}));
+  ws['!autofilter'] = {ref:XLSX.utils.encode_range({s:{r:0, c:0}, e:{r:lr.length, c:heads.length - 1}})};
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '명단');
+  const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const d = new Date(), ymd = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  saveBlob(new Blob([out], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}), `${String(name).replace(/[\\/:*?"<>|]/g, '_')}_${ymd}.xlsx`);
+  toast(`'${name}' 명단(${lr.length}명)을 엑셀로 내려받았습니다` + (hasPos ? ` · 📍 조정 위치는 '${POS_COL}' 열` : ''));
+}
 function downloadRosterXlsx(withData){
-  const extraHeads = withData ? [...new Set(rows.flatMap(r => Object.keys(etcOf(r))))] : [];
+  const extraHeads = withData ? [...new Set(rows.flatMap(r => Object.keys(etcOf(r))))].filter(h => h !== POS_COL) : [];
+  if(withData && rows.some(r => fmtPosCell(r))) extraHeads.push(POS_COL);   // 📍 조정 위치 (다시 올려도 유지)
   const head = [...XLS_COLS.map(c => c[1]), ...extraHeads];
   const body = withData && rows.length
-    ? rows.map(r => [...XLS_COLS.map(c => r[c[0]] ?? ''), ...extraHeads.map(h => etcOf(r)[h] ?? '')])
+    ? rows.map(r => [...XLS_COLS.map(c => r[c[0]] ?? ''), ...extraHeads.map(h => h === POS_COL ? fmtPosCell(r) : etcOf(r)[h] ?? '')])
     : [['구례읍','홍길동','구례읍 ○○로 1','010-0000-0000','2026년 ○○ 지원사업','구례읍 봉동리 89-1, 구례읍 봉동리 90-5','오이','세부사업명',1200,4000000,2400000,'','','',1600000,'예시 행 - 지우고 작성']];
   const ws = XLSX.utils.aoa_to_sheet([head, ...body]);
   ws['!cols'] = [9,14,26,15,40,38,10,12,11,13,13,11,11,11,13,16, ...extraHeads.map(() => 14)].map(w => ({wch:w}));
@@ -2242,7 +2334,28 @@ function renderListSel(){
   sel.innerHTML = ns.map(n => `<option value="${esc(n)}"${n === curList ? ' selected' : ''}>${esc(n)} (${ROSTER.filter(r => listOf(r) === n).length}명)</option>`).join('');
   $('listRow').style.display = ns.length ? 'flex' : 'none';
   const now = $('listNow'); if(now) now.innerHTML = ns.length ? `현재 명단 <b>${esc(curList)}</b> (${rows.length}명)<br>전체 ${ns.length}개: ${ns.map(esc).join(', ')}` : '불러온 명단이 없습니다.';
+  if($('xlsMgrDlg') && $('xlsMgrDlg').open) renderXlsMgr();
   const sub = $('setListSub'); if(sub) sub.textContent = ns.length ? `현재: ${curList} · 명단 ${ns.length}개` : '명단 올리기 · 이름 바꾸기 · 삭제';
+}
+let xmZoneOn = null;   // [교체]를 눌러 끌어다 놓기 영역이 열린 명단 이름
+function renderXlsMgr(){
+  const box = $('xlsMgrList'); if(!box) return;
+  const ns = listNames();
+  $('xlsMgrNow').innerHTML = ns.length ? `올린 명단 <b>${ns.length}개</b> · 지도에 보이는 명단 <b>${esc(curList)}</b>` : '아직 올린 엑셀 명단이 없습니다.';
+  const day = t => { const d = new Date(t); return isNaN(d) ? '' : `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`; };
+  box.innerHTML = ns.map((n, i) => {
+    let cnt = 0, src = null;
+    ROSTER.forEach(r => { if(listOf(r) === n){ cnt++; if(!src){ const s = etcRaw(r)._src; if(s) src = s; } } });
+    const cur = n === curList;
+    const meta = [`${cnt}명`, src && src.f ? `원본 파일: ${esc(src.f)}` : '', src && src.at ? `${day(src.at)} 올림` : ''].filter(Boolean).join(' · ');
+    return `<div class="xmRow${cur ? ' cur' : ''}${xmZoneOn === n ? ' zone' : ''}" data-n="${esc(n)}"><div class="xmTop"><b>📊 ${esc(n)}</b>${cur ? '<span class="xmBadge">지도에 표시 중</span>' : ''}</div>`
+      + `<small class="xmMeta">${meta}</small><div class="xmBtns">`
+      + `<button type="button" class="xmGo" data-a="go"${cur ? ' disabled' : ''} title="이 명단을 지도에 표시">${cur ? '보는 중' : '보기'}</button>`
+      + `<button type="button" data-a="ren" title="명단 이름 바꾸기">이름 수정</button><button type="button" data-a="rep" title="새 엑셀로 내용 바꾸기 (끌어다 놓기 가능)"${xmZoneOn === n ? ' class="on"' : ''}>교체</button>`
+      + `<button type="button" data-a="dl" title="이 명단을 엑셀로 내려받기">⬇ 받기</button><button type="button" class="xmDel" data-a="del" title="명단 삭제">삭제</button></div>`
+      + `<div class="xmZone"><span class="zi">📥</span><b>바꿀 엑셀 파일을 여기에 끌어다 놓으세요</b><small>xlsx · xls · csv — '${esc(n)}' 명단 내용이 새 파일로 바뀝니다</small>`
+      + `<button type="button" class="xmPick" data-a="pick">파일 고르기</button><button type="button" class="xmZx" data-a="zx">취소</button></div></div>`;
+  }).join('');
 }
 function switchList(name){
   curList = name; LS.set('curList', name); rows = pickRows();
@@ -2289,35 +2402,67 @@ async function plot(){
 }
 
 /* ---------- 시작 ---------- */
+let xlsRepl = null;   // 올린 엑셀 목록 관리 → [교체]로 고른 명단 이름 (이 이름으로 바로 교체)
 function bindUi(){
+  $('file').addEventListener('cancel', () => { xlsRepl = null; });
   $('file').onchange = async e => {
-    const f = e.target.files[0]; if(!f) return;
+    const f = e.target.files[0]; if(!f){ xlsRepl = null; return; }
+    const repl = xlsRepl; xlsRepl = null;
     try{
       const raw = readSheetRaw(await f.arrayBuffer());
       if(!raw.json.length){ alert('엑셀에서 명단을 찾지 못했습니다.'); e.target.value = ''; return; }
+      // 1행 항목명(열 제목)이 2개 미만이면: 표 제목·빈 줄이 1행에 있는 경우가 많음 → 한 번 더 묻기
+      if(raw.heads.length < 2){
+        const h1 = raw.heads.length ? `'${String(raw.heads[0]).slice(0, 40)}'` : '(비어 있음)';
+        const what = repl ? `'${repl}' 명단 교체` : '명단 올리기';
+        if(!confirm(`⚠ 엑셀 첫 번째 줄(1행)의 항목명(열 제목)이 ${raw.heads.length}개뿐입니다.\n· 지금 1행: ${h1}\n\n1행에는 이름·지번처럼 항목명이 2개 이상 있어야 명단이 바르게 읽힙니다.\n1행에 표 제목이나 빈 줄이 있다면 지우고 다시 올려 주세요.\n\n그래도 이대로 ${what}를 진행할까요?`)){ e.target.value = ''; return; }
+      }
+      // 지도위치(조정) 열은 팝업 항목이 아니라 마커 위치로 읽음
+      const posH = raw.heads.find(h => POS_RE.test(String(h).trim()));
+      if(posH) raw.heads = raw.heads.filter(h => h !== posH);
       // 열 설정: 이름·위치·읍면 열과 팝업(간단·상세)에 보일 항목 고르기 (같은 서식은 지난 선택을 기억)
       const sig = raw.heads.join('|'), mem = LS.get('colMem', {});
       const cfg = await colDialog({mode:'upload', heads:raw.heads, sample:raw.json.slice(0, 5), map:mapHeaders(raw.heads), prev:mem[sig]});
       if(!cfg){ e.target.value = ''; return; }
       mem[sig] = cfg; LS.set('colMem', mem);
-      const built = buildRows(raw, cfg), parsed = built.rows;
+      const built = buildRows(raw, cfg, posH), parsed = built.rows;
       if(!parsed.length){ alert('고른 이름·위치 열에 값이 있는 행이 없습니다.'); e.target.value = ''; return; }
       const pop = {a:raw.heads, h:built.map, s:cfg.s, d:cfg.d};
       const base = f.name.replace(/\.[^.]+$/, '').trim() || '새 명단', ns = listNames();
-      let name = prompt(`명단 이름을 정해 주세요 (${parsed.length}명).\n· 새 이름 → 명단이 하나 더 추가됩니다\n· 같은 이름 → 그 명단을 새 내용으로 바꿉니다` + (ns.length ? `\n\n지금 있는 명단: ${ns.join(', ')}` : ''), base);
+      let name;
+      if(repl && ns.includes(repl)){
+        const oldN = ROSTER.filter(r => listOf(r) === repl).length;
+        if(!confirm(`'${repl}' 명단(${oldN}명)을 '${f.name}'(${parsed.length}명)로 교체할까요?\n명단 이름과 점검 기록은 그대로 유지됩니다.`)){ e.target.value = ''; return; }
+        name = repl;
+      } else {
+      name = prompt(`명단 이름을 정해 주세요 (${parsed.length}명).\n· 새 이름 → 명단이 하나 더 추가됩니다\n· 같은 이름 → 그 명단을 새 내용으로 바꿉니다` + (ns.length ? `\n\n지금 있는 명단: ${ns.join(', ')}` : ''), base);
       if(name === null){ e.target.value = ''; return; }
       name = name.trim() || base;
+      }
       const old = ROSTER.find(r => listOf(r) === name);
       const lid = old ? listIdOf(old) : (name === LIST_DEF ? '' : 'L' + Date.now().toString(36));
       const newRows = parsed.map(r => withList(r, name, lid));
-      setEtc(newRows[0], x => { x._pop = pop; });
+      // 엑셀에 지도위치(조정) 열이 없으면: 같은 이름·같은 지번이던 곳의 조정 위치를 그대로 이어받음
+      let posKept = 0;
+      if(!posH && old){
+        const prev = {};
+        ROSTER.forEach(x => { if(listOf(x) === name){ const ps = etcRaw(x)._pos; if(ps) prev[x.name + '|' + x.place] = ps; } });
+        newRows.forEach(x => {
+          const ps = prev[x.name + '|' + x.place]; if(!ps) return;
+          const o = {}; parsePlace(x.place).forEach(p => { if(ps[p]) o[p] = ps[p]; });
+          if(Object.keys(o).length){ setEtc(x, e => { e._pos = o; }); posKept++; }
+        });
+      }
+      const posN = newRows.filter(x => etcRaw(x)._pos).length;
+      setEtc(newRows[0], x => { x._pop = pop; x._src = {f:f.name, at:Date.now()}; });   // _src: 올린 엑셀 파일 이름·날짜 (목록 관리에 표시)
       ROSTER = [...ROSTER.filter(r => listOf(r) !== name), ...newRows];
       curList = name; LS.set('curList', name); saveRoster(); rows = pickRows();
       queueListOp({op:'set', name, rows:newRows});
       if(window.syncRoster) syncRoster(f, name);
       filterTown = null; $('q').value = '';
-      setStatus(`${f.name} → '${name}' 명단 ${rows.length}명`);
-      plot();
+      setStatus(`${f.name} → '${name}' 명단 ${rows.length}명` + (posN ? ` · 조정 위치 ${posN}곳 적용` : ''));
+      if(repl){ xmZoneOn = null; toast(`'${name}' 명단을 새 엑셀로 교체했습니다` + (posN ? ` (📍 조정 위치 ${posN}곳 유지)` : '')); }
+      plot(); renderXlsMgr();
     }catch(err){ alert('엑셀을 읽지 못했습니다: ' + err.message); }
     e.target.value = '';
   };
@@ -2329,23 +2474,87 @@ function bindUi(){
     renderFilters(); renderList(); fitVisible();
   };
   $('listSel').onchange = e => switchList(e.target.value);
-  $('listRen').onclick = () => {
-    if(!listNames().length) return toast('불러온 명단이 없습니다');
-    const from = curList, to = (prompt(`'${from}' 명단의 새 이름`, from) || '').trim();
+  function renList(from){
+    if(!from || !listNames().includes(from)) return toast('불러온 명단이 없습니다');
+    const to = (prompt(`'${from}' 명단의 새 이름`, from) || '').trim();
     if(!to || to === from) return;
     if(listNames().includes(to)) return alert('같은 이름의 명단이 이미 있습니다.');
     ROSTER = ROSTER.map(r => listOf(r) === from ? withList(r, to) : r);
     const lt = LS.get('listTpl', {}); if(lt[from]){ lt[to] = lt[from]; delete lt[from]; LS.set('listTpl', lt); }
-    queueListOp({op:'ren', from, to}); curList = to; LS.set('curList', to); saveRoster(); rows = pickRows(); plot();
+    queueListOp({op:'ren', from, to}); if(curList === from){ curList = to; LS.set('curList', to); } saveRoster(); rows = pickRows(); plot(); renderXlsMgr();
     if(window.syncSoon) syncSoon(); toast(`명단 이름을 '${to}'(으)로 바꿨습니다`);
-  };
-  $('listDel').onclick = () => {
-    if(!listNames().length) return toast('불러온 명단이 없습니다');
-    const name = curList, n = rows.length;
+  }
+  function delList(name){
+    if(!name || !listNames().includes(name)) return toast('불러온 명단이 없습니다');
+    const n = ROSTER.filter(r => listOf(r) === name).length;
     if(!confirm(`'${name}' 명단(${n}명)을 모든 사용자에게서 삭제할까요?\n점검 기록은 지워지지 않습니다.`)) return;
     ROSTER = ROSTER.filter(r => listOf(r) !== name);
-    queueListOp({op:'del', name}); saveRoster(); rows = pickRows(); LS.set('curList', curList); plot();
+    const lt = LS.get('listTpl', {}); if(lt[name]){ delete lt[name]; LS.set('listTpl', lt); }   // 같은 이름으로 새로 올릴 때 예전 서식이 자동 선택되지 않게
+    queueListOp({op:'del', name}); saveRoster(); rows = pickRows(); LS.set('curList', curList); plot(); renderXlsMgr();
     if(window.syncSoon) syncSoon(); toast(`'${name}' 명단을 삭제했습니다`);
+  }
+  $('listRen').onclick = () => renList(curList);
+  $('listDel').onclick = () => delList(curList);
+  /* 올린 엑셀 목록 관리: 명단마다 [보기][이름 수정][교체][삭제] */
+  $('xlsMgrBtn').onclick = () => {
+    xmZoneOn = null; renderXlsMgr(); const d = $('xlsMgrDlg'); d.showModal();
+    const p = LS.get('xmPos', null);   // 지난번 옮긴 위치·크기로 열기 (화면 밖이면 맞춤)
+    if(p && innerWidth > 500){
+      const w = Math.min(p.w, innerWidth - 10), h = Math.min(p.h, innerHeight - 10);
+      Object.assign(d.style, {margin:'0', inset:'auto', maxWidth:'none', maxHeight:'none', width:w + 'px', height:h + 'px',
+        left:Math.max(0, Math.min(innerWidth - w, p.l)) + 'px', top:Math.max(0, Math.min(innerHeight - 60, p.t)) + 'px'});
+    }
+  };
+  /* 팝업 이동: 제목줄 + 위 안내 카드를 끌어 옮김, 놓으면 위치·크기 기억 */
+  (function xmMove(){
+    const d = $('xlsMgrDlg'), info = d.querySelector('.setinfo');
+    const keep = () => { if(!d.open || d.classList.contains('wfull')) return; const r = d.getBoundingClientRect(); LS.set('xmPos', {l:r.left, t:r.top, w:r.width, h:r.height}); };
+    d.addEventListener('pointerdown', ev => { if(ev.target.closest('.wbar,.wrh,.setinfo')) addEventListener('pointerup', () => setTimeout(keep, 0), {once:true}); });
+    info.addEventListener('pointerdown', ev => {
+      if(d.classList.contains('wfull')) return;
+      const r = d.getBoundingClientRect(), sx = ev.clientX, sy = ev.clientY;
+      d.style.margin = '0'; d.style.inset = 'auto'; d.style.left = r.left + 'px'; d.style.top = r.top + 'px';
+      const mv = m => { d.style.left = Math.max(-r.width + 80, Math.min(innerWidth - 80, r.left + m.clientX - sx)) + 'px'; d.style.top = Math.max(0, Math.min(innerHeight - 40, r.top + m.clientY - sy)) + 'px'; m.preventDefault(); };
+      const up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); };
+      addEventListener('pointermove', mv, {passive:false}); addEventListener('pointerup', up); addEventListener('pointercancel', up); ev.preventDefault();
+    });
+  })();
+  /* 교체: 명단 카드(또는 열린 놓기 영역)에 엑셀 파일을 끌어다 놓으면 바로 교체 */
+  (function xmDrop(){
+    const box = $('xlsMgrList'), d = $('xlsMgrDlg');
+    const isFile = e => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
+    const clear = () => box.querySelectorAll('.xmRow.drop').forEach(x => x.classList.remove('drop'));
+    // 창 안 다른 곳에 떨어뜨려도 브라우저가 파일을 열어 버리지 않게
+    d.addEventListener('dragover', e => { if(isFile(e)){ e.preventDefault(); e.dataTransfer.dropEffect = e.target.closest('.xmRow') ? 'copy' : 'none'; } });
+    d.addEventListener('drop', e => { if(isFile(e) && !e.target.closest('.xmRow')){ e.preventDefault(); clear(); toast('바꿀 명단 카드 위에 놓아 주세요'); } });
+    box.addEventListener('dragover', e => {
+      const row = e.target.closest('.xmRow'); if(!row || !isFile(e)) return;
+      e.preventDefault(); if(!row.classList.contains('drop')){ clear(); row.classList.add('drop'); }
+    });
+    box.addEventListener('dragleave', e => { const row = e.target.closest('.xmRow'); if(row && !row.contains(e.relatedTarget)) row.classList.remove('drop'); });
+    box.addEventListener('drop', e => {
+      const row = e.target.closest('.xmRow'); if(!row || !isFile(e)) return;
+      e.preventDefault(); clear();
+      const f = e.dataTransfer.files[0], name = row.dataset.n;
+      if(!f || !name) return;
+      if(!listNames().includes(name)){ renderXlsMgr(); return toast('명단 목록이 바뀌었습니다. 다시 놓아 주세요'); }
+      if(!/\.(xlsx|xlsm|xls|csv)$/i.test(f.name)) return alert('엑셀 파일(xlsx · xls · csv)만 올릴 수 있습니다.');
+      xmZoneOn = null; xlsRepl = name;
+      $('file').onchange({target:{files:[f], value:''}});
+    });
+  })();
+  $('xlsMgrAdd').onclick = () => { xlsRepl = null; $('file').click(); };
+  $('xlsMgrList').onclick = e => {
+    const b = e.target.closest('button[data-a]'); if(!b) return;
+    const name = b.closest('.xmRow').dataset.n; if(!name || !listNames().includes(name)) return toast('명단 목록이 바뀌었습니다. 다시 확인해 주세요'), renderXlsMgr();
+    const a = b.dataset.a;
+    if(a === 'go'){ switchList(name); renderXlsMgr(); toast(`'${name}' 명단을 지도에 표시합니다`); }
+    else if(a === 'ren') renList(name);
+    else if(a === 'rep'){ xmZoneOn = xmZoneOn === name ? null : name; renderXlsMgr(); }
+    else if(a === 'pick'){ xlsRepl = name; $('file').click(); }
+    else if(a === 'zx'){ xmZoneOn = null; renderXlsMgr(); }
+    else if(a === 'dl') downloadListXlsx(name);
+    else if(a === 'del') delList(name);
   };
   $('listPop').onclick = async () => {
     if(!rows.length) return toast('불러온 명단이 없습니다');
@@ -2417,8 +2626,8 @@ function bindUi(){
   })();
   const applyTop = () => { $('openTop').style.display = allowTop ? 'inline-block' : 'none'; };
   applyTop();
-  $('openTop').onclick = () => $('file').click();
-  $('openInSet').onclick = () => { try{ $('listDlg').close(); }catch(e){} $('dlg').close(); $('file').click(); };
+  $('openTop').onclick = () => { xlsRepl = null; $('file').click(); };
+  $('openInSet').onclick = () => { xlsRepl = null; try{ $('listDlg').close(); }catch(e){} $('dlg').close(); $('file').click(); };
   $('setList').onclick = () => { $('allowTop').checked = allowTop; if(typeof renderListSel === 'function') renderListSel(); $('listDlg').showModal(); };
   $('setOps').onclick = () => $('opsDlg').showModal();
   $('allowTop').onchange = () => { allowTop = $('allowTop').checked; LS.set('allowTop', allowTop); applyTop(); };
@@ -2651,7 +2860,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261116063048';
+const APP_VER = '20261122100037';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -5871,6 +6080,9 @@ async function syncAll(manual){
       if(ops.length){   // 내가 바꾼 명단만 서버 최신 목록 위에 덧씌움 (다른 사람이 올린 명단은 그대로)
         srvAll = applyListOps(srvAll, ops);
         const payload = {rows: srvAll.map(({_pts, ...r}) => r)};
+        // 이름 바꾸기·삭제는 서버가 드라이브 '명단엑셀/명단이름' 폴더 이름도 맞춰 바꿈 (예전 서버는 무시)
+        const fops = ops.filter(o => o.op === 'ren' || o.op === 'del').map(o => o.op === 'ren' ? {op:'ren', from:o.from, to:o.to} : {op:'del', name:o.name});
+        if(fops.length) payload.listOps = fops;
         const f = pendingRosterFile;
         if(f && f.size < 15e6) payload.file = {name:f.name, list:pendingRosterList, data: await blobToDataUrl(f)};
         await api('setRoster', payload, 180000);
@@ -7137,7 +7349,7 @@ $('iHwp').onclick = async () => {
   }
 
   /* ---------- 팝업(dialog) ---------- */
-  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', hwpDlg:'한글 양식 미리보기', dlg:'설정', listDlg:'대상관리', numDlg:'요소 넣기', colDlg:'엑셀 열 · 팝업 항목 설정', opsDlg:'운영관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'서식관리', logDlg:'점검관리'};
+  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', hwpDlg:'한글 양식 미리보기', dlg:'설정', listDlg:'대상관리', xlsMgrDlg:'올린 엑셀 목록 관리', numDlg:'요소 넣기', colDlg:'엑셀 열 · 팝업 항목 설정', opsDlg:'운영관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'서식관리', logDlg:'점검관리'};
   function winDialog(d){
     if(d._win) return; d._win = true;
     const bar = document.createElement('div');
@@ -7905,7 +8117,7 @@ $('iHwp').onclick = async () => {
 
   // [한글 저장] 버튼: 한글 서식이 아니어도 항상 표시
   const _rf = renderForm;
-  renderForm = function(){ _rf(); $('iHwp').style.display = ''; $('iHwp').textContent = cur && cur.hwpx ? '한글(hwpx) 저장' : '한글(hwpx)로 저장'; };
+  renderForm = function(){ _rf(); $('iHwp').style.display = ''; $('iHwp').textContent = '한글 저장'; $('iHwp').title = cur && cur.hwpx ? '한글(hwpx) 서식에 채워 저장' : '한글(hwpx) 파일로 저장'; };
   const old = $('iHwp').onclick;
   $('iHwp').onclick = async e => {
     if(cur && cur.hwpx) return old && old.call($('iHwp'), e);
@@ -9748,6 +9960,163 @@ $('iHwp').onclick = async () => {
   }
   window.PARCEL = {at, hide, onLab, refresh, jbHtml};
   cadInit(0);
+})();
+</script>
+<script>
+/* ===================== 사용설명서 (PDF 받기) =====================
+   설정 카드 [사용설명서] · 동기화 창 [📘 사용설명서 받기] → A4 PDF (앱 안에서 바로 만듦, 인터넷 연결 필요) */
+(function manualMod(){
+  const $ = id => document.getElementById(id);
+  const css = document.createElement('style');
+  css.textContent = `.mnP{width:794px;height:1123px;box-sizing:border-box;padding:56px 60px 70px;background:#fff;color:#1b1f24;font-family:"Malgun Gothic","맑은 고딕","Noto Sans KR",sans-serif;font-size:14.5px;line-height:1.7;position:relative;overflow:hidden;word-break:keep-all}
+  .mnP h1{font-size:30px;margin:150px 0 10px;color:#1f6feb;letter-spacing:-1px}.mnP .cv2{font-size:18px;color:#334155;margin:0 0 40px}
+  .mnP .cvBox{border:2px solid #dbeafe;background:#f8fbff;border-radius:16px;padding:18px 22px;font-size:15px}
+  .mnP h2{font-size:19px;margin:18px 0 8px;padding:6px 14px;background:#1f6feb;color:#fff;border-radius:999px;display:inline-block}
+  .mnP h3{font-size:15.5px;margin:12px 0 4px;color:#0f766e;border-left:5px solid #14b8a6;padding-left:8px}
+  .mnP p{margin:4px 0}.mnP ul,.mnP ol{margin:4px 0 6px;padding-left:22px}.mnP li{margin:2px 0}
+  .mnP .bt{display:inline-block;border:1.5px solid #93c5fd;color:#1f6feb;border-radius:999px;padding:0 8px;font-size:13px;line-height:1.6;background:#fff;white-space:nowrap}
+  .mnP .tip{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:8px 12px;margin:6px 0;font-size:13.5px}
+  .mnP .warn{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:8px 12px;margin:6px 0;font-size:13.5px}
+  .mnP table{border-collapse:collapse;width:100%;font-size:13.5px;margin:4px 0 8px}.mnP td,.mnP th{border:1px solid #cbd5e1;padding:4px 8px;vertical-align:top}.mnP th{background:#f1f5f9;white-space:nowrap}
+  .mnP .ft{position:absolute;left:60px;right:60px;bottom:28px;display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;border-top:1px solid #e5e7eb;padding-top:6px}
+  .mnP .toc li{font-size:15px;margin:4px 0}`;
+  document.head.appendChild(css);
+  const B = t => `<span class="bt">${t}</span>`;
+  const APP = (document.querySelector('h1[aria-label]') || {}).getAttribute ? document.querySelector('h1[aria-label]').getAttribute('aria-label') : '보조사업 현장지도';
+
+  /* 내용: 블록 단위 (h2 = 새 장, 쪽이 넘치면 자동으로 다음 쪽) */
+  const S = [];
+  const ch = (t, ...b) => S.push({h:`<h2>${t}</h2>`, chapter:true}, ...b.map(x => ({h:x})));
+  ch('1. 처음 시작하기',
+    `<h3>주소로 열기 · 앱으로 설치</h3><p>크롬(안드로이드·PC) 또는 사파리(아이폰)에서 현장지도 주소를 엽니다.</p>
+     <ul><li>안드로이드·PC: 위쪽 ${B('앱설치')}을 누르면 바탕화면·홈 화면에 아이콘이 생깁니다.</li>
+     <li>아이폰: 사파리 아래 [공유] → [홈 화면에 추가].</li>
+     <li>카카오톡에서 링크를 눌러 열었다면 오른쪽 위 메뉴의 [다른 브라우저로 열기]를 눌러 크롬·사파리로 엽니다.</li></ul>`,
+    `<h3>구글 동기화 연결 (처음 한 번)</h3><p>${B('☁ 동기화')}를 눌러 <b>사용자 이름</b>(예: 농업기술센터 홍길동)과 담당자에게 받은 <b>팀 키</b>를 넣고 ${B('연결·동기화')}를 누릅니다.</p>
+     <ul><li>연결되면 명단·점검 기록·서식이 모든 직원과 함께 쓰입니다. 위쪽에 「☁ 동기화 ✓」가 보이면 정상입니다.</li>
+     <li>이름이나 팀 키가 틀리면 연결되지 않습니다. 사용자 이름은 사용기록에 남습니다.</li></ul>`,
+    `<div class="tip">💡 새 버전이 올라오면 앱이 작업 중이 아닐 때 스스로 새로고침해서 최신 상태가 됩니다.</div>`);
+  ch('2. 화면 구성',
+    `<table><tr><th>위쪽 버튼</th><th>하는 일</th></tr>
+     <tr><td>${B('앱설치')}</td><td>휴대폰·PC에 앱처럼 설치</td></tr>
+     <tr><td>${B('☁ 동기화')}</td><td>구글 동기화 연결 · 지금 바로 동기화 · 이 사용설명서 받기</td></tr>
+     <tr><td>${B('대상')}</td><td>대상 목록 창 열기·닫기 (명단 · 점검 서식 · 읍면 · 점검 상태 · 검색 · 동선)</td></tr>
+     <tr><td>${B('결과')}</td><td>점검한 기록 목록 · PDF · 엑셀 · 한글 묶음 저장</td></tr>
+     <tr><td>${B('설정')}</td><td>관리자 메뉴 (비밀번호 필요): 대상관리 · 서식관리 · 점검관리 · 운영관리</td></tr>
+     <tr><td>${B('⛶ 전체화면')}</td><td>지도를 화면 가득 보기</td></tr></table>`,
+    `<p>창(팝업)은 <b>제목줄을 끌어 옮기고</b>, 오른쪽 아래 모서리를 끌어 <b>크기를 바꿉니다</b>. ⤢는 크게/작게, ✕는 닫기입니다. 휴대폰 [뒤로가기]는 열린 창을 하나씩 닫습니다.</p>`);
+  ch('3. 지도 보기',
+    `<h3>마커(핀)와 이름표</h3><ul><li>지도를 확대하면 마커 위에 이름이 보입니다. 핀 색은 읍·면별, 핀 가운데 표시는 점검 상태입니다 (✔ 완료 · 반쪽 주황 점검 중 · 흰 점 미점검).</li>
+     <li>마커를 한 번 누르면 간단 정보와 ${B('점검')} ${B('상세')} ${B('📍 조정')} 버튼이 나옵니다.</li>
+     <li>${B('상세')}를 누르면 상세 항목, 📞 전화, 🧭 길찾기, 카카오맵 열기, 점검 상태가 보입니다.</li></ul>`,
+    `<h3>지도 종류 · 지번 · 필지 경계</h3><ul><li>오른쪽 위 묶음 버튼: ☑ 지번(이름 아래에 「구례군 냉천리 200」처럼 지번 표시) | 일반도 | 위성도 | 지적도(켜지면 빨강).</li>
+     <li>많이 확대하면 화면 안 대상의 <b>필지 경계</b>가 빨간 선으로 그려집니다. 누른 대상은 더 굵게 보입니다.</li></ul>`,
+    `<h3>📍 마커 위치 조정</h3><p>지번으로 찾은 위치가 실제 사업장과 다르면 ${B('📍 조정')}을 누르고 마커를 끌어 옮깁니다. 놓으면 다음 중 하나를 고릅니다.</p>
+     <ul><li>${B('주소도 변경')}: 명단의 사업장 주소(지번)도 새 위치의 지번으로 바꿉니다. 점검 기록도 새 주소로 따라갑니다.</li>
+     <li>${B('위치만 저장')}: 주소는 그대로 두고 마커 위치만 기억합니다.</li></ul>
+     <div class="tip">💡 조정한 위치는 명단 엑셀을 받으면 「지도위치(조정)」 열에 들어 있어, 엑셀을 고쳐 다시 올려도 그대로 유지됩니다.</div>`);
+  ch('4. 대상 목록 창',
+    `<ul><li><b>명단</b>: 여러 명단 중 지도에 보일 명단을 고릅니다.</li>
+     <li><b>점검 서식</b>: 점검할 때 쓸 서식을 고릅니다. 명단마다 마지막에 쓴 서식이 자동으로 골라집니다.</li>
+     <li><b>읍면 칩</b>: 누르면 그 읍·면만 보입니다. <b>점검 칩</b>: 전체 · 미완료 · 미점검 · 점검 중 · 완료로 거릅니다.</li>
+     <li><b>검색칸</b>: 이름·지번으로 찾습니다. 목록 줄을 누르면 지도가 그 곳으로 이동합니다.</li></ul>`,
+    `<h3>내 위치 · 동선 짜기</h3><ul><li>${B('📍 내 위치')}: 지금 내 위치를 지도에 표시합니다.</li>
+     <li>${B('🚗 동선 짜기')}: 목록에서 체크된 곳(기본: 미완료)을 가까운 순서로 이어 최적 동선을 만듭니다. 동선 창에서 줄마다 ${B('점검')}을 누를 수 있고, 위성지도가 들어간 <b>동선 PDF</b>(전화·길찾기 링크 포함)를 저장하거나 공유합니다.</li>
+     <li>${B('🔎 위치 지정')}: 명단에 없는 곳을 장소 검색 · 내 위치 · 지도에서 찍기로 정해 점검합니다 (출장 사진대지 등).</li></ul>`);
+  ch('5. 현장 점검하기',
+    `<ol><li>마커나 목록에서 ${B('점검')}을 누릅니다.</li>
+     <li>대상 정보를 확인하고 <b>점검 항목</b>을 고르거나 적습니다.</li>
+     <li><b>종합 의견</b>을 적습니다.</li>
+     <li><b>사진</b>: ${B('사진 촬영')} 또는 ${B('앨범에서 선택')}. 사진 위치가 함께 기록됩니다.</li>
+     <li><b>서명</b>: 서명칸에 손가락으로 씁니다. ${B('다시 쓰기')}로 지웁니다.</li>
+     <li>모두 끝났으면 ${B('점검 완료')}를 체크합니다. (체크하지 않으면 「점검 중」)</li>
+     <li>한글 서식이면 옆의 ${B('📄 한글 미리보기')}로 채워진 모습을 확인합니다.</li>
+     <li>${B('PDF 편집')}으로 출력 모양을 확인·수정하고 ${B('저장')}합니다.</li>
+     <li>필요하면 ${B('PDF 저장')} 또는 ${B('한글 저장')}으로 문서를 받습니다.</li></ol>`,
+    `<div class="tip">💡 작성 중에 앱이 꺼져도 <b>임시 저장</b>된 내용을 다시 열 때 이어서 할 수 있습니다.</div>
+     <div class="warn">⚠ ${B('저장')}을 눌러야 기록이 남고, 동기화가 켜져 있으면 다른 직원에게도 공유됩니다.</div>`);
+  ch('6. 결과 보기 · 문서 받기',
+    `<ul><li>${B('결과')}를 누르면 점검 기록 목록이 열립니다. 줄마다 ${B('✏ 열기·수정')} ${B('🗑 삭제')}가 있습니다.</li>
+     <li>골라서 ${B('PDF')} ${B('엑셀')} ${B('한글(HWPX)')}로 한꺼번에 받습니다. 사진대지에는 위성사진도 넣을 수 있습니다.</li>
+     <li>파일 이름은 「[종류]_서식_대상_점검자_날짜」 모양으로 자동으로 붙습니다.</li></ul>`);
+  ch('7. 대상관리 (명단 엑셀) — 관리자',
+    `<p>${B('설정')} → 비밀번호 → <b>대상관리</b>.</p>
+     <ul><li>${B('엑셀 올리기 (명단 추가·교체)')}: 엑셀을 고르면 「엑셀 열 · 팝업 항목 설정」 창에서 이름 열 · 위치(지번·주소) 열 · 읍면 열과 팝업(간단·상세)에 보일 항목을 고릅니다. 명단 이름이 새 이름이면 추가, 같은 이름이면 교체됩니다.</li>
+     <li>${B('팝업 표시 항목 설정')}: 마커 팝업에 보일 항목을 나중에 바꿉니다.</li>
+     <li><b>엑셀 서식 받기</b>: ${B('빈 서식 (공통)')} ${B('보조사업 서식')} ${B('현재 명단')}. 서식 안 「작성요령」 시트를 꼭 읽어 주세요.</li></ul>`,
+    `<h3>📂 올린 엑셀 목록 관리</h3><p>올린 명단이 카드로 보입니다 (사람 수 · 원본 파일 이름 · 올린 날짜). 카드마다:</p>
+     <table><tr><th>${B('보기')}</th><td>그 명단을 지도에 표시</td></tr>
+     <tr><th>${B('이름 수정')}</th><td>명단 이름만 바꿈 (점검 기록은 그대로 이어짐)</td></tr>
+     <tr><th>${B('교체')}</th><td>점선 상자가 열리면 새 엑셀을 <b>끌어다 놓거나</b> ${B('파일 고르기')}. 이름과 점검 기록은 유지. 카드 위에 바로 끌어다 놓아도 됩니다.</td></tr>
+     <tr><th>${B('⬇ 받기')}</th><td>그 명단을 엑셀로 내려받음 (📍 조정 위치는 「지도위치(조정)」 열). 고쳐서 [교체]로 다시 올립니다.</td></tr>
+     <tr><th>${B('삭제')}</th><td>명단만 지움 (점검 기록은 남음)</td></tr></table>
+     <div class="tip">💡 명단 고치는 순서: ${B('⬇ 받기')} → 엑셀에서 고치기 → ${B('교체')}에 끌어다 놓기 → 열 설정 [확인] → [확인]</div>`,
+    `<h3>명단 엑셀 쓰는 법 (요약)</h3><ul><li>1행은 열 제목, 2행부터 한 줄에 한 곳. 표 제목·빈 줄·셀 병합 금지. 첫 시트만 읽습니다. (1행 항목명이 2개 미만이면 올릴 때 한 번 더 묻습니다)</li>
+     <li>꼭 필요한 열은 <b>이름</b>과 <b>위치(지번 또는 주소)</b> 두 가지. 열 제목·순서는 자유, 열을 더 넣거나 빼도 됩니다.</li>
+     <li>여러 필지는 쉼표로 구분, 산은 「산 12」처럼. 다른 시·군이면 시·군부터 적습니다.</li>
+     <li>「지도위치(조정)」 칸을 지우면 그 곳은 지번으로 다시 위치를 찾습니다.</li></ul>`);
+  ch('8. 서식관리 · 점검관리 · 운영관리 — 관리자',
+    `<h3>서식관리</h3><ul><li>${B('＋ 새 서식 (파일 올리기)')}: 한글·엑셀·워드·PDF 서식을 올려 점검 서식으로 바꿉니다. ${B('＋ 직접 만들기')}도 됩니다.</li>
+     <li>${B('양식 디자인')}: 셀·글자·사진·서명 위치를 자유롭게 고칩니다. 명단 엑셀의 열은 {열 제목}으로 불러 씁니다.</li>
+     <li>${B('이름 바꾸기')} ${B('복제')} ${B('삭제')}, 여러 기록에 서식을 한꺼번에 바꾸는 서식 일괄 적용.</li></ul>`,
+    `<h3>점검관리 · 운영관리</h3><ul><li><b>점검관리</b>: 점검 기록 수정·삭제, 접속 기록, 사용자별 점검 기록.</li>
+     <li><b>운영관리</b>: 운영 중단(안내 문구), 접속자 목록, 이름·기기 차단.</li>
+     <li>대상관리의 「상단에 '엑셀 열기' 버튼 표시」를 켜면 비밀번호 없이 누구나 명단을 바꿀 수 있으니 주의합니다.</li></ul>`);
+  ch('9. 이럴 때는',
+    `<table><tr><th>이럴 때</th><th>이렇게</th></tr>
+     <tr><td>동기화가 안 돼요</td><td>${B('☁ 동기화')}에서 사용자 이름·팀 키를 다시 넣고 ${B('연결·동기화')}. 인터넷 연결 확인.</td></tr>
+     <tr><td>마커가 엉뚱한 곳에 있어요</td><td>${B('📍 조정')}으로 옮기기. 또는 엑셀 지번을 고쳐 다시 올리기.</td></tr>
+     <tr><td>위치를 못 찾은 곳이 있어요</td><td>아래 상태줄에 「못 찾음 ○명」이 보이면 지번 표기(읍·면·리, 산, 쉼표)를 확인합니다.</td></tr>
+     <tr><td>처음 올렸는데 느려요</td><td>처음엔 위치를 하나씩 찾느라 시간이 걸립니다. 한 번 찾으면 다음부터 빠릅니다.</td></tr>
+     <tr><td>필지 경계가 안 보여요</td><td>지도를 더 확대합니다 (5단계 이하). 그래도 안 되면 관리자에게 알립니다.</td></tr>
+     <tr><td>사진·PDF가 안 만들어져요</td><td>인터넷 연결을 확인하고 앱을 새로고침합니다.</td></tr></table>`,
+    `<div class="warn">⚠ 명단과 점검 기록에는 개인정보(이름·전화·주소)가 들어 있습니다. 받은 PDF·엑셀은 업무 외로 보내거나 공개된 곳에 올리지 않습니다.</div>`);
+
+  function cover(ver){
+    const toc = S.filter(x => x.chapter).map(x => `<li>${x.h.replace(/<\/?h2>/g, '')}</li>`).join('');
+    return `<h1>📘 ${APP}<br>사용설명서</h1><p class="cv2">현장에서 바로 쓰는 쉬운 안내</p>
+      <div class="cvBox"><b>차례</b><ul class="toc" style="list-style:none;padding-left:0">${toc}</ul></div>
+      <p style="margin-top:30px;color:#64748b;font-size:13px">앱 버전 ${ver} · ${new Date().toLocaleDateString('ko-KR')} 내려받음</p>`;
+  }
+  async function makePdf(){
+    if(!window.html2canvas || !window.jspdf){ alert('PDF 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.'); return; }
+    const busy = $('busy'); if(busy){ busy.textContent = '사용설명서 만드는 중…'; busy.hidden = false; }
+    const box = document.createElement('div'); box.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px'; document.body.appendChild(box);
+    try{
+      const ver = (typeof APP_VER !== 'undefined') ? `${APP_VER.slice(0, 4)}.${APP_VER.slice(4, 6)}.${APP_VER.slice(6, 8)}` : '';
+      // 쪽 나누기: 블록을 차례로 넣다가 넘치면 다음 쪽 (장 제목은 새 쪽 아래쪽에 홀로 남지 않게)
+      const pages = [cover(ver)], LIMIT = 1123 - 70;
+      const pg = document.createElement('div'); pg.className = 'mnP'; box.appendChild(pg);
+      let cur = '';
+      const fits = html => { pg.style.height = 'auto'; pg.innerHTML = html; const ok = pg.offsetHeight <= LIMIT; pg.style.height = ''; return ok; };
+      for(let i = 0; i < S.length; i++){
+        const blk = S[i].chapter && S[i + 1] ? S[i].h + S[i + 1].h : S[i].h;
+        if(S[i].chapter) i++;
+        if(cur && !fits(cur + blk)){ pages.push(cur); cur = ''; }
+        cur += blk;
+      }
+      if(cur) pages.push(cur);
+      const pdf = new jspdf.jsPDF({unit:'mm', format:'a4', orientation:'portrait', compress:true});
+      for(let p = 0; p < pages.length; p++){
+        pg.innerHTML = pages[p] + `<div class="ft"><span>${APP} 사용설명서</span><span>${p + 1} / ${pages.length}</span></div>`;
+        await new Promise(r => setTimeout(r, 40));
+        const cv = await html2canvas(pg, {scale:2, backgroundColor:'#ffffff', logging:false});
+        if(p) pdf.addPage();
+        pdf.addImage(cv.toDataURL('image/jpeg', .9), 'JPEG', 0, 0, 210, 297);
+      }
+      const name = `${APP.replace(/\s+/g, '')}_사용설명서_${ver.replace(/\./g, '')}.pdf`;
+      if(typeof saveBlob === 'function') saveBlob(pdf.output('blob'), name); else pdf.save(name);
+      if(typeof toast === 'function') toast('사용설명서(PDF)를 내려받았습니다');
+    }catch(e){ alert('사용설명서를 만들지 못했습니다: ' + e.message); }
+    finally{ box.remove(); if(busy){ busy.hidden = true; busy.textContent = 'PDF 만드는 중…'; } }
+  }
+  function bind(){
+    const a = $('setManual'), b = $('syManual');
+    if(!a || !b){ setTimeout(bind, 300); return; }
+    a.onclick = makePdf; b.onclick = makePdf;
+  }
+  bind();
+  window.MANUAL = {pdf:makePdf, sections:S};
 })();
 </script>
 </body>
