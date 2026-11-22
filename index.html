@@ -612,6 +612,46 @@
   .xmZone .xmPick{margin-top:8px;font-family:Jua,sans-serif;font-size:13px;border-radius:999px;padding:7px 16px;background:var(--b);color:#fff;border:0;cursor:pointer}
   .xmZone .xmZx{margin:8px 0 0 6px;font-family:Jua,sans-serif;font-size:13px;border-radius:999px;padding:7px 14px;background:#fff;color:#475569;border:1px solid #cbd5e1;cursor:pointer}
   .xmBtns button.on{background:var(--b);color:#fff;border-color:var(--b)}
+  #tpList .tmi{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--ln);border-radius:10px;cursor:pointer;font-size:14px;margin:0;background:#fff}
+  #tpList .tmi.on{border-color:var(--b);background:#eff6ff}
+  #tpList .tmi input{width:auto;margin-top:3px}
+  #tpList small{color:var(--mut)}
+  #tpList .tmth{flex:none;width:76px;height:107px;border:1px solid #cbd5e1;border-radius:4px;background:#fff;overflow:hidden;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  #tpList .tmth>div{position:absolute;left:0;top:0;transform-origin:0 0;transform:scale(.0957);pointer-events:none}
+  #tpList .tmth>div .pg{box-shadow:none}
+  #tpList .tmth.wait::after{content:'…';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:18px}
+  #tpList .tmi>span{flex:1;min-width:0}
+  #tpList .tag{background:#0f766e;color:#fff;border-radius:999px;padding:1px 7px;font-size:11px}
+  #tpList .tag.tg2{background:var(--b)}
+  .sbo.tpTeal{border-color:#0f766e!important;color:#0f766e}
+  .xmTpl{display:flex;align-items:center;gap:6px;margin:-2px 0 8px;padding:6px 8px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;font-size:13px;color:#115e59}
+  .xmTpl b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .xmTpl.none{background:#fff7ed;border-color:#fed7aa;color:#9a3412}
+  .xmTpl button{font-family:Jua,sans-serif;font-size:12px;border-radius:999px;padding:4px 10px;background:#fff;border:1px solid #0f766e;color:#0f766e;white-space:nowrap;cursor:pointer}
+  .xmTpl.none button{border-color:#f97316;color:#c2410c}
+  .hdSheets{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .hdSheets button{font-family:Jua,sans-serif;font-size:14px;border-radius:999px;padding:7px 14px;background:#fff;border:1px solid #93c5fd;color:var(--b);cursor:pointer}
+  .hdSheets button small{font-family:"Noto Sans KR",sans-serif;font-size:11px;color:#64748b;margin-left:4px}
+  .hdSheets button.on{background:var(--b);color:#fff;border-color:var(--b)}.hdSheets button.on small{color:#dbeafe}
+  .hdSheets button.off{opacity:.45;cursor:default}
+  .hdTools{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:#334155}
+  .hdTools input{width:64px;padding:4px 8px;border:1px solid #93c5fd;border-radius:999px;margin:0 4px;font-size:14px;text-align:center}
+  .hdTools button{font-family:Jua,sans-serif;font-size:13px;border-radius:999px;padding:5px 12px;background:#fff;border:1px solid #93c5fd;color:var(--b);cursor:pointer}
+  .hdWrap{overflow:auto;max-height:46vh;margin-top:6px;border:1px solid #e2e8f0;border-radius:10px;background:#fff}
+  .hdT{border-collapse:collapse;font-size:13px;width:100%;white-space:nowrap}
+  .hdT th{background:#f1f5f9;color:#64748b;font-weight:400;padding:3px 8px;border:1px solid #e5e7eb;position:sticky;top:0;z-index:1}
+  .hdT td{border:1px solid #eef2f7;padding:5px 8px;cursor:pointer;color:#1b1f24;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+  .hdT td.rn{background:#f8fafc;color:#64748b;text-align:center;width:46px}
+  .hdT tr[data-r]:hover td{background:#eff6ff}
+  .hdT tr.skip td{color:#94a3b8;background:repeating-linear-gradient(135deg,#fff,#fff 6px,#f1f5f9 6px,#f1f5f9 12px)}
+  .hdT tr.hd td{background:var(--b)!important;color:#fff;font-weight:700}
+  .hdT tr.hd td.rn{background:#1e40af!important}
+  .hdT .rb{display:block;font-size:10px;background:#fff;color:var(--b);border-radius:999px;margin-top:2px;padding:0 4px}
+  .hdT .rb.rc{background:#fef3c7;color:#92400e}
+  .hdT tr.more td{color:#94a3b8;text-align:center;cursor:default;background:#fff}
+  .hdSum{margin-top:8px;font-size:13px;color:#334155;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:8px 10px;line-height:1.6}
+  .hdSum.bad{background:#fef2f2;border-color:#fecaca}
+  .hdSum .rec{display:inline-block;margin-left:4px;font-size:12px;background:#fef3c7;color:#92400e;border-radius:999px;padding:0 8px}
   .xmBtns .xmGo[disabled]{background:#eff6ff;color:#94a3b8;border-color:#dbeafe;cursor:default}
   .setsub{font-family:var(--f-title);font-size:14px;color:#475569;margin:14px 0 0}
   .setchk{display:flex!important;gap:10px;align-items:flex-start;margin:12px 0 4px!important;padding:10px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;font-size:14px!important;cursor:pointer}
@@ -907,8 +947,8 @@
   <form method="dialog">
     <div class="setinfo"><span class="si">📂</span><small id="xlsMgrNow"></small></div>
     <div id="xlsMgrList"></div>
-    <button type="button" id="xlsMgrAdd" class="sbp" style="margin-top:10px">＋ 새 엑셀 올리기 (명단 추가)</button>
-    <small class="setnote">· <b>이름 수정</b>: 명단 이름만 바꿉니다. 점검 기록은 그대로 이어집니다.<br>· <b>교체</b>: 새 엑셀로 그 명단 내용을 바꿉니다(이름은 그대로).<br>· <b>받기</b>: 그 명단을 엑셀로 내려받습니다(고쳐서 [교체]로 다시 올리면 됩니다).<br>· <b>삭제</b>: 명단만 지우고 점검 기록은 남깁니다.<br>☁ 동기화가 연결되어 있으면 모든 사용자에게 똑같이 적용됩니다.</small>
+    <button type="button" id="xlsMgrAdd" class="sbp" style="margin-top:10px">＋ 새 엑셀 올리기 (명단 + 짝 서식)</button>
+    <small class="setnote">· <b>이름 수정</b>: 명단 이름만 바꿉니다. 점검 기록은 그대로 이어집니다.<br>· <b>교체</b>: 새 엑셀로 그 명단 내용을 바꿉니다(이름은 그대로).<br>· <b>받기</b>: 그 명단을 엑셀로 내려받습니다(고쳐서 [교체]로 다시 올리면 됩니다).<br>· <b>삭제</b>: 명단만 지우고 점검 기록은 남깁니다.<br>· <b>📝 짝 서식</b>: 명단을 지도에 띄우면 모든 직원이 이 서식으로 점검합니다. [서식 바꾸기]로 바꿉니다.<br>☁ 동기화가 연결되어 있으면 모든 사용자에게 똑같이 적용됩니다.</small>
     <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">닫기</button></div>
   </form>
 </dialog>
@@ -952,6 +992,35 @@
     <div class="setbox" id="elStyBox"><div class="setlab">모양</div><div id="elSty"></div></div>
     <div class="setbox"><div class="setlab">미리보기</div><div id="elPrev" class="tbprev"></div><small id="elNote" class="setnote" style="display:block;margin-top:8px"></small></div>
     <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">취소</button><button type="button" id="elOk" class="sgp">넣기</button></div>
+  </form>
+</dialog>
+
+<dialog id="tplPairDlg" class="setdlg" style="max-width:480px;width:94vw">
+  <form method="dialog">
+    <div class="setinfo" style="background:#f0fdfa;border-color:#99f6e4"><span class="si" style="background:#ccfbf1">📝</span><small id="tpWhy"></small></div>
+    <div id="tpList" style="max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:6px"></div>
+    <button type="button" id="tpOk" class="sbp" style="margin-top:10px">이 서식과 짝짓기</button>
+    <div class="sg2"><button type="button" id="tpNewFile" class="sbo">＋ 새 서식 (파일 올리기)</button><button type="button" id="tpNewBasic" class="sbo tpTeal">＋ 기본 서식 만들기</button></div>
+    <small class="setnote">· 짝 서식은 나중에 [올린 엑셀 목록 관리]에서 바꿀 수 있습니다. · 직원이 점검 서식을 손으로 바꾸면 그 기기에서 이번에만 쓰이고, 명단을 다시 띄우면 짝 서식으로 돌아갑니다.</small>
+    <div class="row setfoot"><button type="button" id="tpSkip" class="sgo">건너뛰기 (짝 없이)</button><span style="flex:1"></span><button type="button" id="tpOk2" class="sgp">짝짓기</button></div>
+  </form>
+</dialog>
+
+<dialog id="hdrDlg" class="setdlg" style="max-width:760px;width:95vw">
+  <form method="dialog">
+    <div class="setinfo" style="border-color:#fdba74;background:#fff7ed"><span class="si" style="background:#ffedd5">⚠</span><small id="hdrWhy"></small></div>
+    <div class="setbox" id="hdrSheetBox" style="margin-top:0">
+      <div class="setlab">① 시트 고르기</div>
+      <div class="hdSheets" id="hdrSheets"></div>
+    </div>
+    <div class="setbox">
+      <div class="setlab">② 제목 행 고르기 <small style="font-weight:400;color:var(--mut)">(행을 누르세요 · 위쪽 행은 건너뜁니다)</small></div>
+      <div class="hdTools"><label>제목 행 <input type="number" id="hdrRow" min="1" step="1">행</label><button type="button" id="hdrRec">추천 행으로</button></div>
+      <div class="hdWrap"><table class="hdT" id="hdrTable"></table></div>
+      <div class="hdSum" id="hdrSum"></div>
+    </div>
+    <small class="setnote">· 제목 행 위쪽(표 제목·작성일 등)은 읽지 않습니다. · 제목이 빈 열은 읽지 않습니다. · 다음 단계에서 이름·위치 열과 팝업 항목을 고릅니다.</small>
+    <div class="row setfoot"><span style="flex:1"></span><button value="cancel" type="submit" class="sgo">취소</button><button type="button" id="hdrOk" class="sgp">이 행을 제목으로 → 다음</button></div>
   </form>
 </dialog>
 
@@ -1486,12 +1555,40 @@ function mapHeaders(heads){
   return map;
 }
 /* 엑셀 첫 시트(작성요령 제외)를 제목 + 행으로 읽기 */
-function readSheetRaw(buf){
-  const wb = XLSX.read(buf, {type:'array'});
-  const ws = wb.Sheets[wb.SheetNames.find(n => !/작성요령|작성방법|안내/.test(n)) || wb.SheetNames[0]];
-  const json = XLSX.utils.sheet_to_json(ws, {defval:''});
+function readSheetRaw(buf, pick){
+  const wb = buf && buf.SheetNames ? buf : XLSX.read(buf, {type:'array'});
+  const sn = pick && pick.sheet && wb.Sheets[pick.sheet] ? pick.sheet : (wb.SheetNames.find(n => !GUIDE_SHEET_RE.test(n)) || wb.SheetNames[0]);
+  const ws = wb.Sheets[sn];
+  // pick.row: 제목 행(시트 기준 0부터 센 절대 행 번호). 그 위쪽 행(표 제목·작성일 등)은 읽지 않음
+  const json = XLSX.utils.sheet_to_json(ws, pick && pick.row != null ? {defval:'', range:pick.row} : {defval:''});
   const heads = json.length ? Object.keys(json[0]).filter(h => !/^__EMPTY/.test(h)) : [];
-  return {heads, json};
+  return {heads, json, sheet:sn, row:pick && pick.row != null ? pick.row : null};
+}
+/* 엑셀 시트 살펴보기: 시트마다 미리보기(앞 20행)·값 있는 열 수·1행 항목 수·추천 제목 행 */
+const GUIDE_SHEET_RE = /작성요령|작성방법|안내/;
+function bookInfo(wb){
+  const filled = v => String(v ?? '').trim() !== '';
+  return wb.SheetNames.map(name => {
+    const ws = wb.Sheets[name], ref = ws && ws['!ref'];
+    if(!ref) return {name, guide:GUIDE_SHEET_RE.test(name), empty:true, rows:0, cols:0, aoa:[], r0:0, c0:0};
+    const rg = XLSX.utils.decode_range(ref);
+    const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:'', blankrows:true, raw:false});
+    const used = new Set(); let lastRow = -1;
+    aoa.forEach((r, i) => r.forEach((v, j) => { if(filled(v)){ used.add(j); lastRow = i; } }));
+    const cnt = r => (r || []).filter(filled).length;
+    const top = aoa.slice(0, 20);
+    // 추천 제목 행: 값이 가장 많이 찬 행의 절반 이상(최소 2칸)이 차 있고, 칸 대부분이 '글자 제목' 같은 첫 행
+    //  (숫자·날짜·전화번호 위주인 행, 표 제목 한 칸짜리 행은 건너뜀) — 없으면 값이 가장 많이 찬 첫 행
+    let rec = 0, best = -1;
+    top.forEach((r, i) => { const n = cnt(r); if(n > best){ best = n; rec = i; } });
+    const titleLike = r => { const v = (r || []).filter(filled).map(x => String(x).trim()); if(!v.length) return false;
+      const ok = v.filter(x => x.length <= 30 && (x.replace(/\D/g, '').length / x.length) < 0.3).length;
+      return ok / v.length >= 0.6 && new Set(v).size === v.length; };
+    const need = Math.max(2, Math.ceil(best * 0.5));
+    const hi = top.findIndex(r => cnt(r) >= need && titleLike(r));
+    if(hi >= 0) rec = hi;
+    return {name, guide:GUIDE_SHEET_RE.test(name), empty:!used.size, rows:lastRow + 1, cols:used.size, head1:cnt(aoa[0]), aoa, r0:rg.s.r, c0:rg.s.c, rec};
+  });
 }
 /* 📍 조정한 마커 위치를 엑셀 한 칸으로 주고받기 (받은 엑셀을 고쳐 다시 올려도 조정 위치 유지)
    필지 1개: "35.202512, 127.462734" / 여러 필지: "구례읍 봉동리 89 = 35.2, 127.4 / 구례읍 봉동리 90-5 = 35.2, 127.4"
@@ -1549,6 +1646,53 @@ function buildRows({heads, json}, cfg, posH){
   return {rows, map};
 }
 function readWorkbook(buf, cfg){ return buildRows(readSheetRaw(buf), cfg).rows; }
+/* 시트 · 제목 행 고르기 창 → {sheet, row(절대 행 0부터)} 또는 null(취소) */
+function hdrDialog(o){
+  return new Promise(res => {
+    const d = $('hdrDlg'), info = o.info, data = info.filter(x => !x.guide && !x.empty);
+    let si = Math.max(0, info.indexOf(o.sheet || data[0])), hr = o.row != null ? o.row : null;
+    const colName = c => { let s = ''; c++; while(c){ const m = (c - 1) % 26; s = String.fromCharCode(65 + m) + s; c = Math.floor((c - 1) / 26); } return s; };
+    const filled = v => String(v ?? '').trim() !== '';
+    $('hdrWhy').innerHTML = o.why;
+    function draw(){
+      const sh = info[si];
+      if(hr == null || hr < 0 || hr >= Math.max(1, sh.rows)) hr = sh.rec || 0;
+      $('hdrSheetBox').style.display = data.length > 1 || info.length > 1 ? '' : 'none';
+      $('hdrSheets').innerHTML = info.map((x, i) => `<button type="button" data-s="${i}" class="${i === si ? 'on' : ''}${x.guide || x.empty ? ' off' : ''}"${x.guide || x.empty ? ' disabled' : ''}>📄 ${esc(x.name)} <small>${x.guide ? '읽지 않음' : x.empty ? '비어 있음' : `${x.rows}행 · ${x.cols}열`}</small></button>`).join('');
+      const nC = Math.min(30, Math.max(1, ...sh.aoa.slice(0, 20).map(r => r.length))), show = sh.aoa.slice(0, Math.max(20, hr + 3));
+      let h = '<tr><th></th>' + Array.from({length:nC}, (_, j) => `<th>${colName(sh.c0 + j)}</th>`).join('') + '</tr>';
+      show.forEach((r, i) => {
+        const cls = i < hr ? 'skip' : i === hr ? 'hd' : '';
+        h += `<tr class="${cls}" data-r="${i}"><td class="rn">${sh.r0 + i + 1}${i === hr ? '<span class="rb">제목</span>' : ''}${i === sh.rec && i !== hr ? '<span class="rb rc">추천</span>' : ''}</td>`
+          + Array.from({length:nC}, (_, j) => { const v = String(r[j] ?? ''); return `<td title="${esc(v)}">${esc(v.length > 24 ? v.slice(0, 24) + '…' : v)}</td>`; }).join('') + '</tr>';
+      });
+      if(sh.rows > show.length) h += `<tr class="more"><td class="rn">…</td><td colspan="${nC}">아래 ${sh.rows - show.length}행 더 있음 (미리보기는 위 ${show.length}행)</td></tr>`;
+      $('hdrTable').innerHTML = h;
+      const heads = (sh.aoa[hr] || []).filter(filled).map(String), body = sh.aoa.slice(hr + 1).filter(r => r.some(filled)).length;
+      const emptyCols = [...new Set(sh.aoa.slice(hr + 1).flatMap(r => r.map((v, j) => filled(v) && !filled((sh.aoa[hr] || [])[j]) ? j : -1)))].filter(j => j >= 0);
+      $('hdrRow').value = sh.r0 + hr + 1; $('hdrRow').max = sh.r0 + Math.max(1, sh.rows);
+      $('hdrSum').innerHTML = `${heads.length >= 2 ? '✔' : '⚠'} <b>${sh.r0 + hr + 1}행</b>을 제목으로 · 항목 <b>${heads.length}개</b>: ${esc(heads.slice(0, 12).join(', '))}${heads.length > 12 ? ' …' : ''} · 명단 <b>${body}줄</b>`
+        + (hr === sh.rec ? ' <span class="rec">추천 행</span>' : ` <span class="rec">추천: ${sh.r0 + sh.rec + 1}행 (값이 가장 많이 찬 첫 행)</span>`)
+        + (emptyCols.length ? `<br><span style="color:#c2410c">⚠ 제목이 빈 열 ${emptyCols.map(j => colName(sh.c0 + j)).join(', ')}에는 값이 있지만 읽지 않습니다. 필요하면 엑셀에서 제목을 적어 주세요.</span>` : '')
+        + (heads.length < 2 ? '<br><span style="color:#b91c1c">⚠ 이 행은 항목명이 2개 미만입니다. 열 제목이 있는 행을 골라 주세요.</span>' : '');
+      $('hdrSum').classList.toggle('bad', heads.length < 2);
+    }
+    let done = false;
+    const fin = v => { if(done) return; done = true; try{ d.close(); }catch(e){} res(v); };
+    $('hdrSheets').onclick = e => { const b = e.target.closest('button[data-s]'); if(!b || b.disabled) return; si = +b.dataset.s; hr = null; draw(); };
+    $('hdrTable').onclick = e => { const tr = e.target.closest('tr[data-r]'); if(!tr) return; hr = +tr.dataset.r; draw(); };
+    // 숫자로 직접 고르기 (값이 그대로면 다시 그리지 않음 → 입력칸에서 표를 바로 눌러도 클릭이 먹힘)
+    $('hdrRow').onchange = () => { const v = parseInt($('hdrRow').value, 10), r = v - 1 - info[si].r0; if(v > 0 && r !== hr && r >= 0){ hr = r; draw(); } };
+    $('hdrRec').onclick = () => { hr = info[si].rec; draw(); };
+    $('hdrOk').onclick = () => {
+      const sh = info[si], heads = (sh.aoa[hr] || []).filter(filled);
+      if(heads.length < 2 && !confirm(`${sh.r0 + hr + 1}행의 항목명이 ${heads.length}개뿐입니다. 그래도 이 행을 제목으로 쓸까요?`)) return;
+      fin({sheet:sh.name, row:sh.r0 + hr});
+    };
+    d.addEventListener('close', () => fin(null), {once:true});
+    draw(); d.showModal();
+  });
+}
 
 /* ---------- 팝업 표시 항목 (명단별: 명단 첫 행의 etc._pop = {a:모든 열, h:열→키, s:간단, d:상세}) ---------- */
 let _popRef = null, _popC = {};
@@ -1941,7 +2085,8 @@ const XLS_COMMON_GUIDE = [
   ['12. 처음 올리면 위치를 찾느라 시간이 걸립니다 (수백 곳이면 몇 분). 한 번 찾은 위치는 저장되어 다음부터 빠릅니다.'],
   ['13. 점검 서식(한글 양식)에서 추가한 열은 {열 제목} 으로 불러 쓸 수 있습니다.'],
   ['14. 「지도위치(조정)」 열은 지도에서 📍 조정으로 옮긴 마커 위치(위도, 경도)입니다. 받은 엑셀을 고쳐 다시 올려도 이 위치가 그대로 쓰입니다.'],
-  ['    · 이 칸을 지우면 그 곳은 지번·주소로 다시 위치를 찾습니다. 숫자는 고치지 않는 것이 좋습니다.']
+  ['    · 이 칸을 지우면 그 곳은 지번·주소로 다시 위치를 찾습니다. 숫자는 고치지 않는 것이 좋습니다.'],
+  ['15. 1행에 표 제목이 있거나 시트가 여러 개인 엑셀은 올릴 때 「엑셀 시트 · 제목 행 고르기」 창에서 미리보기를 보며 시트와 제목 행을 고를 수 있습니다.']
 ];
 function downloadCommonXlsx(){
   const head = ['이름', '지번·주소', '읍면', '연락처', '구분', '내용', '비고'];
@@ -2335,9 +2480,79 @@ function renderListSel(){
   $('listRow').style.display = ns.length ? 'flex' : 'none';
   const now = $('listNow'); if(now) now.innerHTML = ns.length ? `현재 명단 <b>${esc(curList)}</b> (${rows.length}명)<br>전체 ${ns.length}개: ${ns.map(esc).join(', ')}` : '불러온 명단이 없습니다.';
   if($('xlsMgrDlg') && $('xlsMgrDlg').open) renderXlsMgr();
+  applyPair(false);
   const sub = $('setListSub'); if(sub) sub.textContent = ns.length ? `현재: ${curList} · 명단 ${ns.length}개` : '명단 올리기 · 이름 바꾸기 · 삭제';
 }
+/* ---------- 명단 ↔ 짝 서식 (명단 첫 행 etc._tpl·_tplN → 명단 동기화로 모든 직원 공통) ---------- */
+let pairShown = '';   // 지금 화면에 짝 서식을 적용한 '명단|서식' (같으면 다시 바꾸지 않음 → 직원이 이번에만 바꾼 서식 유지)
+function pairOf(name){
+  for(const r of ROSTER){ if(listOf(r) === name){ const e = etcRaw(r); if(e._tpl) return {id:e._tpl, name:e._tplN || ''}; } }
+  return null;
+}
+function setPair(name, t){
+  let first = true;
+  ROSTER = ROSTER.map(r => {
+    if(listOf(r) !== name) return r;
+    const e = {...etcRaw(r)};
+    if(first && t){ e._tpl = t.id; e._tplN = t.name; } else { delete e._tpl; delete e._tplN; }
+    first = false;
+    return {...r, etc:Object.keys(e).length ? JSON.stringify(e) : ''};
+  });
+  saveRoster(); rows = pickRows();
+  queueListOp({op:'set', name, rows:ROSTER.filter(x => listOf(x) === name).map(({_pts, ...x}) => x)});
+  if(window.syncSoon) syncSoon();
+}
+// 명단을 띄우거나(시작·동기화 포함) 짝이 바뀌면 점검 서식을 짝 서식으로 맞춤
+function applyPair(force){
+  if(typeof tplById !== 'function' || !curList) return;
+  const p = pairOf(curList), key = curList + '|' + (p ? p.id : '');
+  if(!force && key === pairShown) return;
+  pairShown = key;
+  const t = p && tplById(p.id); if(!t) return;
+  const sel = $('mainTpl');
+  if(sel && sel.value === t.id) return;
+  useTpl(t.id); if(window.fillMainTpl) fillMainTpl();
+  toast(`'${curList}' 명단 · 짝 서식 '${t.name}'으로 점검합니다`);
+}
+/* 짝지을 점검 서식 고르기 창 → 서식 id · ''(짝 없이) · null(바꾸지 않음) */
+function tplPairDialog(o){
+  return new Promise(res => {
+    const d = $('tplPairDlg'), cur = $('mainTpl') ? $('mainTpl').value : '';
+    let sel = (o.cur && tplById(o.cur) ? o.cur : '') || (tplById(cur) ? cur : '') || (sortedTpls()[0] || {}).id;
+    $('tpWhy').innerHTML = `<b>'${esc(o.list)}'</b>${o.count ? ` (${o.count}명)` : ''}과 짝지을 점검 서식을 고르세요.<br>이 명단을 지도에 띄우면 모든 직원이 이 서식으로 점검합니다.`;
+    $('tpSkip').textContent = o.edit ? (o.cur ? '짝 없애기' : '닫기') : '건너뛰기 (짝 없이)';
+    const draw = () => {
+      const kind = window.tplKind || (() => '');
+      $('tpList').innerHTML = sortedTpls().map(t => { const th = window.tplThumb ? tplThumb(t) : ''; return `<label class="tmi${t.id === sel ? ' on' : ''}">
+        <input type="radio" name="tp" value="${t.id}" ${t.id === sel ? 'checked' : ''}>
+        <div class="tmth${th == null ? ' wait' : ''}" title="1쪽 미리보기">${th ? `<div>${th}</div>` : ''}</div>
+        <span><b>${esc(t.name)}</b>${t.id === o.cur ? ' <small class="tag">지금 짝</small>' : t.id === cur ? ' <small class="tag tg2">지금 사용 중</small>' : ''}<br>
+        <small>${esc(t.title)} · ${t.items.length}항목 · ${kind(t)} · ${typeof fmtTs === 'function' ? fmtTs(t.savedAt).slice(2) : ''}</small></span></label>`; }).join('');
+    };
+    let done = false;
+    const fin = v => { if(done) return; done = true; window.onTplAdded = null; window.onTplThumb = null; try{ d.close(); }catch(e){} res(v); };
+    $('tpList').onchange = e => { if(e.target.name === 'tp'){ sel = e.target.value; draw(); } };
+    $('tpOk').onclick = $('tpOk2').onclick = () => fin(sel || '');
+    $('tpSkip').onclick = () => fin(o.edit && !o.cur ? null : '');
+    $('tpNewFile').onclick = () => { if($('tmNew')) $('tmNew').click(); };   // 한글·엑셀·워드·PDF 서식 올리기 → 다 되면 목록에 바로 선택
+    $('tpNewBasic').onclick = () => {
+      const nm = prompt('새 서식 이름 (기본 현장점검표 모양으로 만들고, 서식관리에서 고칠 수 있습니다)', '새 점검표'); if(nm === null) return;
+      const now = Date.now(), {name:_n, ...dd} = JSON.parse(JSON.stringify(DEFAULT_TPL));
+      const t = {...dd, id:'t' + now, name:nm.trim() || '새 점검표', layout:null, hwpx:null, savedAt:now, usedAt:now};
+      tpls.push(t); saveTpls(); sel = t.id; draw(); toast(`'${t.name}' 서식을 만들었습니다`);
+    };
+    window.onTplAdded = id => { sel = id; draw(); };
+    window.onTplThumb = () => draw();
+    d.addEventListener('close', () => fin(o.edit ? null : ''), {once:true});
+    draw(); d.showModal();
+  });
+}
 let xmZoneOn = null;   // [교체]를 눌러 끌어다 놓기 영역이 열린 명단 이름
+function pairRow(n){
+  const p = pairOf(n), t = p && typeof tplById === 'function' && tplById(p.id);
+  if(!p) return `<div class="xmTpl none">📝 짝 서식: <b>없음 (점검할 때 고른 서식 사용)</b><button type="button" data-a="tpl">＋ 서식 짝짓기</button></div>`;
+  return `<div class="xmTpl${t ? '' : ' none'}">📝 짝 서식: <b title="${esc(t ? t.name : p.name)}">${t ? esc(t.name) : '(삭제된 서식) ' + esc(p.name)}</b><button type="button" data-a="tpl">서식 바꾸기</button></div>`;
+}
 function renderXlsMgr(){
   const box = $('xlsMgrList'); if(!box) return;
   const ns = listNames();
@@ -2347,9 +2562,10 @@ function renderXlsMgr(){
     let cnt = 0, src = null;
     ROSTER.forEach(r => { if(listOf(r) === n){ cnt++; if(!src){ const s = etcRaw(r)._src; if(s) src = s; } } });
     const cur = n === curList;
-    const meta = [`${cnt}명`, src && src.f ? `원본 파일: ${esc(src.f)}` : '', src && src.at ? `${day(src.at)} 올림` : ''].filter(Boolean).join(' · ');
+    const where = src && (src.hr != null || src.sh) ? ` (${src.sh ? esc(src.sh) + ' 시트' : ''}${src.sh && src.hr != null ? ' · ' : ''}${src.hr != null ? (src.hr + 1) + '행 제목' : ''})` : '';
+    const meta = [`${cnt}명`, src && src.f ? `원본 파일: ${esc(src.f)}${where}` : '', src && src.at ? `${day(src.at)} 올림` : ''].filter(Boolean).join(' · ');
     return `<div class="xmRow${cur ? ' cur' : ''}${xmZoneOn === n ? ' zone' : ''}" data-n="${esc(n)}"><div class="xmTop"><b>📊 ${esc(n)}</b>${cur ? '<span class="xmBadge">지도에 표시 중</span>' : ''}</div>`
-      + `<small class="xmMeta">${meta}</small><div class="xmBtns">`
+      + `<small class="xmMeta">${meta}</small>${pairRow(n)}<div class="xmBtns">`
       + `<button type="button" class="xmGo" data-a="go"${cur ? ' disabled' : ''} title="이 명단을 지도에 표시">${cur ? '보는 중' : '보기'}</button>`
       + `<button type="button" data-a="ren" title="명단 이름 바꾸기">이름 수정</button><button type="button" data-a="rep" title="새 엑셀로 내용 바꾸기 (끌어다 놓기 가능)"${xmZoneOn === n ? ' class="on"' : ''}>교체</button>`
       + `<button type="button" data-a="dl" title="이 명단을 엑셀로 내려받기">⬇ 받기</button><button type="button" class="xmDel" data-a="del" title="명단 삭제">삭제</button></div>`
@@ -2359,9 +2575,11 @@ function renderXlsMgr(){
 }
 function switchList(name){
   curList = name; LS.set('curList', name); rows = pickRows();
-  // 이 명단에서 마지막으로 쓴 서식을 자동 선택 (기기별)
-  const tid = LS.get('listTpl', {})[curList];
-  if(tid && typeof tplById === 'function' && tplById(tid) && $('mainTpl') && $('mainTpl').value !== tid){ useTpl(tid); if(window.fillMainTpl) fillMainTpl(); toast(`'${curList}' 명단 · '${tplById(tid).name}' 서식`); }
+  // 짝 서식이 있으면 그 서식으로 (모든 직원 공통), 없으면 이 기기에서 이 명단에 마지막으로 쓴 서식
+  pairShown = '';
+  const pr = pairOf(curList), tid = pr && typeof tplById === 'function' && tplById(pr.id) ? pr.id : LS.get('listTpl', {})[curList];
+  if(pr && tid === pr.id) pairShown = curList + '|' + pr.id;
+  if(tid && typeof tplById === 'function' && tplById(tid) && $('mainTpl') && $('mainTpl').value !== tid){ useTpl(tid); if(window.fillMainTpl) fillMainTpl(); toast(`'${curList}' 명단 · ${pr && tid === pr.id ? '짝 서식 ' : ''}'${tplById(tid).name}' 서식으로 점검합니다`); }
   filterTown = null; if($('q')) $('q').value = '';
   plot();
 }
@@ -2409,10 +2627,25 @@ function bindUi(){
     const f = e.target.files[0]; if(!f){ xlsRepl = null; return; }
     const repl = xlsRepl; xlsRepl = null;
     try{
-      const raw = readSheetRaw(await f.arrayBuffer());
-      if(!raw.json.length){ alert('엑셀에서 명단을 찾지 못했습니다.'); e.target.value = ''; return; }
-      // 1행 항목명(열 제목)이 2개 미만이면: 표 제목·빈 줄이 1행에 있는 경우가 많음 → 한 번 더 묻기
-      if(raw.heads.length < 2){
+      const wb = XLSX.read(await f.arrayBuffer(), {type:'array'});
+      // 시트 · 제목 행 고르기: ① 1행의 항목 수 < 시트에서 값이 있는 열 수 ② 명단 시트가 여러 개 → 미리보기 창
+      const info = bookInfo(wb), dataSh = info.filter(x => !x.guide && !x.empty);
+      if(!dataSh.length){ alert('엑셀에서 명단을 찾지 못했습니다.'); e.target.value = ''; return; }
+      const first = dataSh[0], prevSrc = repl ? etcRaw(ROSTER.find(r => listOf(r) === repl && etcRaw(r)._src))._src : null;
+      let pick = null;
+      const why = [];
+      if(first.head1 < first.cols) why.push(`<b>'${esc(first.name)}' 시트 1행의 항목명은 ${first.head1}칸뿐인데, 값이 있는 열은 ${first.cols}개입니다.</b>`);
+      if(dataSh.length > 1) why.push(`<b>명단이 들어 있을 수 있는 시트가 ${dataSh.length}개입니다.</b>`);
+      if(why.length){
+        // 교체라면 지난번에 고른 시트·제목 행을 먼저 골라 둠
+        const ps = prevSrc && prevSrc.sh && info.find(x => x.name === prevSrc.sh && !x.guide && !x.empty);
+        pick = await hdrDialog({info, why:why.join('<br>') + '<br>열 제목(항목명)이 있는 시트와 행을 골라 주세요.', sheet:ps || first, row:ps && prevSrc.hr != null ? prevSrc.hr - ps.r0 : null});
+        if(!pick){ e.target.value = ''; return; }
+      }
+      const raw = readSheetRaw(wb, pick);
+      if(!raw.json.length){ alert('고른 제목 행 아래에 명단이 없습니다.'); e.target.value = ''; return; }
+      // (창을 거치지 않은 경우) 1행 항목명(열 제목)이 2개 미만이면 한 번 더 묻기
+      if(!pick && raw.heads.length < 2){
         const h1 = raw.heads.length ? `'${String(raw.heads[0]).slice(0, 40)}'` : '(비어 있음)';
         const what = repl ? `'${repl}' 명단 교체` : '명단 올리기';
         if(!confirm(`⚠ 엑셀 첫 번째 줄(1행)의 항목명(열 제목)이 ${raw.heads.length}개뿐입니다.\n· 지금 1행: ${h1}\n\n1행에는 이름·지번처럼 항목명이 2개 이상 있어야 명단이 바르게 읽힙니다.\n1행에 표 제목이나 빈 줄이 있다면 지우고 다시 올려 주세요.\n\n그래도 이대로 ${what}를 진행할까요?`)){ e.target.value = ''; return; }
@@ -2440,6 +2673,13 @@ function bindUi(){
       name = name.trim() || base;
       }
       const old = ROSTER.find(r => listOf(r) === name);
+      // 짝 서식: 교체(같은 이름)는 원래 짝 그대로, 새 명단은 짝지을 서식 고르기
+      let pairT = null;
+      if(old){ const op = pairOf(name); if(op) pairT = op; }
+      else {
+        const tid = await tplPairDialog({list:name, count:parsed.length});
+        const t = tid && tplById(tid); if(t) pairT = {id:t.id, name:t.name};
+      }
       const lid = old ? listIdOf(old) : (name === LIST_DEF ? '' : 'L' + Date.now().toString(36));
       const newRows = parsed.map(r => withList(r, name, lid));
       // 엑셀에 지도위치(조정) 열이 없으면: 같은 이름·같은 지번이던 곳의 조정 위치를 그대로 이어받음
@@ -2454,7 +2694,7 @@ function bindUi(){
         });
       }
       const posN = newRows.filter(x => etcRaw(x)._pos).length;
-      setEtc(newRows[0], x => { x._pop = pop; x._src = {f:f.name, at:Date.now()}; });   // _src: 올린 엑셀 파일 이름·날짜 (목록 관리에 표시)
+      setEtc(newRows[0], x => { x._pop = pop; x._src = {f:f.name, at:Date.now(), sh:raw.sheet, hr:raw.row}; if(pairT){ x._tpl = pairT.id; x._tplN = pairT.name; } });   // _src: 올린 엑셀 파일 이름·날짜·시트·제목 행 (목록 관리에 표시, 교체 때 다시 씀)
       ROSTER = [...ROSTER.filter(r => listOf(r) !== name), ...newRows];
       curList = name; LS.set('curList', name); saveRoster(); rows = pickRows();
       queueListOp({op:'set', name, rows:newRows});
@@ -2554,6 +2794,18 @@ function bindUi(){
     else if(a === 'pick'){ xlsRepl = name; $('file').click(); }
     else if(a === 'zx'){ xmZoneOn = null; renderXlsMgr(); }
     else if(a === 'dl') downloadListXlsx(name);
+    else if(a === 'tpl'){
+      const p = pairOf(name);
+      tplPairDialog({list:name, count:ROSTER.filter(r => listOf(r) === name).length, cur:p && p.id, edit:true}).then(id => {
+        if(id === null) return;
+        const t = id ? tplById(id) : null;
+        if(id && !t) return;
+        if((p ? p.id : '') === (t ? t.id : '')) return;
+        setPair(name, t); renderXlsMgr();
+        if(name === curList) applyPair(true);
+        toast(t ? `'${name}' 명단의 짝 서식을 '${t.name}'(으)로 정했습니다` : `'${name}' 명단의 짝 서식을 없앴습니다`);
+      });
+    }
     else if(a === 'del') delList(name);
   };
   $('listPop').onclick = async () => {
@@ -2860,7 +3112,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261122100037';
+const APP_VER = '20261122113231';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -7349,7 +7601,7 @@ $('iHwp').onclick = async () => {
   }
 
   /* ---------- 팝업(dialog) ---------- */
-  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', hwpDlg:'한글 양식 미리보기', dlg:'설정', listDlg:'대상관리', xlsMgrDlg:'올린 엑셀 목록 관리', numDlg:'요소 넣기', colDlg:'엑셀 열 · 팝업 항목 설정', opsDlg:'운영관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'서식관리', logDlg:'점검관리'};
+  const DLG_TITLE = {bulkDlg:'서식 일괄 적용', pwDlg:'설정 비밀번호', hwpDlg:'한글 양식 미리보기', dlg:'설정', listDlg:'대상관리', xlsMgrDlg:'올린 엑셀 목록 관리', hdrDlg:'엑셀 시트 · 제목 행 고르기', tplPairDlg:'짝지을 점검 서식 고르기', numDlg:'요소 넣기', colDlg:'엑셀 열 · 팝업 항목 설정', opsDlg:'운영관리', admDlg:'접속자 · 차단 관리', syncDlg:'구글 동기화', tplDlg:'서식 편집', tplMgr:'서식관리', logDlg:'점검관리'};
   function winDialog(d){
     if(d._win) return; d._win = true;
     const bar = document.createElement('div');
@@ -7446,11 +7698,12 @@ $('iHwp').onclick = async () => {
     }catch(_){ h = ''; }
     if(h === null){   // 한글 서식: 파일을 읽어 1쪽을 만든 뒤 다시 그림
       thumbC.set(k, null);
-      (async () => { try{ const x = await hwpxToLayout(t.hwpx); const r = tplRec(t, x.layout); thumbC.set(k, (window.layoutPages(r) || [])[0] || ''); }catch(_){ thumbC.set(k, ''); } if($('tplMgr').open) renderMgr(); })();
+      (async () => { try{ const x = await hwpxToLayout(t.hwpx); const r = tplRec(t, x.layout); thumbC.set(k, (window.layoutPages(r) || [])[0] || ''); }catch(_){ thumbC.set(k, ''); } if($('tplMgr').open) renderMgr(); if(window.onTplThumb) onTplThumb(); })();
       return null;
     }
     thumbC.set(k, h); return h;
   }
+  window.tplThumb = t => thumbHtml(t); window.tplKind = kind;   // 짝 서식 고르기 창에서도 같은 미리보기
   function renderMgr(){
     const list = sortedTpls();
     if(!mgrSel || !tplById(mgrSel)) mgrSel = list[0].id;
@@ -7474,7 +7727,7 @@ $('iHwp').onclick = async () => {
   $('tmUse').onclick = () => { useTpl(mgrSel); fillMainTpl(); renderMgr(); toast(`'${tplById(mgrSel).name}' 서식으로 점검합니다`); };
   $('tmEdit').onclick = () => withTempRec(() => openTplEditor());
   $('tmDesign').onclick = () => withTempRec(() => openDesigner());
-  window.mgrRefresh = id => { mgrSel = id; if($('tplMgr').open) renderMgr(); };
+  window.mgrRefresh = id => { mgrSel = id; if($('tplMgr').open) renderMgr(); if(window.onTplAdded) onTplAdded(id); };
   // [+ 새 서식] = 한글 서식 파일을 바로 골라 올리기
   $('tmNew').onclick = () => { hwpFromMgr = true; $('tplHwpIn').click(); };
   const _tmBlank = () => {
@@ -10017,7 +10270,7 @@ $('iHwp').onclick = async () => {
      <div class="tip">💡 조정한 위치는 명단 엑셀을 받으면 「지도위치(조정)」 열에 들어 있어, 엑셀을 고쳐 다시 올려도 그대로 유지됩니다.</div>`);
   ch('4. 대상 목록 창',
     `<ul><li><b>명단</b>: 여러 명단 중 지도에 보일 명단을 고릅니다.</li>
-     <li><b>점검 서식</b>: 점검할 때 쓸 서식을 고릅니다. 명단마다 마지막에 쓴 서식이 자동으로 골라집니다.</li>
+     <li><b>점검 서식</b>: 점검할 때 쓸 서식을 고릅니다. 명단에 <b>짝 서식</b>이 있으면 명단을 띄울 때 자동으로 그 서식이 골라집니다. 직접 바꾸면 이 기기에서 이번에만 쓰이고, 명단을 다시 띄우면 짝 서식으로 돌아갑니다. (짝 서식이 없으면 이 기기에서 그 명단에 마지막으로 쓴 서식)</li>
      <li><b>읍면 칩</b>: 누르면 그 읍·면만 보입니다. <b>점검 칩</b>: 전체 · 미완료 · 미점검 · 점검 중 · 완료로 거릅니다.</li>
      <li><b>검색칸</b>: 이름·지번으로 찾습니다. 목록 줄을 누르면 지도가 그 곳으로 이동합니다.</li></ul>`,
     `<h3>내 위치 · 동선 짜기</h3><ul><li>${B('📍 내 위치')}: 지금 내 위치를 지도에 표시합니다.</li>
@@ -10049,9 +10302,12 @@ $('iHwp').onclick = async () => {
      <tr><th>${B('이름 수정')}</th><td>명단 이름만 바꿈 (점검 기록은 그대로 이어짐)</td></tr>
      <tr><th>${B('교체')}</th><td>점선 상자가 열리면 새 엑셀을 <b>끌어다 놓거나</b> ${B('파일 고르기')}. 이름과 점검 기록은 유지. 카드 위에 바로 끌어다 놓아도 됩니다.</td></tr>
      <tr><th>${B('⬇ 받기')}</th><td>그 명단을 엑셀로 내려받음 (📍 조정 위치는 「지도위치(조정)」 열). 고쳐서 [교체]로 다시 올립니다.</td></tr>
-     <tr><th>${B('삭제')}</th><td>명단만 지움 (점검 기록은 남음)</td></tr></table>
-     <div class="tip">💡 명단 고치는 순서: ${B('⬇ 받기')} → 엑셀에서 고치기 → ${B('교체')}에 끌어다 놓기 → 열 설정 [확인] → [확인]</div>`,
-    `<h3>명단 엑셀 쓰는 법 (요약)</h3><ul><li>1행은 열 제목, 2행부터 한 줄에 한 곳. 표 제목·빈 줄·셀 병합 금지. 첫 시트만 읽습니다. (1행 항목명이 2개 미만이면 올릴 때 한 번 더 묻습니다)</li>
+     <tr><th>${B('삭제')}</th><td>명단만 지움 (점검 기록은 남음)</td></tr>
+     <tr><th>📝 짝 서식</th><td>카드의 ${B('서식 바꾸기')} / ${B('＋ 서식 짝짓기')}로 명단과 점검 서식을 짝지음. 명단을 띄우면 모든 직원이 그 서식으로 점검합니다. ${B('짝 없애기')}로 풀 수 있습니다.</td></tr></table>
+     <p>${B('＋ 새 엑셀 올리기')}로 새 명단을 올리면 이름을 정한 뒤 「짝지을 점검 서식 고르기」 창이 뜹니다. 미리보기를 보고 고르거나, 그 자리에서 ${B('＋ 새 서식 (파일 올리기)')} ${B('＋ 기본 서식 만들기')}로 새 서식을 만들어 짝지을 수 있습니다. 교체할 때는 원래 짝이 그대로 유지됩니다.</p>
+     <div class="tip">💡 명단 고치는 순서: ${B('⬇ 받기')} → 엑셀에서 고치기 → ${B('교체')}에 끌어다 놓기 → (필요하면 시트·제목 행 고르기) → 열 설정 [확인] → [확인]</div>`,
+    `<h3>명단 엑셀 쓰는 법 (요약)</h3><ul><li>1행은 열 제목, 2행부터 한 줄에 한 곳이 가장 좋습니다. 셀 병합은 하지 않습니다.</li>
+     <li>1행에 표 제목·작성일이 있거나(1행 항목 수가 값이 있는 열 수보다 적을 때) <b>시트가 여러 개</b>면 「엑셀 시트 · 제목 행 고르기」 창이 뜹니다. 시트를 누르고, 미리보기에서 <b>열 제목이 있는 행을 누르면</b> 그 행이 제목이 되고 위쪽 행은 건너뜁니다. 행 번호를 직접 적거나 ${B('추천 행으로')}를 눌러도 됩니다. 교체할 때는 지난번에 고른 시트·제목 행이 먼저 골라져 있습니다.</li>
      <li>꼭 필요한 열은 <b>이름</b>과 <b>위치(지번 또는 주소)</b> 두 가지. 열 제목·순서는 자유, 열을 더 넣거나 빼도 됩니다.</li>
      <li>여러 필지는 쉼표로 구분, 산은 「산 12」처럼. 다른 시·군이면 시·군부터 적습니다.</li>
      <li>「지도위치(조정)」 칸을 지우면 그 곳은 지번으로 다시 위치를 찾습니다.</li></ul>`);
