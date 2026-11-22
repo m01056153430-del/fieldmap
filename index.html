@@ -1098,7 +1098,6 @@
     <input id="syUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
     <label class="chk"><input type="checkbox" id="syPdf"> PDF 저장할 때 구글 드라이브에도 보관</label>
     <div id="syInfo" style="font-size:13px;color:var(--mut);margin-top:10px;line-height:1.7"></div>
-    <button type="button" id="syManual" style="display:block;width:100%;margin-top:10px;border-radius:999px;border:1px solid #93c5fd;background:#eff6ff;color:#1f6feb;padding:9px;font-size:14px;font-family:Jua,sans-serif;cursor:pointer">📘 사용설명서 받기 (PDF)</button>
     <div class="row">
       <button value="off" type="submit" class="bdan">끄기</button>
       <span style="flex:1"></span>
@@ -3112,7 +3111,7 @@ function saveBlob(blob, name){
 
 let allRecs = [];
 /* 새 버전 자동 적용: 사이트가 바뀌면(작업 중이 아닐 때) 새로 불러옴 */
-const APP_VER = '20261122113231';
+const APP_VER = '20261122115251';
 (function verCheck(){
   if(!/^https?:/.test(location.protocol)) return;
   const check = async () => {
@@ -10217,7 +10216,7 @@ $('iHwp').onclick = async () => {
 </script>
 <script>
 /* ===================== 사용설명서 (PDF 받기) =====================
-   설정 카드 [사용설명서] · 동기화 창 [📘 사용설명서 받기] → A4 PDF (앱 안에서 바로 만듦, 인터넷 연결 필요) */
+   설정 카드 [사용설명서] → A4 PDF (앱 안에서 바로 만듦, 인터넷 연결 필요) */
 (function manualMod(){
   const $ = id => document.getElementById(id);
   const css = document.createElement('style');
@@ -10252,10 +10251,10 @@ $('iHwp').onclick = async () => {
   ch('2. 화면 구성',
     `<table><tr><th>위쪽 버튼</th><th>하는 일</th></tr>
      <tr><td>${B('앱설치')}</td><td>휴대폰·PC에 앱처럼 설치</td></tr>
-     <tr><td>${B('☁ 동기화')}</td><td>구글 동기화 연결 · 지금 바로 동기화 · 이 사용설명서 받기</td></tr>
+     <tr><td>${B('☁ 동기화')}</td><td>구글 동기화 연결 · 지금 바로 동기화</td></tr>
      <tr><td>${B('대상')}</td><td>대상 목록 창 열기·닫기 (명단 · 점검 서식 · 읍면 · 점검 상태 · 검색 · 동선)</td></tr>
      <tr><td>${B('결과')}</td><td>점검한 기록 목록 · PDF · 엑셀 · 한글 묶음 저장</td></tr>
-     <tr><td>${B('설정')}</td><td>관리자 메뉴 (비밀번호 필요): 대상관리 · 서식관리 · 점검관리 · 운영관리</td></tr>
+     <tr><td>${B('설정')}</td><td>관리자 메뉴 (비밀번호 필요): 대상관리 · 서식관리 · 점검관리 · 사용설명서 · 운영관리</td></tr>
      <tr><td>${B('⛶ 전체화면')}</td><td>지도를 화면 가득 보기</td></tr></table>`,
     `<p>창(팝업)은 <b>제목줄을 끌어 옮기고</b>, 오른쪽 아래 모서리를 끌어 <b>크기를 바꿉니다</b>. ⤢는 크게/작게, ✕는 닫기입니다. 휴대폰 [뒤로가기]는 열린 창을 하나씩 닫습니다.</p>`);
   ch('3. 지도 보기',
@@ -10367,9 +10366,9 @@ $('iHwp').onclick = async () => {
     finally{ box.remove(); if(busy){ busy.hidden = true; busy.textContent = 'PDF 만드는 중…'; } }
   }
   function bind(){
-    const a = $('setManual'), b = $('syManual');
-    if(!a || !b){ setTimeout(bind, 300); return; }
-    a.onclick = makePdf; b.onclick = makePdf;
+    const a = $('setManual');
+    if(!a){ setTimeout(bind, 300); return; }
+    a.onclick = makePdf;
   }
   bind();
   window.MANUAL = {pdf:makePdf, sections:S};
